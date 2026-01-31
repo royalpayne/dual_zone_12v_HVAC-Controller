@@ -10,6 +10,8 @@ class ThermostatWebServer:
         self.scheduler = scheduler
         self.socket = None
         self.pico = pico
+        self.pressure_history = []  # Track pressure for trend
+        self.max_history = 3
 
     def start(self, port=80):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -57,6 +59,9 @@ class ThermostatWebServer:
         status['pico_connected'] = pico_status is not None
         if pico_status:
             status['pico'] = pico_status
+        # Add pressure trend
+        if status.get('pressure'):
+            status['pressure_trend'] = self._get_pressure_trend(status['pressure'])
         body = json.dumps(status)
         return f"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{body}"
 
@@ -67,6 +72,24 @@ class ThermostatWebServer:
         else:
             body = json.dumps({'error': 'Pico not connected'})
         return f"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{body}"
+
+    def _get_pressure_trend(self, current_pressure):
+        """Determine pressure trend: 'rising', 'falling', or 'steady'"""
+        if current_pressure is None:
+            return 'steady'
+        self.pressure_history.append(current_pressure)
+        if len(self.pressure_history) > self.max_history:
+            self.pressure_history.pop(0)
+        if len(self.pressure_history) < 2:
+            return 'steady'
+        avg_previous = sum(self.pressure_history[:-1]) / len(self.pressure_history[:-1])
+        change = current_pressure - avg_previous
+        if change > 0.5:
+            return 'rising'
+        elif change < -0.5:
+            return 'falling'
+        else:
+            return 'steady'
 
     def _api_schedule(self):
         if self.scheduler:
@@ -191,7 +214,7 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <div class="card">
 <div class="zone-title">Kitchen (ESP32)</div>
 <div class="temp"><span id="temp">--</span>&deg;F</div>
-<div class="row"><span id="hum">--%</span> | <span id="pres">--</span> inHg</div>
+<div class="row">💧 <span id="hum">--%</span> | <span id="ptrend">→</span> <span id="pres">--</span> inHg</div>
 <div id="status">Idle</div>
 </div>
 <div class="card">
@@ -264,6 +287,8 @@ function upd(d){
 document.getElementById('temp').textContent=d.temp?d.temp.toFixed(1):'--';
 document.getElementById('hum').textContent=d.humidity?d.humidity+'%':'--%';
 document.getElementById('pres').textContent=d.pressure?(d.pressure*0.02953).toFixed(2):'--';
+var trend=d.pressure_trend||'steady';
+document.getElementById('ptrend').textContent=trend=='rising'?'↑':trend=='falling'?'↓':'→';
 document.getElementById('hset').textContent=d.heat_setpoint;
 document.getElementById('cset').textContent=d.cool_setpoint;
 hs=d.heat_setpoint;cs=d.cool_setpoint;
