@@ -1,4 +1,4 @@
-# Pico Remote - Thermostat Controller
+# ESP32 Remote - Thermostat Controller
 # Handles heating/cooling with boost mode for portable unit
 
 from machine import Pin

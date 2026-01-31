@@ -39,7 +39,7 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 - Web server and UI
 - Nest-style scheduling
 - Sensor monitoring
-- Remote control of Pico via HTTP API
+- Remote control of ESP32 Remote via HTTP API
 
 ### ESP32 (Remote Unit)
 - Wireless relay control (furnace/rooftop AC)
@@ -93,7 +93,7 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 ├── thermostat_remote.py (control logic - 240 lines)
 ├── scheduler.py (time-based scheduling - 145 lines)
 ├── webserver.py (HTTP API - 265 lines)
-├── remote_client.py (ESP32→Pico communication - 94 lines)
+├── remote_client.py (ESP32→Remote communication - 94 lines)
 ├── sensor.py (BMP280 + DHT11 wrapper - 109 lines)
 ├── display.py (OLED UI - 95 lines)
 ├── bmp280.py, ssd1306.py (hardware drivers)
@@ -101,7 +101,7 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 ├── deploy_esp32_remote.sh, test_thermostat.sh
 ├── README.md, DEPLOY_MANUAL.md, rv_thermostat_project_summary.md
 ├── esp32_remote/ (11 files, ~1700 lines)
-│   ├── main.py (Pico entry point - 165 lines)
+│   ├── main.py (ESP32 Remote entry point - 165 lines)
 │   ├── thermostat.py (local control - 249 lines)
 │   ├── ir_whynter.py (IR TX/RX - 540 lines)
 │   ├── webserver.py (API server - 322 lines)
@@ -203,7 +203,7 @@ run_control_loop()
 - `POST /api/heat_setpoint` - Set heat setpoint
 - `POST /api/cool_setpoint` - Set cool setpoint
 - `POST /api/schedule/*` - Manage schedules
-- `POST /api/pico/*` - Control ESP32 Remote
+- `POST /api/remote/*` - Control ESP32 Remote
 - `GET /` - Web UI
 
 ### ESP32 Remote API
@@ -332,5 +332,5 @@ curl -X POST http://192.168.71.153/api/ir/set_cooling -d '{"temperature": 68, "f
 
 ---
 
-*Last updated: 2026-01-31 - Migrated remote from Pico W to ESP32*
+*Last updated: 2026-01-31 - Migrated from Raspberry Pi Pico W to dual ESP32 architecture*
 *Agent ID for resume: ab1610c*
