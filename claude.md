@@ -1,7 +1,7 @@
 # RV Thermostat Project - Claude Memory
 
 ## Project Overview
-A DIY smart RV thermostat system controlling three HVAC systems (furnace, rooftop AC, and Whynter portable AC/heater) using dual microcontrollers (ESP32 + Raspberry Pi Pico W).
+A DIY smart RV thermostat system controlling three HVAC systems (furnace, rooftop AC, and Whynter portable AC/heater) using dual microcontrollers (ESP32 + ESP32).
 
 ---
 
@@ -93,11 +93,11 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 ├── thermostat_remote.py (control logic - 240 lines)
 ├── scheduler.py (time-based scheduling - 145 lines)
 ├── webserver.py (HTTP API - 265 lines)
-├── pico_client.py (ESP32→Pico communication - 94 lines)
+├── remote_client.py (ESP32→Pico communication - 94 lines)
 ├── sensor.py (BMP280 + DHT11 wrapper - 109 lines)
 ├── display.py (OLED UI - 95 lines)
 ├── bmp280.py, ssd1306.py (hardware drivers)
-├── test.py, test_pico.py (component tests)
+├── test.py, test_remote.py (component tests)
 ├── deploy_esp32_remote.sh, test_thermostat.sh
 ├── README.md, DEPLOY_MANUAL.md, rv_thermostat_project_summary.md
 ├── esp32_remote/ (11 files, ~1700 lines)
@@ -159,7 +159,7 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 main()
 ├── Initialize I2C, OLED, sensors
 ├── Connect to WiFi
-├── Create PicoClient
+├── Create RemoteClient
 ├── Initialize RemoteThermostatController
 ├── Initialize Scheduler
 ├── Start ThermostatWebServer (port 80)
@@ -203,10 +203,10 @@ run_control_loop()
 - `POST /api/heat_setpoint` - Set heat setpoint
 - `POST /api/cool_setpoint` - Set cool setpoint
 - `POST /api/schedule/*` - Manage schedules
-- `POST /api/pico/*` - Control Pico remotely
+- `POST /api/pico/*` - Control ESP32 Remote
 - `GET /` - Web UI
 
-### Pico API
+### ESP32 Remote API
 - `GET /api/status` - Thermostat + IR status
 - `POST /api/mode`, `/api/heat_setpoint`, `/api/cool_setpoint` - Local thermostat
 - `POST /api/relay/furnace`, `/api/relay/rooftop` - Direct relay control
@@ -242,7 +242,7 @@ mpremote connect /dev/ttyUSB0 reset
 ```bash
 ./test_thermostat.sh  # System integration test
 python test.py        # Component tests (I2C, sensors, OLED, relays)
-python test_pico.py   # Pico diagnostics
+python test_remote.py   # ESP32 Remote diagnostics
 ```
 
 ---
@@ -281,7 +281,7 @@ python test_pico.py   # Pico diagnostics
 - IR signal capture timing issues (Whynter remote learning)
 - Complete web UI dashboard
 - Advanced scheduling rules
-- Full ESP32↔Pico synchronization
+- Full ESP32 Main↔Remote synchronization
 
 ---
 
