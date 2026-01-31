@@ -33,6 +33,9 @@ DEFAULT_COOL_SETPOINT = 75
 MIN_SETPOINT = 50
 MAX_SETPOINT = 90
 
+# Default operating mode at boot (0=OFF, 1=HEAT, 2=COOL, 3=AUTO)
+DEFAULT_MODE = 3  # AUTO
+
 # Hysteresis (prevents rapid cycling)
 HYSTERESIS = 1.5
 
@@ -40,7 +43,7 @@ HYSTERESIS = 1.5
 MIN_CYCLE_TIME = 180  # 3 minutes
 
 # Sensor Settings
-SENSOR_READ_INTERVAL = 5  # seconds between readings
+SENSOR_READ_INTERVAL = 10  # seconds between readings
 
 # Debug and dry-run modes
 DEBUG = False

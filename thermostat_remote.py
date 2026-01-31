@@ -18,7 +18,7 @@ class RemoteThermostatController:
         self.cool_setpoint = config.DEFAULT_COOL_SETPOINT
 
         # Operating mode
-        self.mode = config.MODE_OFF
+        self.mode = config.DEFAULT_MODE
 
         # Cooling system selection
         self.cool_system = config.COOL_SYSTEM_ROOFTOP
