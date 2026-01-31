@@ -1,0 +1,23 @@
+# Local Configuration (DO NOT COMMIT)
+# ====================================
+#
+# Copy this file to config_local.py and customize for your setup.
+# This file is gitignored and should contain your actual credentials.
+#
+# Usage:
+#   cp config_local.py.example config_local.py
+#   # Edit config_local.py with your settings
+
+# Set the environment: "dev", "test", or "prod"
+ENV = "dev"
+
+# Local overrides (highest priority - overrides all other configs)
+CONFIG = {
+    # Your actual WiFi credentials
+    "WIFI_SSID": "MyActualWiFi",
+    "WIFI_PASSWORD": "MyActualPassword",
+
+    # Any other local overrides
+    # "DEBUG": True,
+    # "SENSOR_READ_INTERVAL": 3,
+}

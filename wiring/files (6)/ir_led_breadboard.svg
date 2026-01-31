@@ -1,0 +1,294 @@
+<svg viewBox="0 0 700 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bb-hole { fill: #1a1a1a; stroke: #333; }
+      .bb-rail-red { fill: #3a1a1a; stroke: #e74c3c; }
+      .bb-rail-blue { fill: #1a1a3a; stroke: #3498db; }
+      .label { font-family: Arial, sans-serif; font-size: 11px; fill: #fff; }
+      .title { font-family: Arial, sans-serif; font-size: 14px; fill: #fff; font-weight: bold; }
+      .note { font-family: Arial, sans-serif; font-size: 10px; fill: #888; }
+      .wire-red { stroke: #e74c3c; stroke-width: 3; fill: none; stroke-linecap: round; }
+      .wire-black { stroke: #333; stroke-width: 3; fill: none; stroke-linecap: round; }
+      .wire-purple { stroke: #9b59b6; stroke-width: 3; fill: none; stroke-linecap: round; }
+      .wire-yellow { stroke: #f1c40f; stroke-width: 3; fill: none; stroke-linecap: round; }
+      .wire-green { stroke: #2ecc71; stroke-width: 3; fill: none; stroke-linecap: round; }
+    </style>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="700" height="500" fill="#0d1117"/>
+  
+  <!-- Title -->
+  <text x="350" y="25" text-anchor="middle" font-family="Arial" font-size="18" fill="#fff" font-weight="bold">IR LED Circuit - Breadboard Layout</text>
+  
+  <!-- Breadboard -->
+  <rect x="50" y="60" width="400" height="200" rx="5" fill="#e8e4d9" stroke="#999"/>
+  
+  <!-- Power rails labels -->
+  <text x="40" y="80" text-anchor="end" fill="#e74c3c" font-size="10">+ (3.3V)</text>
+  <text x="40" y="95" text-anchor="end" fill="#3498db" font-size="10">- (GND)</text>
+  
+  <!-- Top power rail (red +) -->
+  <rect x="60" y="70" width="380" height="12" rx="2" class="bb-rail-red"/>
+  <g transform="translate(70, 76)">
+    <circle cx="0" cy="0" r="3" class="bb-hole"/><circle cx="20" cy="0" r="3" class="bb-hole"/>
+    <circle cx="40" cy="0" r="3" class="bb-hole"/><circle cx="60" cy="0" r="3" class="bb-hole"/>
+    <circle cx="80" cy="0" r="3" class="bb-hole"/><circle cx="100" cy="0" r="3" class="bb-hole"/>
+    <circle cx="120" cy="0" r="3" class="bb-hole"/><circle cx="140" cy="0" r="3" class="bb-hole"/>
+    <circle cx="160" cy="0" r="3" class="bb-hole"/><circle cx="180" cy="0" r="3" class="bb-hole"/>
+    <circle cx="200" cy="0" r="3" class="bb-hole"/><circle cx="220" cy="0" r="3" class="bb-hole"/>
+    <circle cx="240" cy="0" r="3" class="bb-hole"/><circle cx="260" cy="0" r="3" class="bb-hole"/>
+    <circle cx="280" cy="0" r="3" class="bb-hole"/><circle cx="300" cy="0" r="3" class="bb-hole"/>
+    <circle cx="320" cy="0" r="3" class="bb-hole"/><circle cx="340" cy="0" r="3" class="bb-hole"/>
+    <circle cx="360" cy="0" r="3" class="bb-hole"/>
+  </g>
+  
+  <!-- Top ground rail (blue -) -->
+  <rect x="60" y="85" width="380" height="12" rx="2" class="bb-rail-blue"/>
+  <g transform="translate(70, 91)">
+    <circle cx="0" cy="0" r="3" class="bb-hole"/><circle cx="20" cy="0" r="3" class="bb-hole"/>
+    <circle cx="40" cy="0" r="3" class="bb-hole"/><circle cx="60" cy="0" r="3" class="bb-hole"/>
+    <circle cx="80" cy="0" r="3" class="bb-hole"/><circle cx="100" cy="0" r="3" class="bb-hole"/>
+    <circle cx="120" cy="0" r="3" class="bb-hole"/><circle cx="140" cy="0" r="3" class="bb-hole"/>
+    <circle cx="160" cy="0" r="3" class="bb-hole"/><circle cx="180" cy="0" r="3" class="bb-hole"/>
+    <circle cx="200" cy="0" r="3" class="bb-hole"/><circle cx="220" cy="0" r="3" class="bb-hole"/>
+    <circle cx="240" cy="0" r="3" class="bb-hole"/><circle cx="260" cy="0" r="3" class="bb-hole"/>
+    <circle cx="280" cy="0" r="3" class="bb-hole"/><circle cx="300" cy="0" r="3" class="bb-hole"/>
+    <circle cx="320" cy="0" r="3" class="bb-hole"/><circle cx="340" cy="0" r="3" class="bb-hole"/>
+    <circle cx="360" cy="0" r="3" class="bb-hole"/>
+  </g>
+  
+  <!-- Row labels -->
+  <text x="55" y="120" text-anchor="end" font-size="9" fill="#666">a</text>
+  <text x="55" y="135" text-anchor="end" font-size="9" fill="#666">b</text>
+  <text x="55" y="150" text-anchor="end" font-size="9" fill="#666">c</text>
+  <text x="55" y="165" text-anchor="end" font-size="9" fill="#666">d</text>
+  <text x="55" y="180" text-anchor="end" font-size="9" fill="#666">e</text>
+  <text x="55" y="205" text-anchor="end" font-size="9" fill="#666">f</text>
+  <text x="55" y="220" text-anchor="end" font-size="9" fill="#666">g</text>
+  <text x="55" y="235" text-anchor="end" font-size="9" fill="#666">h</text>
+  <text x="55" y="250" text-anchor="end" font-size="9" fill="#666">i</text>
+  
+  <!-- Column numbers -->
+  <text x="70" y="108" text-anchor="middle" font-size="8" fill="#666">1</text>
+  <text x="90" y="108" text-anchor="middle" font-size="8" fill="#666">2</text>
+  <text x="110" y="108" text-anchor="middle" font-size="8" fill="#666">3</text>
+  <text x="130" y="108" text-anchor="middle" font-size="8" fill="#666">4</text>
+  <text x="150" y="108" text-anchor="middle" font-size="8" fill="#666">5</text>
+  <text x="170" y="108" text-anchor="middle" font-size="8" fill="#666">6</text>
+  <text x="190" y="108" text-anchor="middle" font-size="8" fill="#666">7</text>
+  <text x="210" y="108" text-anchor="middle" font-size="8" fill="#666">8</text>
+  <text x="230" y="108" text-anchor="middle" font-size="8" fill="#666">9</text>
+  <text x="250" y="108" text-anchor="middle" font-size="8" fill="#666">10</text>
+  <text x="270" y="108" text-anchor="middle" font-size="8" fill="#666">11</text>
+  <text x="290" y="108" text-anchor="middle" font-size="8" fill="#666">12</text>
+  <text x="310" y="108" text-anchor="middle" font-size="8" fill="#666">13</text>
+  <text x="330" y="108" text-anchor="middle" font-size="8" fill="#666">14</text>
+  <text x="350" y="108" text-anchor="middle" font-size="8" fill="#666">15</text>
+  
+  <!-- Main breadboard holes - top section (a-e) -->
+  <g transform="translate(70, 115)">
+    <!-- Row a -->
+    <circle cx="0" cy="0" r="3" class="bb-hole"/><circle cx="20" cy="0" r="3" class="bb-hole"/>
+    <circle cx="40" cy="0" r="3" class="bb-hole"/><circle cx="60" cy="0" r="3" class="bb-hole"/>
+    <circle cx="80" cy="0" r="3" class="bb-hole"/><circle cx="100" cy="0" r="3" class="bb-hole"/>
+    <circle cx="120" cy="0" r="3" class="bb-hole"/><circle cx="140" cy="0" r="3" class="bb-hole"/>
+    <circle cx="160" cy="0" r="3" class="bb-hole"/><circle cx="180" cy="0" r="3" class="bb-hole"/>
+    <circle cx="200" cy="0" r="3" class="bb-hole"/><circle cx="220" cy="0" r="3" class="bb-hole"/>
+    <circle cx="240" cy="0" r="3" class="bb-hole"/><circle cx="260" cy="0" r="3" class="bb-hole"/>
+    <circle cx="280" cy="0" r="3" class="bb-hole"/>
+    <!-- Row b -->
+    <circle cx="0" cy="15" r="3" class="bb-hole"/><circle cx="20" cy="15" r="3" class="bb-hole"/>
+    <circle cx="40" cy="15" r="3" class="bb-hole"/><circle cx="60" cy="15" r="3" class="bb-hole"/>
+    <circle cx="80" cy="15" r="3" class="bb-hole"/><circle cx="100" cy="15" r="3" class="bb-hole"/>
+    <circle cx="120" cy="15" r="3" class="bb-hole"/><circle cx="140" cy="15" r="3" class="bb-hole"/>
+    <circle cx="160" cy="15" r="3" class="bb-hole"/><circle cx="180" cy="15" r="3" class="bb-hole"/>
+    <circle cx="200" cy="15" r="3" class="bb-hole"/><circle cx="220" cy="15" r="3" class="bb-hole"/>
+    <circle cx="240" cy="15" r="3" class="bb-hole"/><circle cx="260" cy="15" r="3" class="bb-hole"/>
+    <circle cx="280" cy="15" r="3" class="bb-hole"/>
+    <!-- Row c -->
+    <circle cx="0" cy="30" r="3" class="bb-hole"/><circle cx="20" cy="30" r="3" class="bb-hole"/>
+    <circle cx="40" cy="30" r="3" class="bb-hole"/><circle cx="60" cy="30" r="3" class="bb-hole"/>
+    <circle cx="80" cy="30" r="3" class="bb-hole"/><circle cx="100" cy="30" r="3" class="bb-hole"/>
+    <circle cx="120" cy="30" r="3" class="bb-hole"/><circle cx="140" cy="30" r="3" class="bb-hole"/>
+    <circle cx="160" cy="30" r="3" class="bb-hole"/><circle cx="180" cy="30" r="3" class="bb-hole"/>
+    <circle cx="200" cy="30" r="3" class="bb-hole"/><circle cx="220" cy="30" r="3" class="bb-hole"/>
+    <circle cx="240" cy="30" r="3" class="bb-hole"/><circle cx="260" cy="30" r="3" class="bb-hole"/>
+    <circle cx="280" cy="30" r="3" class="bb-hole"/>
+    <!-- Row d -->
+    <circle cx="0" cy="45" r="3" class="bb-hole"/><circle cx="20" cy="45" r="3" class="bb-hole"/>
+    <circle cx="40" cy="45" r="3" class="bb-hole"/><circle cx="60" cy="45" r="3" class="bb-hole"/>
+    <circle cx="80" cy="45" r="3" class="bb-hole"/><circle cx="100" cy="45" r="3" class="bb-hole"/>
+    <circle cx="120" cy="45" r="3" class="bb-hole"/><circle cx="140" cy="45" r="3" class="bb-hole"/>
+    <circle cx="160" cy="45" r="3" class="bb-hole"/><circle cx="180" cy="45" r="3" class="bb-hole"/>
+    <circle cx="200" cy="45" r="3" class="bb-hole"/><circle cx="220" cy="45" r="3" class="bb-hole"/>
+    <circle cx="240" cy="45" r="3" class="bb-hole"/><circle cx="260" cy="45" r="3" class="bb-hole"/>
+    <circle cx="280" cy="45" r="3" class="bb-hole"/>
+    <!-- Row e -->
+    <circle cx="0" cy="60" r="3" class="bb-hole"/><circle cx="20" cy="60" r="3" class="bb-hole"/>
+    <circle cx="40" cy="60" r="3" class="bb-hole"/><circle cx="60" cy="60" r="3" class="bb-hole"/>
+    <circle cx="80" cy="60" r="3" class="bb-hole"/><circle cx="100" cy="60" r="3" class="bb-hole"/>
+    <circle cx="120" cy="60" r="3" class="bb-hole"/><circle cx="140" cy="60" r="3" class="bb-hole"/>
+    <circle cx="160" cy="60" r="3" class="bb-hole"/><circle cx="180" cy="60" r="3" class="bb-hole"/>
+    <circle cx="200" cy="60" r="3" class="bb-hole"/><circle cx="220" cy="60" r="3" class="bb-hole"/>
+    <circle cx="240" cy="60" r="3" class="bb-hole"/><circle cx="260" cy="60" r="3" class="bb-hole"/>
+    <circle cx="280" cy="60" r="3" class="bb-hole"/>
+  </g>
+  
+  <!-- Center gap -->
+  <rect x="60" y="185" width="380" height="10" fill="#c4c0b5"/>
+  
+  <!-- Main breadboard holes - bottom section (f-i) -->
+  <g transform="translate(70, 200)">
+    <!-- Row f -->
+    <circle cx="0" cy="0" r="3" class="bb-hole"/><circle cx="20" cy="0" r="3" class="bb-hole"/>
+    <circle cx="40" cy="0" r="3" class="bb-hole"/><circle cx="60" cy="0" r="3" class="bb-hole"/>
+    <circle cx="80" cy="0" r="3" class="bb-hole"/><circle cx="100" cy="0" r="3" class="bb-hole"/>
+    <circle cx="120" cy="0" r="3" class="bb-hole"/><circle cx="140" cy="0" r="3" class="bb-hole"/>
+    <circle cx="160" cy="0" r="3" class="bb-hole"/><circle cx="180" cy="0" r="3" class="bb-hole"/>
+    <circle cx="200" cy="0" r="3" class="bb-hole"/><circle cx="220" cy="0" r="3" class="bb-hole"/>
+    <circle cx="240" cy="0" r="3" class="bb-hole"/><circle cx="260" cy="0" r="3" class="bb-hole"/>
+    <circle cx="280" cy="0" r="3" class="bb-hole"/>
+    <!-- Row g -->
+    <circle cx="0" cy="15" r="3" class="bb-hole"/><circle cx="20" cy="15" r="3" class="bb-hole"/>
+    <circle cx="40" cy="15" r="3" class="bb-hole"/><circle cx="60" cy="15" r="3" class="bb-hole"/>
+    <circle cx="80" cy="15" r="3" class="bb-hole"/><circle cx="100" cy="15" r="3" class="bb-hole"/>
+    <circle cx="120" cy="15" r="3" class="bb-hole"/><circle cx="140" cy="15" r="3" class="bb-hole"/>
+    <circle cx="160" cy="15" r="3" class="bb-hole"/><circle cx="180" cy="15" r="3" class="bb-hole"/>
+    <circle cx="200" cy="15" r="3" class="bb-hole"/><circle cx="220" cy="15" r="3" class="bb-hole"/>
+    <circle cx="240" cy="15" r="3" class="bb-hole"/><circle cx="260" cy="15" r="3" class="bb-hole"/>
+    <circle cx="280" cy="15" r="3" class="bb-hole"/>
+    <!-- Row h -->
+    <circle cx="0" cy="30" r="3" class="bb-hole"/><circle cx="20" cy="30" r="3" class="bb-hole"/>
+    <circle cx="40" cy="30" r="3" class="bb-hole"/><circle cx="60" cy="30" r="3" class="bb-hole"/>
+    <circle cx="80" cy="30" r="3" class="bb-hole"/><circle cx="100" cy="30" r="3" class="bb-hole"/>
+    <circle cx="120" cy="30" r="3" class="bb-hole"/><circle cx="140" cy="30" r="3" class="bb-hole"/>
+    <circle cx="160" cy="30" r="3" class="bb-hole"/><circle cx="180" cy="30" r="3" class="bb-hole"/>
+    <circle cx="200" cy="30" r="3" class="bb-hole"/><circle cx="220" cy="30" r="3" class="bb-hole"/>
+    <circle cx="240" cy="30" r="3" class="bb-hole"/><circle cx="260" cy="30" r="3" class="bb-hole"/>
+    <circle cx="280" cy="30" r="3" class="bb-hole"/>
+    <!-- Row i -->
+    <circle cx="0" cy="45" r="3" class="bb-hole"/><circle cx="20" cy="45" r="3" class="bb-hole"/>
+    <circle cx="40" cy="45" r="3" class="bb-hole"/><circle cx="60" cy="45" r="3" class="bb-hole"/>
+    <circle cx="80" cy="45" r="3" class="bb-hole"/><circle cx="100" cy="45" r="3" class="bb-hole"/>
+    <circle cx="120" cy="45" r="3" class="bb-hole"/><circle cx="140" cy="45" r="3" class="bb-hole"/>
+    <circle cx="160" cy="45" r="3" class="bb-hole"/><circle cx="180" cy="45" r="3" class="bb-hole"/>
+    <circle cx="200" cy="45" r="3" class="bb-hole"/><circle cx="220" cy="45" r="3" class="bb-hole"/>
+    <circle cx="240" cy="45" r="3" class="bb-hole"/><circle cx="260" cy="45" r="3" class="bb-hole"/>
+    <circle cx="280" cy="45" r="3" class="bb-hole"/>
+  </g>
+  
+  
+  <!-- ===================== -->
+  <!-- COMPONENTS ON BOARD -->
+  <!-- ===================== -->
+  
+  <!-- IR LED at column 5-6, row a-d -->
+  <ellipse cx="150" cy="135" rx="12" ry="25" fill="#4a3060" stroke="#9b59b6" stroke-width="2"/>
+  <text x="150" y="140" text-anchor="middle" font-size="8" fill="#fff">IR</text>
+  <!-- LED legs -->
+  <line x1="145" y1="160" x2="145" y2="175" stroke="#888" stroke-width="2"/>
+  <line x1="155" y1="160" x2="155" y2="175" stroke="#888" stroke-width="2"/>
+  <!-- Anode marker (longer leg representation) -->
+  <text x="140" y="182" text-anchor="middle" font-size="7" fill="#e74c3c">+</text>
+  <text x="160" y="182" text-anchor="middle" font-size="7" fill="#888">-</text>
+  
+  <!-- 2N2222 Transistor at column 8-10 straddling center gap -->
+  <ellipse cx="210" cy="190" rx="18" ry="12" fill="#1a1a1a" stroke="#2ecc71" stroke-width="2"/>
+  <text x="210" y="194" text-anchor="middle" font-size="8" fill="#2ecc71">2N2222</text>
+  <!-- Transistor legs -->
+  <line x1="195" y1="200" x2="195" y2="215" stroke="#888" stroke-width="2"/>
+  <line x1="210" y1="200" x2="210" y2="175" stroke="#888" stroke-width="2"/>
+  <line x1="225" y1="200" x2="225" y2="215" stroke="#888" stroke-width="2"/>
+  <!-- Pin labels -->
+  <text x="195" y="228" text-anchor="middle" font-size="8" fill="#2ecc71">E</text>
+  <text x="210" y="168" text-anchor="middle" font-size="8" fill="#9b59b6">B</text>
+  <text x="225" y="228" text-anchor="middle" font-size="8" fill="#e74c3c">C</text>
+  
+  <!-- 1K Resistor (for base) at column 2-5, row f -->
+  <rect x="95" y="196" width="55" height="8" rx="2" fill="#d4a574" stroke="#8b6914"/>
+  <!-- Color bands -->
+  <rect x="102" y="196" width="5" height="8" fill="#8b4513"/>
+  <rect x="112" y="196" width="5" height="8" fill="#000"/>
+  <rect x="122" y="196" width="5" height="8" fill="#ff0000"/>
+  <rect x="137" y="196" width="5" height="8" fill="#d4af37"/>
+  <text x="122" y="218" text-anchor="middle" font-size="9" fill="#f39c12">1kΩ</text>
+  
+  
+  <!-- ===================== -->
+  <!-- WIRES -->
+  <!-- ===================== -->
+  
+  <!-- Red wire: 3.3V rail to LED anode (column 5, row a) -->
+  <path d="M 150 76 L 150 100 L 145 100 L 145 115" class="wire-red"/>
+  <circle cx="150" cy="76" r="4" fill="#e74c3c"/>
+  <circle cx="145" cy="115" r="4" fill="#e74c3c"/>
+  
+  <!-- Yellow wire: LED cathode to transistor collector -->
+  <path d="M 155 175 L 155 160 L 225 160 L 225 175" class="wire-yellow"/>
+  <circle cx="155" cy="175" r="4" fill="#f1c40f"/>
+  <circle cx="225" cy="175" r="4" fill="#f1c40f"/>
+  
+  <!-- Green wire: Transistor emitter to GND rail -->
+  <path d="M 195 215 L 195 245 L 90 245 L 90 91" class="wire-black"/>
+  <circle cx="195" cy="215" r="4" fill="#555"/>
+  <circle cx="90" cy="91" r="4" fill="#555"/>
+  
+  <!-- Purple wire: 1K resistor to transistor base -->
+  <path d="M 150 200 L 175 200 L 175 160 L 210 160 L 210 175" class="wire-green"/>
+  <circle cx="150" cy="200" r="4" fill="#2ecc71"/>
+  <circle cx="210" cy="175" r="4" fill="#2ecc71"/>
+  
+  <!-- Purple wire: GP18 to 1K resistor -->
+  <path d="M 95 200 L 80 200 L 80 280" class="wire-purple"/>
+  <circle cx="95" cy="200" r="4" fill="#9b59b6"/>
+  
+  
+  <!-- ===================== -->
+  <!-- PICO CONNECTION INDICATOR -->
+  <!-- ===================== -->
+  <rect x="50" y="280" width="100" height="60" rx="5" fill="#1a472a" stroke="#4CAF50" stroke-width="2"/>
+  <text x="100" y="300" text-anchor="middle" class="title" fill="#4CAF50">Pico W</text>
+  <text x="100" y="320" text-anchor="middle" class="pin" fill="#9b59b6">GP18 →</text>
+  <text x="100" y="335" text-anchor="middle" class="note">To 1kΩ resistor</text>
+  
+  <rect x="50" y="350" width="100" height="40" rx="5" fill="#1a472a" stroke="#4CAF50" stroke-width="2"/>
+  <text x="100" y="368" text-anchor="middle" class="pin" fill="#e74c3c">3V3 →</text>
+  <text x="100" y="382" text-anchor="middle" class="note">To + rail</text>
+  
+  <rect x="50" y="400" width="100" height="40" rx="5" fill="#1a472a" stroke="#4CAF50" stroke-width="2"/>
+  <text x="100" y="418" text-anchor="middle" class="pin" fill="#555">GND →</text>
+  <text x="100" y="432" text-anchor="middle" class="note">To - rail</text>
+  
+  
+  <!-- ===================== -->
+  <!-- WIRING INSTRUCTIONS -->
+  <!-- ===================== -->
+  <rect x="470" y="60" width="220" height="380" rx="10" fill="#111" stroke="#4a9eff"/>
+  <text x="580" y="85" text-anchor="middle" class="title">Wiring Instructions</text>
+  
+  <text x="485" y="115" font-family="Arial" font-size="12" fill="#e74c3c" font-weight="bold">Step 1: Power Rails</text>
+  <text x="485" y="135" class="label">• Red wire from Pico 3V3</text>
+  <text x="485" y="150" class="label">  to breadboard + rail</text>
+  <text x="485" y="165" class="label">• Black wire from Pico GND</text>
+  <text x="485" y="180" class="label">  to breadboard - rail</text>
+  
+  <text x="485" y="210" font-family="Arial" font-size="12" fill="#9b59b6" font-weight="bold">Step 2: IR LED</text>
+  <text x="485" y="230" class="label">• Long leg (anode +) → + rail</text>
+  <text x="485" y="245" class="label">• Short leg (cathode -) → col 6</text>
+  
+  <text x="485" y="275" font-family="Arial" font-size="12" fill="#2ecc71" font-weight="bold">Step 3: Transistor 2N2222</text>
+  <text x="485" y="295" class="label">• Flat side facing right</text>
+  <text x="485" y="310" class="label">• E (left pin) → row f</text>
+  <text x="485" y="325" class="label">• B (middle pin) → row e</text>
+  <text x="485" y="340" class="label">• C (right pin) → row f</text>
+  
+  <text x="485" y="370" font-family="Arial" font-size="12" fill="#f39c12" font-weight="bold">Step 4: 1kΩ Resistor</text>
+  <text x="485" y="390" class="label">• One end → same column as B</text>
+  <text x="485" y="405" class="label">• Other end → wire to GP18</text>
+  
+  <text x="485" y="435" font-family="Arial" font-size="12" fill="#f1c40f" font-weight="bold">Step 5: Connections</text>
+  <text x="485" y="455" class="label">• LED cathode → Collector (C)</text>
+  <text x="485" y="470" class="label">• Emitter (E) → GND rail</text>
+  
+</svg>

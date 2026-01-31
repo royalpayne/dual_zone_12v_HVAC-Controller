@@ -1,0 +1,25 @@
+# Local configuration (contains secrets)
+config_local.py
+ENVIRONMENT
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+venv/
+.venv/
+
+# MicroPython compiled
+*.mpy
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

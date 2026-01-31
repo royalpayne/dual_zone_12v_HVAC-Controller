@@ -1,0 +1,18 @@
+# Pico Remote - Local Configuration Example
+# Copy this to config_local.py and update with your values
+
+# WiFi credentials
+WIFI_SSID = "your_wifi_ssid"
+WIFI_PASSWORD = "your_wifi_password"
+
+# ESP32 main controller IP (for future API integration)
+ESP32_IP = "192.168.1.100"
+
+# Debug mode
+DEBUG = True
+
+# Dry run mode (True = don't actually control relays)
+DRY_RUN = False
+
+# Boost threshold (portable unit kicks in when temp exceeds setpoint by this amount)
+BOOST_THRESHOLD = 10  # degrees F

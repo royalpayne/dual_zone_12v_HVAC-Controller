@@ -1,0 +1,240 @@
+<svg viewBox="0 0 900 650" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .component { fill: #1a1a2e; stroke: #4a9eff; stroke-width: 2; }
+      .pico { fill: #1a472a; stroke: #4CAF50; stroke-width: 2; }
+      .sensor { fill: #2d1b4e; stroke: #9b59b6; stroke-width: 2; }
+      .relay { fill: #4a1a1a; stroke: #e74c3c; stroke-width: 2; }
+      .power { fill: #1a3a4a; stroke: #3498db; stroke-width: 2; }
+      .label { font-family: Arial, sans-serif; font-size: 12px; fill: #fff; }
+      .title { font-family: Arial, sans-serif; font-size: 14px; fill: #fff; font-weight: bold; }
+      .pin { font-family: monospace; font-size: 10px; fill: #aaa; }
+      .wire-3v3 { stroke: #e74c3c; stroke-width: 2; fill: none; }
+      .wire-gnd { stroke: #333; stroke-width: 2; fill: none; }
+      .wire-sda { stroke: #3498db; stroke-width: 2; fill: none; }
+      .wire-scl { stroke: #f39c12; stroke-width: 2; fill: none; }
+      .wire-5v { stroke: #e67e22; stroke-width: 2; fill: none; }
+      .wire-gpio { stroke: #2ecc71; stroke-width: 2; fill: none; }
+      .wire-ir { stroke: #9b59b6; stroke-width: 2; fill: none; }
+      .dot { fill: #fff; }
+      .legend-text { font-family: Arial, sans-serif; font-size: 11px; fill: #ccc; }
+    </style>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="900" height="650" fill="#0d1117"/>
+  
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-family="Arial" font-size="20" fill="#fff" font-weight="bold">RV Thermostat Wiring Diagram</text>
+  <text x="450" y="50" text-anchor="middle" font-family="Arial" font-size="12" fill="#888">Raspberry Pi Pico W + BME280 + OLED + Relay Module</text>
+  
+  <!-- Pico W -->
+  <rect x="350" y="180" width="200" height="280" rx="10" class="pico"/>
+  <text x="450" y="205" text-anchor="middle" class="title">Raspberry Pi Pico W</text>
+  
+  <!-- Pico Pins - Left Side -->
+  <text x="360" y="235" class="pin">GP0</text>
+  <text x="360" y="255" class="pin">GP1</text>
+  <text x="360" y="275" class="pin">GND</text>
+  <circle cx="345" cy="272" r="4" fill="#333"/>
+  <text x="360" y="295" class="pin">GP2</text>
+  <text x="360" y="315" class="pin">GP3</text>
+  <text x="360" y="335" class="pin">GP4</text>
+  <text x="360" y="355" class="pin">GP5</text>
+  <text x="360" y="375" class="pin">GND</text>
+  <circle cx="345" cy="372" r="4" fill="#333"/>
+  <text x="360" y="395" class="pin">GP6</text>
+  <text x="360" y="415" class="pin">GP7</text>
+  <text x="360" y="435" class="pin">GP8</text>
+  
+  <!-- Pico Pins - Right Side -->
+  <text x="510" y="235" class="pin" text-anchor="end">VBUS</text>
+  <text x="510" y="255" class="pin" text-anchor="end">VSYS</text>
+  <circle cx="520" cy="252" r="4" fill="#e67e22"/>
+  <text x="510" y="275" class="pin" text-anchor="end">GND</text>
+  <circle cx="520" cy="272" r="4" fill="#333"/>
+  <text x="510" y="295" class="pin" text-anchor="end">3V3_EN</text>
+  <text x="510" y="315" class="pin" text-anchor="end">3V3</text>
+  <circle cx="520" cy="312" r="4" fill="#e74c3c"/>
+  <text x="510" y="335" class="pin" text-anchor="end">ADC_VREF</text>
+  <text x="510" y="355" class="pin" text-anchor="end">GP28</text>
+  <text x="510" y="375" class="pin" text-anchor="end">GND</text>
+  <circle cx="520" cy="372" r="4" fill="#333"/>
+  <text x="510" y="395" class="pin" text-anchor="end">GP27</text>
+  <text x="510" y="415" class="pin" text-anchor="end">GP26</text>
+  <text x="510" y="435" class="pin" text-anchor="end">RUN</text>
+  
+  <!-- Key Pins Highlighted -->
+  <rect x="355" y="224" width="45" height="14" fill="#2ecc71" rx="2" opacity="0.3"/>
+  <text x="360" y="235" class="pin" fill="#2ecc71">GP16 SDA</text>
+  <circle cx="345" cy="232" r="4" fill="#3498db"/>
+  
+  <rect x="355" y="244" width="45" height="14" fill="#f39c12" rx="2" opacity="0.3"/>
+  <text x="360" y="255" class="pin" fill="#f39c12">GP17 SCL</text>
+  <circle cx="345" cy="252" r="4" fill="#f39c12"/>
+  
+  <rect x="355" y="304" width="35" height="14" fill="#9b59b6" rx="2" opacity="0.3"/>
+  <text x="360" y="315" class="pin" fill="#9b59b6">GP18 IR</text>
+  <circle cx="345" cy="312" r="4" fill="#9b59b6"/>
+  
+  <rect x="355" y="384" width="35" height="14" fill="#2ecc71" rx="2" opacity="0.3"/>
+  <text x="360" y="395" class="pin" fill="#2ecc71">GP20</text>
+  <circle cx="345" cy="392" r="4" fill="#2ecc71"/>
+  
+  <rect x="355" y="404" width="35" height="14" fill="#2ecc71" rx="2" opacity="0.3"/>
+  <text x="360" y="415" class="pin" fill="#2ecc71">GP21</text>
+  <circle cx="345" cy="412" r="4" fill="#2ecc71"/>
+  
+  <!-- BME280 Sensor -->
+  <rect x="80" y="200" width="120" height="100" rx="8" class="sensor"/>
+  <text x="140" y="225" text-anchor="middle" class="title">BME280</text>
+  <text x="140" y="245" text-anchor="middle" class="label">Temp/Humidity</text>
+  <text x="140" y="260" text-anchor="middle" class="label">Pressure</text>
+  
+  <text x="190" y="280" class="pin" text-anchor="end">VCC</text>
+  <circle cx="200" cy="277" r="4" fill="#e74c3c"/>
+  <text x="190" y="295" class="pin" text-anchor="end">GND</text>
+  <circle cx="200" cy="292" r="4" fill="#333"/>
+  <text x="95" y="280" class="pin">SCL</text>
+  <circle cx="80" cy="277" r="4" fill="#f39c12"/>
+  <text x="95" y="295" class="pin">SDA</text>
+  <circle cx="80" cy="292" r="4" fill="#3498db"/>
+  
+  <!-- OLED Display -->
+  <rect x="80" y="340" width="120" height="110" rx="8" class="component"/>
+  <text x="140" y="365" text-anchor="middle" class="title">SSD1306 OLED</text>
+  <text x="140" y="385" text-anchor="middle" class="label">128x64</text>
+  <rect x="95" y="395" width="90" height="40" fill="#111" stroke="#4a9eff" rx="3"/>
+  <text x="140" y="420" text-anchor="middle" font-family="monospace" font-size="8" fill="#4a9eff">DISPLAY</text>
+  
+  <text x="95" y="445" class="pin">VCC</text>
+  <circle cx="80" cy="442" r="4" fill="#e74c3c"/>
+  <text x="125" y="445" class="pin">GND</text>
+  <circle cx="115" cy="442" r="4" fill="#333"/>
+  <text x="155" y="445" class="pin">SCL</text>
+  <circle cx="150" cy="442" r="4" fill="#f39c12"/>
+  <text x="190" y="445" class="pin">SDA</text>
+  <circle cx="185" cy="442" r="4" fill="#3498db"/>
+  
+  <!-- Relay Module -->
+  <rect x="680" y="200" width="140" height="160" rx="8" class="relay"/>
+  <text x="750" y="225" text-anchor="middle" class="title">HL-52S Relay</text>
+  <text x="750" y="245" text-anchor="middle" class="label">2-Channel</text>
+  
+  <!-- Relay terminals -->
+  <rect x="695" y="260" width="50" height="30" fill="#222" stroke="#e74c3c" rx="3"/>
+  <text x="720" y="280" text-anchor="middle" class="pin" fill="#e74c3c">RELAY 1</text>
+  <text x="720" y="300" text-anchor="middle" font-size="9" fill="#888">Furnace</text>
+  
+  <rect x="755" y="260" width="50" height="30" fill="#222" stroke="#e74c3c" rx="3"/>
+  <text x="780" y="280" text-anchor="middle" class="pin" fill="#e74c3c">RELAY 2</text>
+  <text x="780" y="300" text-anchor="middle" font-size="9" fill="#888">Roof AC</text>
+  
+  <text x="695" y="330" class="pin">VCC</text>
+  <circle cx="680" cy="327" r="4" fill="#e67e22"/>
+  <text x="695" y="350" class="pin">GND</text>
+  <circle cx="680" cy="347" r="4" fill="#333"/>
+  <text x="695" y="370" class="pin">IN1</text>
+  <circle cx="680" cy="367" r="4" fill="#2ecc71"/>
+  <text x="695" y="390" class="pin">IN2</text>
+  <circle cx="680" cy="387" r="4" fill="#2ecc71"/>
+  
+  <!-- Buck Converter -->
+  <rect x="580" y="480" width="160" height="100" rx="8" class="power"/>
+  <text x="660" y="505" text-anchor="middle" class="title">DROK Buck</text>
+  <text x="660" y="525" text-anchor="middle" class="label">12V → 5V</text>
+  
+  <text x="595" y="555" class="pin">12V IN</text>
+  <circle cx="580" cy="552" r="4" fill="#e67e22"/>
+  <text x="595" y="575" class="pin">GND</text>
+  <circle cx="580" cy="572" r="4" fill="#333"/>
+  
+  <text x="720" y="555" class="pin" text-anchor="end">5V OUT</text>
+  <circle cx="740" cy="552" r="4" fill="#e67e22"/>
+  <text x="720" y="575" class="pin" text-anchor="end">GND</text>
+  <circle cx="740" cy="572" r="4" fill="#333"/>
+  
+  <!-- IR LED (simplified) -->
+  <rect x="80" y="100" width="100" height="70" rx="8" class="sensor"/>
+  <text x="130" y="125" text-anchor="middle" class="title">IR LED</text>
+  <text x="130" y="145" text-anchor="middle" class="label">+ Transistor</text>
+  <text x="130" y="165" class="pin" text-anchor="middle">GP18</text>
+  <circle cx="80" cy="162" r="4" fill="#9b59b6"/>
+  
+  <!-- RV 12V Source -->
+  <rect x="400" y="530" width="100" height="50" rx="8" fill="#333" stroke="#e67e22" stroke-width="2"/>
+  <text x="450" y="555" text-anchor="middle" class="title" fill="#e67e22">RV 12V</text>
+  <text x="450" y="572" text-anchor="middle" class="label">Battery/DC</text>
+  
+  <!-- WIRING -->
+  
+  <!-- 3V3 Power Bus (red) -->
+  <path d="M 520 312 L 560 312 L 560 150 L 250 150 L 250 277 L 200 277" class="wire-3v3"/>
+  <path d="M 250 277 L 250 442 L 80 442" class="wire-3v3"/>
+  <circle cx="250" cy="277" r="4" class="dot"/>
+  
+  <!-- GND Bus (dark) -->
+  <path d="M 520 272 L 600 272 L 600 130 L 230 130 L 230 292 L 200 292" class="wire-gnd"/>
+  <path d="M 230 292 L 230 442 L 115 442" class="wire-gnd"/>
+  <path d="M 600 272 L 600 347 L 680 347" class="wire-gnd"/>
+  <path d="M 600 347 L 600 450 L 740 450 L 740 572" class="wire-gnd"/>
+  <circle cx="230" cy="292" r="4" fill="#555"/>
+  <circle cx="600" cy="272" r="4" fill="#555"/>
+  <circle cx="600" cy="347" r="4" fill="#555"/>
+  
+  <!-- SDA Wire (blue) -->
+  <path d="M 345 232 L 280 232 L 280 292 L 80 292" class="wire-sda"/>
+  <path d="M 280 292 L 280 480 L 185 480 L 185 442" class="wire-sda"/>
+  <circle cx="280" cy="292" r="4" fill="#3498db"/>
+  
+  <!-- SCL Wire (yellow) -->
+  <path d="M 345 252 L 300 252 L 300 277 L 80 277" class="wire-scl"/>
+  <path d="M 300 277 L 300 490 L 150 490 L 150 442" class="wire-scl"/>
+  <circle cx="300" cy="277" r="4" fill="#f39c12"/>
+  
+  <!-- 5V Power from Buck -->
+  <path d="M 740 552 L 780 552 L 780 450 L 630 450 L 630 327 L 680 327" class="wire-5v"/>
+  <path d="M 630 327 L 630 252 L 520 252" class="wire-5v"/>
+  <circle cx="630" cy="327" r="4" fill="#e67e22"/>
+  
+  <!-- 12V Input -->
+  <path d="M 500 555 L 580 555 L 580 552" class="wire-5v"/>
+  
+  <!-- GPIO to Relay -->
+  <path d="M 345 392 L 320 392 L 320 500 L 650 500 L 650 367 L 680 367" class="wire-gpio"/>
+  <path d="M 345 412 L 310 412 L 310 510 L 660 510 L 660 387 L 680 387" class="wire-gpio"/>
+  
+  <!-- IR LED Wire -->
+  <path d="M 345 312 L 320 312 L 320 162 L 80 162" class="wire-ir"/>
+  
+  <!-- Legend -->
+  <rect x="30" y="530" width="180" height="110" rx="8" fill="#1a1a2e" stroke="#444"/>
+  <text x="120" y="550" text-anchor="middle" class="title">Wire Colors</text>
+  
+  <line x1="45" y1="570" x2="75" y2="570" stroke="#e74c3c" stroke-width="3"/>
+  <text x="85" y="574" class="legend-text">3.3V Power</text>
+  
+  <line x1="45" y1="590" x2="75" y2="590" stroke="#e67e22" stroke-width="3"/>
+  <text x="85" y="594" class="legend-text">5V Power</text>
+  
+  <line x1="45" y1="610" x2="75" y2="610" stroke="#333" stroke-width="3"/>
+  <text x="85" y="614" class="legend-text">Ground</text>
+  
+  <line x1="45" y1="630" x2="75" y2="630" stroke="#3498db" stroke-width="3"/>
+  <text x="85" y="634" class="legend-text">I2C SDA</text>
+  
+  <line x1="120" y1="570" x2="150" y2="570" stroke="#f39c12" stroke-width="3"/>
+  <text x="160" y="574" class="legend-text">I2C SCL</text>
+  
+  <line x1="120" y1="590" x2="150" y2="590" stroke="#2ecc71" stroke-width="3"/>
+  <text x="160" y="594" class="legend-text">GPIO</text>
+  
+  <line x1="120" y1="610" x2="150" y2="610" stroke="#9b59b6" stroke-width="3"/>
+  <text x="160" y="614" class="legend-text">IR Signal</text>
+  
+  <!-- Notes -->
+  <text x="750" y="420" text-anchor="middle" font-family="Arial" font-size="10" fill="#888">Connect relay outputs</text>
+  <text x="750" y="432" text-anchor="middle" font-family="Arial" font-size="10" fill="#888">to HVAC in parallel</text>
+  <text x="750" y="444" text-anchor="middle" font-family="Arial" font-size="10" fill="#888">with existing thermostat</text>
+  
+</svg>
