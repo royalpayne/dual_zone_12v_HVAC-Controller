@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 900" width="800" height="900">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 950" width="900" height="950">
   <defs>
     <style>
       .board { fill: #2a2a2a; stroke: #000; stroke-width: 2; }
       .pin { fill: #ffd700; stroke: #000; stroke-width: 1; }
       .sensor { fill: #27ae60; stroke: #000; stroke-width: 2; }
       .display { fill: #8e44ad; stroke: #000; stroke-width: 2; }
-      .power-rail { fill: #c0392b; stroke: #000; stroke-width: 2; }
-      .ground-rail { fill: #34495e; stroke: #000; stroke-width: 2; }
 
       .wire-power { stroke: #ff0000; stroke-width: 3; fill: none; }
       .wire-ground { stroke: #000000; stroke-width: 3; fill: none; }
@@ -18,115 +16,137 @@
       .label-small { font-family: Arial, sans-serif; font-size: 11px; fill: #fff; }
       .title { font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; fill: #fff; }
       .subtitle { font-family: Arial, sans-serif; font-size: 16px; fill: #ccc; }
-      .pin-label { font-family: monospace; font-size: 11px; fill: #000; }
+      .pin-label { font-family: monospace; font-size: 12px; fill: #ffd700; }
       .note { font-family: Arial, sans-serif; font-size: 12px; fill: #aaa; font-style: italic; }
     </style>
   </defs>
 
   <!-- Background -->
-  <rect width="800" height="900" fill="#1a1a1a"/>
+  <rect width="900" height="950" fill="#1a1a1a"/>
 
   <!-- Title -->
-  <text x="400" y="40" class="title" text-anchor="middle">ESP32 MAIN CONTROLLER</text>
-  <text x="400" y="65" class="subtitle" text-anchor="middle">192.168.71.152 - System Orchestration</text>
+  <text x="450" y="40" class="title" text-anchor="middle">ESP32 MAIN CONTROLLER</text>
+  <text x="450" y="65" class="subtitle" text-anchor="middle">192.168.71.152 - System Orchestration</text>
 
   <!-- ESP32 Main Board -->
-  <rect x="300" y="120" width="200" height="280" class="board" rx="5"/>
-  <text x="400" y="145" class="label" text-anchor="middle">ESP32 DevKit</text>
-  <text x="400" y="162" class="label-small" text-anchor="middle">Main Controller</text>
+  <rect x="350" y="150" width="200" height="350" class="board" rx="5"/>
+  <text x="450" y="180" class="label" text-anchor="middle">ESP32 DevKit</text>
+  <text x="450" y="197" class="label-small" text-anchor="middle">Main Controller</text>
 
-  <!-- ESP32 Pins (Left side) -->
-  <circle cx="310" cy="200" r="5" class="pin"/>
-  <text x="320" y="205" class="pin-label">3.3V</text>
+  <!-- ESP32 Pins - Left side, pins extend outward -->
+  <!-- 3.3V -->
+  <line x1="350" y1="240" x2="330" y2="240" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="330" cy="240" r="4" class="pin"/>
+  <text x="325" y="245" class="pin-label" text-anchor="end">3.3V</text>
 
-  <circle cx="310" cy="230" r="5" class="pin"/>
-  <text x="320" y="235" class="pin-label">GND</text>
+  <!-- GND -->
+  <line x1="350" y1="280" x2="330" y2="280" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="330" cy="280" r="4" class="pin"/>
+  <text x="325" y="285" class="pin-label" text-anchor="end">GND</text>
 
-  <circle cx="310" cy="280" r="5" class="pin"/>
-  <text x="320" y="285" class="pin-label">GPIO 21 (SDA)</text>
+  <!-- GPIO 21 (SDA) -->
+  <line x1="350" y1="360" x2="330" y2="360" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="330" cy="360" r="4" class="pin"/>
+  <text x="325" y="365" class="pin-label" text-anchor="end">GPIO 21 (SDA)</text>
 
-  <circle cx="310" cy="310" r="5" class="pin"/>
-  <text x="320" y="315" class="pin-label">GPIO 22 (SCL)</text>
+  <!-- GPIO 22 (SCL) -->
+  <line x1="350" y1="400" x2="330" y2="400" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="330" cy="400" r="4" class="pin"/>
+  <text x="325" y="405" class="pin-label" text-anchor="end">GPIO 22 (SCL)</text>
 
   <!-- BMP280 Sensor -->
-  <rect x="80" y="480" width="160" height="120" class="sensor" rx="5"/>
-  <text x="160" y="515" class="label" text-anchor="middle">BMP280</text>
-  <text x="160" y="535" class="label-small" text-anchor="middle">Temperature Sensor</text>
-  <text x="160" y="550" class="label-small" text-anchor="middle">Pressure Sensor</text>
-  <text x="160" y="570" class="label-small" text-anchor="middle">I2C Address: 0x76</text>
+  <rect x="50" y="580" width="180" height="140" class="sensor" rx="5"/>
+  <text x="140" y="620" class="label" text-anchor="middle">BMP280</text>
+  <text x="140" y="645" class="label-small" text-anchor="middle">Temperature Sensor</text>
+  <text x="140" y="665" class="label-small" text-anchor="middle">Pressure Sensor</text>
+  <text x="140" y="690" class="label-small" text-anchor="middle">I2C Address: 0x76</text>
 
-  <!-- BMP280 Pins -->
-  <circle cx="200" cy="490" r="4" class="pin"/>
-  <text x="210" y="495" class="label-small">VCC (3.3V)</text>
+  <!-- BMP280 Pins - extending right -->
+  <line x1="230" y1="595" x2="250" y2="595" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="250" cy="595" r="4" class="pin"/>
+  <text x="255" y="600" class="label-small">VCC (3.3V)</text>
 
-  <circle cx="200" cy="515" r="4" class="pin"/>
-  <text x="210" y="520" class="label-small">GND</text>
+  <line x1="230" y1="630" x2="250" y2="630" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="250" cy="630" r="4" class="pin"/>
+  <text x="255" y="635" class="label-small">GND</text>
 
-  <circle cx="200" cy="545" r="4" class="pin"/>
-  <text x="210" y="550" class="label-small">SCL</text>
+  <line x1="230" y1="665" x2="250" y2="665" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="250" cy="665" r="4" class="pin"/>
+  <text x="255" y="670" class="label-small">SCL</text>
 
-  <circle cx="200" cy="575" r="4" class="pin"/>
-  <text x="210" y="580" class="label-small">SDA</text>
+  <line x1="230" y1="700" x2="250" y2="700" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="250" cy="700" r="4" class="pin"/>
+  <text x="255" y="705" class="label-small">SDA</text>
 
   <!-- OLED Display -->
-  <rect x="560" y="480" width="160" height="120" class="display" rx="5"/>
-  <text x="640" y="515" class="label" text-anchor="middle">OLED Display</text>
-  <text x="640" y="535" class="label-small" text-anchor="middle">128x64 SSD1306</text>
-  <text x="640" y="555" class="label-small" text-anchor="middle">I2C Address: 0x3C</text>
+  <rect x="670" y="580" width="180" height="140" class="display" rx="5"/>
+  <text x="760" y="620" class="label" text-anchor="middle">OLED Display</text>
+  <text x="760" y="645" class="label-small" text-anchor="middle">128x64 SSD1306</text>
+  <text x="760" y="670" class="label-small" text-anchor="middle">I2C Address: 0x3C</text>
 
-  <!-- OLED Pins -->
-  <circle cx="600" cy="490" r="4" class="pin"/>
-  <text x="560" y="495" class="label-small" text-anchor="end">VCC (3.3V)</text>
+  <!-- OLED Pins - extending left -->
+  <line x1="670" y1="595" x2="650" y2="595" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="650" cy="595" r="4" class="pin"/>
+  <text x="645" y="600" class="label-small" text-anchor="end">VCC (3.3V)</text>
 
-  <circle cx="600" cy="515" r="4" class="pin"/>
-  <text x="560" y="520" class="label-small" text-anchor="end">GND</text>
+  <line x1="670" y1="630" x2="650" y2="630" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="650" cy="630" r="4" class="pin"/>
+  <text x="645" y="635" class="label-small" text-anchor="end">GND</text>
 
-  <circle cx="600" cy="545" r="4" class="pin"/>
-  <text x="560" y="550" class="label-small" text-anchor="end">SCL</text>
+  <line x1="670" y1="665" x2="650" y2="665" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="650" cy="665" r="4" class="pin"/>
+  <text x="645" y="670" class="label-small" text-anchor="end">SCL</text>
 
-  <circle cx="600" cy="575" r="4" class="pin"/>
-  <text x="560" y="580" class="label-small" text-anchor="end">SDA</text>
+  <line x1="670" y1="700" x2="650" y2="700" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="650" cy="700" r="4" class="pin"/>
+  <text x="645" y="705" class="label-small" text-anchor="end">SDA</text>
 
-  <!-- Wiring - BMP280 to ESP32 -->
-  <!-- Power -->
-  <path d="M 200 490 L 260 490 L 260 200 L 310 200" class="wire-power"/>
-  <!-- Ground -->
-  <path d="M 200 515 L 250 515 L 250 230 L 310 230" class="wire-ground"/>
-  <!-- SCL -->
-  <path d="M 200 545 L 240 545 L 240 310 L 310 310" class="wire-scl"/>
-  <!-- SDA -->
-  <path d="M 200 575 L 230 575 L 230 280 L 310 280" class="wire-sda"/>
+  <!-- Wiring - BMP280 to ESP32 (routes below the board) -->
+  <!-- Power (red) -->
+  <path d="M 250 595 L 280 595 L 280 540 L 330 540 L 330 240" class="wire-power"/>
 
-  <!-- Wiring - OLED to ESP32 -->
-  <!-- Power -->
-  <path d="M 600 490 L 540 490 L 540 200 L 310 200" class="wire-power"/>
-  <!-- Ground -->
-  <path d="M 600 515 L 550 515 L 550 230 L 310 230" class="wire-ground"/>
-  <!-- SCL -->
-  <path d="M 600 545 L 560 545 L 560 310 L 310 310" class="wire-scl"/>
-  <!-- SDA -->
-  <path d="M 600 575 L 570 575 L 570 280 L 310 280" class="wire-sda"/>
+  <!-- Ground (black) -->
+  <path d="M 250 630 L 290 630 L 290 530 L 320 530 L 320 280" class="wire-ground"/>
+
+  <!-- SCL (blue) -->
+  <path d="M 250 665 L 300 665 L 300 520 L 310 520 L 310 400 L 330 400" class="wire-scl"/>
+
+  <!-- SDA (green) -->
+  <path d="M 250 700 L 310 700 L 310 510 L 300 510 L 300 360 L 330 360" class="wire-sda"/>
+
+  <!-- Wiring - OLED to ESP32 (routes below the board) -->
+  <!-- Power (red) -->
+  <path d="M 650 595 L 620 595 L 620 540 L 570 540 L 570 240 L 330 240" class="wire-power"/>
+
+  <!-- Ground (black) -->
+  <path d="M 650 630 L 610 630 L 610 530 L 580 530 L 580 280 L 330 280" class="wire-ground"/>
+
+  <!-- SCL (blue) -->
+  <path d="M 650 665 L 600 665 L 600 520 L 590 520 L 590 400 L 330 400" class="wire-scl"/>
+
+  <!-- SDA (green) -->
+  <path d="M 650 700 L 590 700 L 590 510 L 600 510 L 600 360 L 330 360" class="wire-sda"/>
 
   <!-- Notes Section -->
-  <text x="400" y="680" class="subtitle" text-anchor="middle">Hardware Notes</text>
+  <text x="450" y="780" class="subtitle" text-anchor="middle">Hardware Notes</text>
 
-  <text x="400" y="710" class="note" text-anchor="middle">• I2C bus shared between BMP280 and OLED (different addresses)</text>
-  <text x="400" y="730" class="note" text-anchor="middle">• BMP280 will be upgraded to BME280 (adds humidity sensor)</text>
-  <text x="400" y="750" class="note" text-anchor="middle">• No relays, no DHT11, no IR hardware on Main controller</text>
-  <text x="400" y="770" class="note" text-anchor="middle">• All HVAC control happens on ESP32 Remote</text>
+  <text x="450" y="810" class="note" text-anchor="middle">• I2C bus shared between BMP280 and OLED (different addresses)</text>
+  <text x="450" y="830" class="note" text-anchor="middle">• BMP280 will be upgraded to BME280 (adds humidity sensor)</text>
+  <text x="450" y="850" class="note" text-anchor="middle">• No relays, no DHT11, no IR hardware on Main controller</text>
+  <text x="450" y="870" class="note" text-anchor="middle">• All HVAC control happens on ESP32 Remote</text>
 
   <!-- Legend -->
-  <text x="400" y="820" class="subtitle" text-anchor="middle">Wire Color Guide</text>
+  <text x="450" y="915" class="subtitle" text-anchor="middle">Wire Color Guide</text>
 
-  <line x1="200" y1="850" x2="270" y2="850" class="wire-power"/>
-  <text x="275" y="855" class="label-small">+3.3V Power (Red)</text>
+  <line x1="200" y1="935" x2="280" y2="935" class="wire-power" stroke-width="4"/>
+  <text x="285" y="940" class="label-small">+3.3V Power (Red)</text>
 
-  <line x1="200" y1="870" x2="270" y2="870" class="wire-ground"/>
-  <text x="275" y="875" class="label-small">Ground (Black)</text>
+  <line x1="450" y1="935" x2="530" y2="935" class="wire-ground" stroke-width="4"/>
+  <text x="535" y="940" class="label-small">Ground (Black)</text>
 
-  <line x1="450" y1="850" x2="520" y2="850" class="wire-sda"/>
-  <text x="525" y="855" class="label-small">I2C SDA (Green)</text>
+  <line x1="200" y1="950" x2="280" y2="950" class="wire-sda" stroke-width="4"/>
+  <text x="285" y="955" class="label-small">I2C SDA (Green)</text>
 
-  <line x1="450" y1="870" x2="520" y2="870" class="wire-scl"/>
-  <text x="525" y="875" class="label-small">I2C SCL (Blue)</text>
+  <line x1="450" y1="950" x2="530" y2="950" class="wire-scl" stroke-width="4"/>
+  <text x="535" y="955" class="label-small">I2C SCL (Blue)</text>
 </svg>
