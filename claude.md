@@ -98,9 +98,9 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 ├── display.py (OLED UI - 95 lines)
 ├── bmp280.py, ssd1306.py (hardware drivers)
 ├── test.py, test_pico.py (component tests)
-├── deploy_pico_remote.sh, test_thermostat.sh
+├── deploy_esp32_remote.sh, test_thermostat.sh
 ├── README.md, DEPLOY_MANUAL.md, rv_thermostat_project_summary.md
-├── pico_remote/ (11 files, ~1700 lines)
+├── esp32_remote/ (11 files, ~1700 lines)
 │   ├── main.py (Pico entry point - 165 lines)
 │   ├── thermostat.py (local control - 249 lines)
 │   ├── ir_whynter.py (IR TX/RX - 540 lines)
@@ -175,7 +175,7 @@ main()
 ├── Connect to WiFi (ESP32-specific init sequence)
 ├── Initialize WhynterIR (load ir_codes.json)
 ├── Create ThermostatController
-├── Start PicoAPI server (port 80)
+├── Start RemoteAPI server (port 80)
 └── Loop (every 100ms):
     ├── Handle API requests
     └── Every 5s: read sensors → update thermostat → control relays → update OLED
@@ -226,13 +226,13 @@ run_control_loop()
 ### ESP32 Remote Deployment
 ```bash
 cd /home/heath/Dev/rv_thermostat
-./deploy_pico_remote.sh
+./deploy_esp32_remote.sh
 ```
 
 **Manual alternative**:
 ```bash
 source venv/bin/activate
-cd pico_remote
+cd esp32_remote
 mpremote connect /dev/ttyUSB0 cp *.py :
 mpremote connect /dev/ttyUSB0 rm boot.py
 mpremote connect /dev/ttyUSB0 reset
@@ -263,9 +263,9 @@ python test_pico.py   # Pico diagnostics
 1. **README.md** - Phase 1 overview, hardware specs, installation
 2. **rv_thermostat_project_summary.md** - Comprehensive architecture doc
 3. **DEPLOY_MANUAL.md** - Deployment instructions
-4. **pico_remote/AUTOMATIC_CONTROL.md** - IR control capabilities
-5. **pico_remote/API_QUICK_REFERENCE.md** - API reference
-6. **pico_remote/IR_SETUP_GUIDE.md** - Whynter IR setup guide
+4. **esp32_remote/AUTOMATIC_CONTROL.md** - IR control capabilities
+5. **esp32_remote/API_QUICK_REFERENCE.md** - API reference
+6. **esp32_remote/IR_SETUP_GUIDE.md** - Whynter IR setup guide
 
 ---
 
@@ -289,7 +289,7 @@ python test_pico.py   # Pico diagnostics
 
 ### Static IP Addresses
 - ESP32 Main: 192.168.71.152 (configured in config.py)
-- ESP32 Remote: 192.168.71.153 (configured in pico_remote/config.py)
+- ESP32 Remote: 192.168.71.153 (configured in esp32_remote/config.py)
 - Gateway: 192.168.71.1
 - Subnet: 255.255.255.0
 

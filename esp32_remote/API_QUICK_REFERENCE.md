@@ -1,65 +1,65 @@
 # IR Control API Quick Reference
 
-Replace `PICO_IP` with your Pico's IP address (e.g., 192.168.71.151)
+Replace `REMOTE_IP` with your ESP32 Remote's IP address (e.g., 192.168.71.151)
 
 ## Initial Setup
 
 ### Learn IR Codes (do once)
 ```bash
-curl "http://PICO_IP/api/ir/learn?name=power"
-curl "http://PICO_IP/api/ir/learn?name=mode"
-curl "http://PICO_IP/api/ir/learn?name=temp_up"
-curl "http://PICO_IP/api/ir/learn?name=temp_down"
-curl "http://PICO_IP/api/ir/learn?name=fan"
+curl "http://REMOTE_IP/api/ir/learn?name=power"
+curl "http://REMOTE_IP/api/ir/learn?name=mode"
+curl "http://REMOTE_IP/api/ir/learn?name=temp_up"
+curl "http://REMOTE_IP/api/ir/learn?name=temp_down"
+curl "http://REMOTE_IP/api/ir/learn?name=fan"
 ```
 
 ### Verify Learned Codes
 ```bash
-curl "http://PICO_IP/api/ir/codes"
+curl "http://REMOTE_IP/api/ir/codes"
 ```
 
 ## Common Operations
 
 ### Check Status
 ```bash
-curl "http://PICO_IP/api/ir/status"
+curl "http://REMOTE_IP/api/ir/status"
 ```
 
 ### Power Control
 ```bash
-curl "http://PICO_IP/api/ir/power?on=1"   # Turn ON
-curl "http://PICO_IP/api/ir/power?on=0"   # Turn OFF
+curl "http://REMOTE_IP/api/ir/power?on=1"   # Turn ON
+curl "http://REMOTE_IP/api/ir/power?on=0"   # Turn OFF
 ```
 
 ### Quick Cooling
 ```bash
-curl "http://PICO_IP/api/ir/set_cooling?temp=72&fan=auto"
-curl "http://PICO_IP/api/ir/set_cooling?temp=68&fan=high"
+curl "http://REMOTE_IP/api/ir/set_cooling?temp=72&fan=auto"
+curl "http://REMOTE_IP/api/ir/set_cooling?temp=68&fan=high"
 ```
 
 ### Quick Heating
 ```bash
-curl "http://PICO_IP/api/ir/set_heating?temp=72&fan=auto"
-curl "http://PICO_IP/api/ir/set_heating?temp=75&fan=low"
+curl "http://REMOTE_IP/api/ir/set_heating?temp=72&fan=auto"
+curl "http://REMOTE_IP/api/ir/set_heating?temp=75&fan=low"
 ```
 
 ### Change Temperature Only
 ```bash
-curl "http://PICO_IP/api/ir/temperature?temp=72"
+curl "http://REMOTE_IP/api/ir/temperature?temp=72"
 ```
 
 ### Change Fan Only
 ```bash
-curl "http://PICO_IP/api/ir/fan?speed=high"
-curl "http://PICO_IP/api/ir/fan?speed=auto"
+curl "http://REMOTE_IP/api/ir/fan?speed=high"
+curl "http://REMOTE_IP/api/ir/fan?speed=auto"
 ```
 
 ### Change Mode Only
 ```bash
-curl "http://PICO_IP/api/ir/mode?mode=cool"
-curl "http://PICO_IP/api/ir/mode?mode=heat"
-curl "http://PICO_IP/api/ir/mode?mode=fan"
-curl "http://PICO_IP/api/ir/mode?mode=dehum"
+curl "http://REMOTE_IP/api/ir/mode?mode=cool"
+curl "http://REMOTE_IP/api/ir/mode?mode=heat"
+curl "http://REMOTE_IP/api/ir/mode?mode=fan"
+curl "http://REMOTE_IP/api/ir/mode?mode=dehum"
 ```
 
 ## Advanced Control
@@ -67,12 +67,12 @@ curl "http://PICO_IP/api/ir/mode?mode=dehum"
 ### Master State Control
 ```bash
 # Full state specification
-curl "http://PICO_IP/api/ir/achieve_state?power=1&mode=cool&temp=72&fan=high"
+curl "http://REMOTE_IP/api/ir/achieve_state?power=1&mode=cool&temp=72&fan=high"
 
 # Partial state (only change what you specify)
-curl "http://PICO_IP/api/ir/achieve_state?temp=75"
-curl "http://PICO_IP/api/ir/achieve_state?fan=low"
-curl "http://PICO_IP/api/ir/achieve_state?power=0"
+curl "http://REMOTE_IP/api/ir/achieve_state?temp=75"
+curl "http://REMOTE_IP/api/ir/achieve_state?fan=low"
+curl "http://REMOTE_IP/api/ir/achieve_state?power=0"
 ```
 
 ## Python Integration
@@ -81,18 +81,18 @@ curl "http://PICO_IP/api/ir/achieve_state?power=0"
 ```python
 import requests
 
-PICO_IP = "192.168.71.151"
+REMOTE_IP = "192.168.71.151"
 
 # Turn on cooling at 72°F
-response = requests.get(f"http://{PICO_IP}/api/ir/set_cooling?temp=72&fan=auto")
+response = requests.get(f"http://{REMOTE_IP}/api/ir/set_cooling?temp=72&fan=auto")
 print(response.json())
 
 # Check status
-status = requests.get(f"http://{PICO_IP}/api/ir/status").json()
+status = requests.get(f"http://{REMOTE_IP}/api/ir/status").json()
 print(f"Power: {status['power_on']}, Mode: {status['current_mode']}, Temp: {status['current_temp']}")
 
 # Turn off
-requests.get(f"http://{PICO_IP}/api/ir/power?on=0")
+requests.get(f"http://{REMOTE_IP}/api/ir/power?on=0")
 ```
 
 ### Direct in MicroPython
@@ -160,16 +160,16 @@ All endpoints return JSON:
 ## Troubleshooting
 
 ### No Response
-- Check Pico IP address
-- Ensure Pico is connected to WiFi
+- Check ESP32 Remote IP address
+- Ensure ESP32 Remote is connected to WiFi
 - Verify API server started (check serial output)
 
 ### Commands Don't Work
-- Verify codes are learned: `curl "http://PICO_IP/api/ir/codes"`
+- Verify codes are learned: `curl "http://REMOTE_IP/api/ir/codes"`
 - Re-learn codes if needed
 - Check IR LED is pointed at AC unit
 
 ### State Out of Sync
-- Delete `ir_state.json` on Pico
+- Delete `ir_state.json` on ESP32 Remote
 - Set correct state via API
 - Avoid using physical remote

@@ -21,11 +21,11 @@ Point the Whynter remote at the IR receiver and use the API:
 
 ```bash
 # Learn each button (10 second timeout to press button)
-curl "http://PICO_IP/api/ir/learn?name=power"
-curl "http://PICO_IP/api/ir/learn?name=mode"
-curl "http://PICO_IP/api/ir/learn?name=temp_up"
-curl "http://PICO_IP/api/ir/learn?name=temp_down"
-curl "http://PICO_IP/api/ir/learn?name=fan"
+curl "http://REMOTE_IP/api/ir/learn?name=power"
+curl "http://REMOTE_IP/api/ir/learn?name=mode"
+curl "http://REMOTE_IP/api/ir/learn?name=temp_up"
+curl "http://REMOTE_IP/api/ir/learn?name=temp_down"
+curl "http://REMOTE_IP/api/ir/learn?name=fan"
 ```
 
 **Process for each:**
@@ -37,7 +37,7 @@ curl "http://PICO_IP/api/ir/learn?name=fan"
 ### Verify Learned Codes
 
 ```bash
-curl "http://PICO_IP/api/ir/codes"
+curl "http://REMOTE_IP/api/ir/codes"
 ```
 
 Should return: `{"codes": ["power", "mode", "temp_up", "temp_down", "fan"]}`
@@ -48,54 +48,54 @@ Should return: `{"codes": ["power", "mode", "temp_up", "temp_down", "fan"]}`
 
 **Get IR Status**
 ```bash
-curl "http://PICO_IP/api/ir/status"
+curl "http://REMOTE_IP/api/ir/status"
 ```
 Returns current state: power, mode, temp, fan speed, and available codes.
 
 **Power Control**
 ```bash
-curl "http://PICO_IP/api/ir/power?on=1"  # Turn on
-curl "http://PICO_IP/api/ir/power?on=0"  # Turn off
+curl "http://REMOTE_IP/api/ir/power?on=1"  # Turn on
+curl "http://REMOTE_IP/api/ir/power?on=0"  # Turn off
 ```
 
 **Set Mode** (cool/heat/fan/dehum)
 ```bash
-curl "http://PICO_IP/api/ir/mode?mode=cool"
-curl "http://PICO_IP/api/ir/mode?mode=heat"
+curl "http://REMOTE_IP/api/ir/mode?mode=cool"
+curl "http://REMOTE_IP/api/ir/mode?mode=heat"
 ```
 
 **Set Temperature** (61-89°F)
 ```bash
-curl "http://PICO_IP/api/ir/temperature?temp=72"
+curl "http://REMOTE_IP/api/ir/temperature?temp=72"
 ```
 
 **Set Fan Speed** (auto/low/med/high)
 ```bash
-curl "http://PICO_IP/api/ir/fan?speed=low"
+curl "http://REMOTE_IP/api/ir/fan?speed=low"
 ```
 
 ### Advanced: Combined Controls
 
 **Set Cooling Mode** (mode + temp + fan in one call)
 ```bash
-curl "http://PICO_IP/api/ir/set_cooling?temp=72&fan=auto"
+curl "http://REMOTE_IP/api/ir/set_cooling?temp=72&fan=auto"
 ```
 
 **Set Heating Mode** (mode + temp + fan in one call)
 ```bash
-curl "http://PICO_IP/api/ir/set_heating?temp=68&fan=low"
+curl "http://REMOTE_IP/api/ir/set_heating?temp=68&fan=low"
 ```
 
 **Achieve Specific State** (master control - set any combination)
 ```bash
 # Turn on cooling at 72°F with high fan
-curl "http://PICO_IP/api/ir/achieve_state?power=1&mode=cool&temp=72&fan=high"
+curl "http://REMOTE_IP/api/ir/achieve_state?power=1&mode=cool&temp=72&fan=high"
 
 # Turn off
-curl "http://PICO_IP/api/ir/achieve_state?power=0"
+curl "http://REMOTE_IP/api/ir/achieve_state?power=0"
 
 # Change just temperature (leave everything else as-is)
-curl "http://PICO_IP/api/ir/achieve_state?temp=75"
+curl "http://REMOTE_IP/api/ir/achieve_state?temp=75"
 ```
 
 ## State Tracking

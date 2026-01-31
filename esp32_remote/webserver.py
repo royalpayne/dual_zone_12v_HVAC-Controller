@@ -1,6 +1,6 @@
-# Pico Remote - Web Server / API
-# ===============================
-# Simple HTTP API for ESP32 communication
+# ESP32 Remote - Web Server / API
+# ================================
+# Simple HTTP API for remote control
 
 import socket
 import json
@@ -8,7 +8,7 @@ import config
 from ir_whynter import WhynterIR
 
 
-class PicoAPI:
+class RemoteAPI:
     def __init__(self, thermostat, ir=None):
         self.thermostat = thermostat
         self.ir = ir if ir else WhynterIR()

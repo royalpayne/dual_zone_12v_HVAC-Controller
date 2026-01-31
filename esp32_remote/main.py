@@ -14,7 +14,7 @@ from ssd1306 import SSD1306_I2C
 from display import ThermostatDisplay
 from thermostat import ThermostatController
 from ir_whynter import WhynterIR
-from webserver import PicoAPI
+from webserver import RemoteAPI
 
 
 def connect_wifi(display):
@@ -119,7 +119,7 @@ def main():
     thermostat.set_ir_transmitter(ir)
 
     # Initialize API server (share IR instance)
-    api = PicoAPI(thermostat, ir)
+    api = RemoteAPI(thermostat, ir)
     if ip:
         api.start(80)
         print(f"API: http://{ip}/api/status")
@@ -128,7 +128,7 @@ def main():
     last_sensor_read = 0
     last_status_print = 0
 
-    print("Pico Remote running... Press Ctrl+C to stop")
+    print("ESP32 Remote running... Press Ctrl+C to stop")
     print(f"Furnace relay: GPIO {config.RELAY_FURNACE_PIN}")
     print(f"Rooftop AC relay: GPIO {config.RELAY_ROOFTOP_AC_PIN}")
 

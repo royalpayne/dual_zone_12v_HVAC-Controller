@@ -13,7 +13,7 @@ if [ -d "venv" ]; then
     source venv/bin/activate
 fi
 
-cd pico_remote
+cd esp32_remote
 
 echo ""
 echo "Step 1: Checking connection to ESP32..."

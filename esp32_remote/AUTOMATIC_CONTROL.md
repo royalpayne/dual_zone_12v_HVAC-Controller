@@ -181,34 +181,34 @@ MAX_TEMP = 89  # Maximum AC temp
 ### Test Basic Controls
 ```bash
 # Check status
-curl "http://PICO_IP/api/ir/status"
+curl "http://REMOTE_IP/api/ir/status"
 
 # Test temperature
-curl "http://PICO_IP/api/ir/temperature?temp=72"
+curl "http://REMOTE_IP/api/ir/temperature?temp=72"
 
 # Test fan
-curl "http://PICO_IP/api/ir/fan?speed=high"
+curl "http://REMOTE_IP/api/ir/fan?speed=high"
 ```
 
 ### Test Automatic Operation
 ```bash
 # Simulate boost cooling
-curl "http://PICO_IP/api/ir/set_cooling?temp=65&fan=high"
+curl "http://REMOTE_IP/api/ir/set_cooling?temp=65&fan=high"
 
 # Check result
-curl "http://PICO_IP/api/ir/status"
+curl "http://REMOTE_IP/api/ir/status"
 
 # Turn off
-curl "http://PICO_IP/api/ir/power?on=0"
+curl "http://REMOTE_IP/api/ir/power?on=0"
 ```
 
 ### Test State Achievement
 ```bash
 # Complex state change
-curl "http://PICO_IP/api/ir/achieve_state?power=1&mode=heat&temp=72&fan=low"
+curl "http://REMOTE_IP/api/ir/achieve_state?power=1&mode=heat&temp=72&fan=low"
 
 # Verify
-curl "http://PICO_IP/api/ir/status"
+curl "http://REMOTE_IP/api/ir/status"
 ```
 
 ## Files Modified
