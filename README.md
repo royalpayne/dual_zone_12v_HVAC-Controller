@@ -1,53 +1,97 @@
-# RV Thermostat - Phase 1
+# RV Thermostat - Dual ESP32 System
 
-A DIY RV thermostat using Raspberry Pi Pico W with web interface.
+A DIY RV thermostat using two ESP32 microcontrollers to control three HVAC systems: furnace, rooftop AC, and Whynter portable AC/heater.
 
-## Hardware
+## Architecture
 
-**Sensors:**
-- BMP280 - Temperature and pressure (I2C)
-- DHT11 - Humidity (GPIO 16)
+**ESP32 Main (192.168.71.152):**
+- System orchestration and scheduling
+- BMP280 sensor (temperature/pressure)
+- SSD1306 OLED display
+- Web interface
+- Remote control via HTTP API
 
-**Display:**
-- SSD1306 128x64 OLED (I2C)
+**ESP32 Remote (192.168.71.153):**
+- HVAC hardware control
+- BMP280 sensor (temperature/pressure)
+- DHT11 sensor (humidity)
+- SSD1306 OLED display
+- 2-channel relay module (furnace + rooftop AC)
+- IR transmitter/receiver (portable AC control)
 
-**Control:**
-- 2-channel relay module (GPIO 20, 21)
-- IR LED for portable AC (GPIO 18) - Phase 2
-- IR Receiver for learning codes (GPIO 19) - Phase 2
+## Wiring Diagrams
 
-## Wiring
+**Complete system diagram:** See [wiring/dual_esp32_wiring.svg](wiring/dual_esp32_wiring.svg) for comprehensive color-coded wiring diagram with all connections.
 
-| Component | Pin | Pico GPIO |
-|-----------|-----|-----------|
-| BMP280 SDA | SDA | GPIO 0 |
-| BMP280 SCL | SCL | GPIO 1 |
+### ESP32 Main Wiring
+
+| Component | Pin | ESP32 GPIO |
+|-----------|-----|------------|
+| BMP280 SDA | SDA | GPIO 21 |
+| BMP280 SCL | SCL | GPIO 22 |
 | BMP280 VCC | 3.3V | 3.3V |
 | BMP280 GND | GND | GND |
-| BMP280 CSB | - | 3.3V |
-| BMP280 SDO | - | GND |
-| DHT11 S | Data | GPIO 16 |
-| DHT11 + | VCC | 3.3V |
-| DHT11 - | GND | GND |
-| OLED SDA | SDA | GPIO 0 |
-| OLED SCL | SCL | GPIO 1 |
-| Relay IN1 | - | GPIO 20 |
-| Relay IN2 | - | GPIO 21 |
+| OLED SDA | SDA | GPIO 21 |
+| OLED SCL | SCL | GPIO 22 |
+| OLED VCC | 3.3V | 3.3V |
+| OLED GND | GND | GND |
+
+### ESP32 Remote Wiring
+
+| Component | Pin | ESP32 GPIO |
+|-----------|-----|------------|
+| BMP280 SDA | SDA | GPIO 21 |
+| BMP280 SCL | SCL | GPIO 22 |
+| DHT11 Data | S | GPIO 4 |
+| OLED SDA | SDA | GPIO 21 |
+| OLED SCL | SCL | GPIO 22 |
+| Relay IN1 | - | GPIO 25 (Furnace) |
+| Relay IN2 | - | GPIO 26 (Rooftop AC) |
+| IR LED | + | GPIO 18 |
+| IR Receiver | OUT | GPIO 19 (optional) |
 
 ## Installation
 
-1. Edit `config.py` with your WiFi credentials:
+### Prerequisites
+- MicroPython firmware installed on both ESP32s
+- mpremote installed: `pip install mpremote`
+- Both ESP32s connected via USB
+
+### ESP32 Main Setup
+
+1. Create `config_local.py` with WiFi credentials:
    ```python
    WIFI_SSID = "YourNetwork"
    WIFI_PASSWORD = "YourPassword"
    ```
 
-2. Upload all `.py` files to the Pico using Thonny
+2. Deploy to ESP32 Main:
+   ```bash
+   source venv/bin/activate
+   mpremote connect /dev/ttyUSB0 cp *.py :
+   mpremote connect /dev/ttyUSB0 reset
+   ```
 
-3. Test components:
-   ```python
-   >>> import test
-   >>> test.test_all()
+### ESP32 Remote Setup
+
+1. Create `esp32_remote/config_local.py` with WiFi credentials
+
+2. Deploy using the script:
+   ```bash
+   ./deploy_esp32_remote.sh
+   ```
+
+3. Verify connection:
+   ```bash
+   curl http://192.168.71.153/api/status
+   ```
+
+### Testing
+
+Test components:
+```python
+>>> import test
+>>> test.test_all()
    ```
 
 4. Run the thermostat:
