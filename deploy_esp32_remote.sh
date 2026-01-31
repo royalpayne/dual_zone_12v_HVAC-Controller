@@ -4,8 +4,11 @@
 
 set -e
 
+DEVICE=${1:-/dev/ttyUSB1}
+
 echo "========================================="
 echo "Deploying ESP32 Remote Code"
+echo "Device: $DEVICE"
 echo "========================================="
 
 # Activate virtual environment if needed
@@ -16,26 +19,19 @@ fi
 cd esp32_remote
 
 echo ""
-echo "Step 1: Detecting ESP32 device..."
-
-# Try ttyUSB0 first (most common for ESP32)
-if [ -e /dev/ttyUSB0 ]; then
-    DEVICE=/dev/ttyUSB0
-    echo "✓ Found ESP32 on $DEVICE"
-elif [ -e /dev/ttyACM0 ]; then
-    DEVICE=/dev/ttyACM0
+echo "Step 1: Detecting device..."
+if [ -e "$DEVICE" ]; then
     echo "✓ Found ESP32 on $DEVICE"
 else
-    echo "ERROR: No ESP32 device found (/dev/ttyUSB0 or /dev/ttyACM0)"
+    echo "ERROR: Device not found: $DEVICE"
     exit 1
 fi
 
 echo ""
 echo "Step 2: Uploading core files..."
 
-# Upload all Python files
+# Core Python files for ESP32 Remote (boot.py not needed - ESP32 runs main.py directly)
 FILES=(
-    "boot.py"
     "main.py"
     "config.py"
     "ir_whynter.py"

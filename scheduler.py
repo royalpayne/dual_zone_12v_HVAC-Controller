@@ -20,23 +20,21 @@ DEFAULT_PRESETS = {
     MODE_SLEEP: {"heat": 66, "cool": 72}
 }
 
-# Default weekly schedule (day: list of {time: "HH:MM", mode: "home/away/sleep"})
+# Default schedule (weekday Mon-Fri, weekend Sat-Sun)
 DEFAULT_SCHEDULE = {
-    "mon": [{"time": "06:00", "mode": MODE_HOME}, {"time": "08:00", "mode": MODE_AWAY},
-            {"time": "17:00", "mode": MODE_HOME}, {"time": "22:00", "mode": MODE_SLEEP}],
-    "tue": [{"time": "06:00", "mode": MODE_HOME}, {"time": "08:00", "mode": MODE_AWAY},
-            {"time": "17:00", "mode": MODE_HOME}, {"time": "22:00", "mode": MODE_SLEEP}],
-    "wed": [{"time": "06:00", "mode": MODE_HOME}, {"time": "08:00", "mode": MODE_AWAY},
-            {"time": "17:00", "mode": MODE_HOME}, {"time": "22:00", "mode": MODE_SLEEP}],
-    "thu": [{"time": "06:00", "mode": MODE_HOME}, {"time": "08:00", "mode": MODE_AWAY},
-            {"time": "17:00", "mode": MODE_HOME}, {"time": "22:00", "mode": MODE_SLEEP}],
-    "fri": [{"time": "06:00", "mode": MODE_HOME}, {"time": "08:00", "mode": MODE_AWAY},
-            {"time": "17:00", "mode": MODE_HOME}, {"time": "23:00", "mode": MODE_SLEEP}],
-    "sat": [{"time": "08:00", "mode": MODE_HOME}, {"time": "23:00", "mode": MODE_SLEEP}],
-    "sun": [{"time": "08:00", "mode": MODE_HOME}, {"time": "22:00", "mode": MODE_SLEEP}]
+    "weekday": [
+        {"time": "06:00", "mode": MODE_HOME},
+        {"time": "08:00", "mode": MODE_AWAY},
+        {"time": "17:00", "mode": MODE_HOME},
+        {"time": "22:00", "mode": MODE_SLEEP}
+    ],
+    "weekend": [
+        {"time": "08:00", "mode": MODE_HOME},
+        {"time": "23:00", "mode": MODE_SLEEP}
+    ]
 }
 
-DAY_NAMES = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+DAY_TYPES = ["weekday", "weekend"]
 
 
 class Scheduler:
@@ -96,10 +94,10 @@ class Scheduler:
         else:
             self.hold_until = None
 
-    def set_schedule_entry(self, day, entries):
-        """Set schedule for a day"""
-        if day in DAY_NAMES:
-            self.schedule[day] = entries
+    def set_schedule_entry(self, day_type, entries):
+        """Set schedule for weekday or weekend"""
+        if day_type in DAY_TYPES:
+            self.schedule[day_type] = entries
             self.save()
 
     def get_status(self):
@@ -128,7 +126,9 @@ class Scheduler:
         try:
             t = time.localtime()
             current_minute = t[3] * 60 + t[4]  # hours * 60 + minutes
-            day = DAY_NAMES[t[6]]  # weekday (0=Monday)
+            weekday_num = t[6]  # 0=Monday, 6=Sunday
+            # Determine if weekday (Mon-Fri: 0-4) or weekend (Sat-Sun: 5-6)
+            day_type = "weekday" if weekday_num < 5 else "weekend"
         except:
             return
 
@@ -138,7 +138,7 @@ class Scheduler:
         self.last_check_minute = current_minute
 
         # Find current mode based on schedule
-        day_schedule = self.schedule.get(day, [])
+        day_schedule = self.schedule.get(day_type, [])
         new_mode = self.current_mode
 
         for entry in day_schedule:

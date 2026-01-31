@@ -185,29 +185,6 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 .btn.sync{background:#38b000;padding:16px 32px;font-size:18px}
 .btn.sync.synced{background:#2a9d8f}
 .btn.home{background:#38b000}
-.btn.away{background:#f77f00}
-.btn.sleep{background:#7b2cbf}
-.sched-card{border:2px solid #38b000}
-.sched-status{text-align:center;font-size:14px;margin-top:8px}
-.toggle{display:flex;align-items:center;justify-content:center;gap:10px}
-.switch{position:relative;width:50px;height:26px}
-.switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#555;border-radius:26px;transition:.3s}
-.slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
-input:checked+.slider{background:#38b000}
-input:checked+.slider:before{transform:translateX(24px)}
-.day-tabs{display:flex;justify-content:space-around;margin:12px 0}
-.day-tab{padding:8px 6px;border:none;background:#0f3460;color:#fff;border-radius:4px;cursor:pointer;font-size:12px}
-.day-tab.active{background:#38b000}
-.sched-list{margin:12px 0;max-height:150px;overflow-y:auto}
-.sched-entry{display:flex;justify-content:space-between;align-items:center;padding:6px;background:#0f3460;margin:4px 0;border-radius:4px;font-size:14px}
-.sched-entry .time{font-weight:bold}
-.sched-entry .del{background:#e94560;border:none;color:#fff;padding:4px 8px;border-radius:4px;cursor:pointer}
-.add-entry{display:flex;gap:8px;margin-top:12px}
-.add-entry input,.add-entry select{padding:8px;border-radius:4px;border:none;background:#0f3460;color:#fff}
-.add-entry input{width:80px}
-.add-entry select{flex:1}
-.btn.add{background:#38b000;padding:8px 16px}
 </style>
 </head>
 <body>
@@ -244,63 +221,32 @@ input:checked+.slider:before{transform:translateX(24px)}
 </div>
 </div>
 
-<div class="card sched-card">
-<div class="zone-title" style="color:#38b000">Schedule</div>
-<div class="toggle">
-<span>Schedule</span>
-<label class="switch"><input type="checkbox" id="schedon" onchange="schedEnable(this.checked)"><span class="slider"></span></label>
-</div>
-<h3 style="margin-top:16px">QUICK MODE</h3>
-<div class="row">
-<button class="btn home" id="shome" onclick="schedMode('home')">HOME</button>
-<button class="btn away" id="saway" onclick="schedMode('away')">AWAY</button>
-<button class="btn sleep" id="ssleep" onclick="schedMode('sleep')">SLEEP</button>
-</div>
-<div class="sched-status" id="schedstatus">Schedule: OFF</div>
-<h3 style="margin-top:16px">WEEKLY SCHEDULE</h3>
-<div class="day-tabs">
-<button class="day-tab active" onclick="selDay('mon')">Mon</button>
-<button class="day-tab" onclick="selDay('tue')">Tue</button>
-<button class="day-tab" onclick="selDay('wed')">Wed</button>
-<button class="day-tab" onclick="selDay('thu')">Thu</button>
-<button class="day-tab" onclick="selDay('fri')">Fri</button>
-<button class="day-tab" onclick="selDay('sat')">Sat</button>
-<button class="day-tab" onclick="selDay('sun')">Sun</button>
-</div>
-<div class="sched-list" id="schedlist"></div>
-<div class="add-entry">
-<input type="time" id="newtime" value="08:00">
-<select id="newmode"><option value="home">Home</option><option value="away">Away</option><option value="sleep">Sleep</option></select>
-<button class="btn add" onclick="addEntry()">+</button>
-</div>
-</div>
-
 <div class="card sync-card">
-<button class="btn sync" id="syncbtn" onclick="syncZones()">SYNC TO PICO</button>
+<button class="btn sync" id="syncbtn" onclick="syncZones()">SYNC TO REMOTE</button>
 <div style="margin-top:8px;font-size:12px;color:#888">Copy Kitchen settings to Living Room</div>
 </div>
 
 <div class="card">
-<div class="zone-title pico-title">Living Room (Pico)</div>
+<div class="zone-title pico-title">Living Room (Remote)</div>
 <div class="temp-small"><span id="ptemp">--</span>&deg;F</div>
 <div class="row"><span id="phum">--%</span></div>
 <div id="pstatus">Offline</div>
 </div>
 <div class="card">
-<h3>PICO MODE</h3>
+<h3>REMOTE MODE</h3>
 <div class="row">
 <button class="btn" id="pm0" onclick="pmode(0)">OFF</button>
 <button class="btn" id="pm1" onclick="pmode(1)">HEAT</button>
 <button class="btn" id="pm2" onclick="pmode(2)">COOL</button>
 <button class="btn" id="pm3" onclick="pmode(3)">AUTO</button>
 </div>
-<h3>PICO HEAT SETPOINT</h3>
+<h3>REMOTE HEAT SETPOINT</h3>
 <div class="setrow">
 <button class="btn" onclick="padj('heat',-1)">-</button>
 <span class="setval"><span id="phset">68</span>&deg;</span>
 <button class="btn" onclick="padj('heat',1)">+</button>
 </div>
-<h3>PICO COOL SETPOINT</h3>
+<h3>REMOTE COOL SETPOINT</h3>
 <div class="setrow">
 <button class="btn" onclick="padj('cool',-1)">-</button>
 <span class="setval"><span id="pcset">75</span>&deg;</span>
@@ -350,57 +296,16 @@ function sys(s){fetch('/api/cool_system',{method:'POST',body:JSON.stringify({sys
 function pmode(m){fetch('/api/pico/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updPico);}
 function padj(t,d){var v=(t=='heat'?phs:pcs)+d;fetch('/api/pico/'+(t=='heat'?'heat':'cool')+'_setpoint',{method:'POST',body:JSON.stringify({temp:v})}).then(r=>r.json()).then(updPico);}
 function boost(){fetch('/api/pico/boost',{method:'POST',body:JSON.stringify({on:!pboost})}).then(r=>r.json()).then(updPico);}
-var scurr='home',senabled=false,sched={},selday='mon';
-function updSched(s){
-senabled=s.enabled;scurr=s.current_mode;sched=s.schedule||{};
-document.getElementById('schedon').checked=s.enabled;
-document.getElementById('shome').className='btn home'+(s.current_mode=='home'?' active':'');
-document.getElementById('saway').className='btn away'+(s.current_mode=='away'?' active':'');
-document.getElementById('ssleep').className='btn sleep'+(s.current_mode=='sleep'?' active':'');
-var st=s.enabled?'Schedule: '+s.current_mode.toUpperCase():'Schedule: OFF';
-if(s.hold_until)st+=' (hold)';
-document.getElementById('schedstatus').textContent=st;
-renderDay();
-}
-function renderDay(){
-var list=document.getElementById('schedlist');
-var entries=sched[selday]||[];
-entries.sort(function(a,b){return a.time.localeCompare(b.time);});
-list.innerHTML=entries.map(function(e,i){
-var cls=e.mode=='home'?'#38b000':e.mode=='away'?'#f77f00':'#7b2cbf';
-return '<div class="sched-entry"><span class="time">'+e.time+'</span><span style="color:'+cls+'">'+e.mode.toUpperCase()+'</span><button class="del" onclick="delEntry('+i+')">X</button></div>';
-}).join('');
-document.querySelectorAll('.day-tab').forEach(function(t){t.className='day-tab'+(t.textContent.toLowerCase()==selday?' active':'');});
-}
-function selDay(d){selday=d;renderDay();}
-function addEntry(){
-var t=document.getElementById('newtime').value;
-var m=document.getElementById('newmode').value;
-if(!t)return;
-var entries=sched[selday]||[];
-entries.push({time:t,mode:m});
-sched[selday]=entries;
-fetch('/api/schedule/day',{method:'POST',body:JSON.stringify({day:selday,entries:entries})}).then(r=>r.json()).then(updSched);
-}
-function delEntry(i){
-var entries=sched[selday]||[];
-entries.splice(i,1);
-sched[selday]=entries;
-fetch('/api/schedule/day',{method:'POST',body:JSON.stringify({day:selday,entries:entries})}).then(r=>r.json()).then(updSched);
-}
-function getSched(){fetch('/api/schedule').then(r=>r.json()).then(updSched).catch(e=>console.log(e));}
-function schedEnable(en){fetch('/api/schedule/enable',{method:'POST',body:JSON.stringify({enabled:en})}).then(r=>r.json()).then(updSched);}
-function schedMode(m){fetch('/api/schedule/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updSched);}
 function syncZones(){
 var btn=document.getElementById('syncbtn');
 btn.textContent='SYNCING...';
 btn.className='btn sync synced';
 fetch('/api/pico/sync',{method:'POST',body:'{}'}).then(r=>r.json()).then(function(p){
 updPico(p);btn.textContent='SYNCED!';
-setTimeout(function(){btn.textContent='SYNC TO PICO';btn.className='btn sync';},2000);
+setTimeout(function(){btn.textContent='SYNC TO REMOTE';btn.className='btn sync';},2000);
 }).catch(function(){btn.textContent='SYNC FAILED';btn.className='btn sync';});
 }
-get();getSched();setInterval(get,3000);setInterval(getSched,10000);
+get();setInterval(get,3000);
 </script>
 </body>
 </html>"""

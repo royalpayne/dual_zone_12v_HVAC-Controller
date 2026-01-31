@@ -268,11 +268,4 @@ class RemoteAPI:
         """Create JSON HTTP response"""
         body = json.dumps(data)
         status_text = 'OK' if status == 200 else 'Not Found'
-        return (
-            f"HTTP/1.1 {status} {status_text}\r\n"
-            f"Content-Type: application/json\r\n"
-            f"Access-Control-Allow-Origin: *\r\n"
-            f"Content-Length: {len(body)}\r\n"
-            f"\r\n"
-            f"{body}"
-        )
+        return f"HTTP/1.1 {status} {status_text}\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: {len(body)}\r\n\r\n{body}"

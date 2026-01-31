@@ -162,9 +162,7 @@ def main():
             if config.DEBUG and (now - last_status_print >= 30):
                 status = thermostat.get_status()
                 temp_str = f"{status['temp']:.1f}" if status['temp'] is not None else "None"
-                print(f"Temp: {temp_str}F, Mode: {status['mode_name']}, "
-                      f"Heat: {status['heating_active']}, Cool: {status['cooling_active']}, "
-                      f"Boost: {status['boost_active']}")
+                print(f"Temp: {temp_str}F, Mode: {status['mode_name']}, Heat: {status['heating_active']}, Cool: {status['cooling_active']}, Boost: {status['boost_active']}")
                 last_status_print = now
 
             time.sleep(0.1)
