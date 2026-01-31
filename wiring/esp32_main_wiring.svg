@@ -18,6 +18,8 @@
       .subtitle { font-family: Arial, sans-serif; font-size: 16px; fill: #ccc; }
       .pin-label { font-family: monospace; font-size: 12px; fill: #ffd700; }
       .note { font-family: Arial, sans-serif; font-size: 12px; fill: #aaa; font-style: italic; }
+      .pin-unused { fill: #666; stroke: #333; stroke-width: 1; }
+      .label-unused { font-family: Arial, sans-serif; font-size: 10px; fill: #888; font-style: italic; }
     </style>
   </defs>
 
@@ -54,29 +56,37 @@
   <circle cx="330" cy="400" r="4" class="pin"/>
   <text x="325" y="405" class="pin-label" text-anchor="end">GPIO 22 (SCL)</text>
 
-  <!-- BMP280 Sensor -->
-  <rect x="50" y="580" width="180" height="140" class="sensor" rx="5"/>
-  <text x="140" y="620" class="label" text-anchor="middle">BMP280</text>
-  <text x="140" y="645" class="label-small" text-anchor="middle">Temperature Sensor</text>
-  <text x="140" y="665" class="label-small" text-anchor="middle">Pressure Sensor</text>
-  <text x="140" y="690" class="label-small" text-anchor="middle">I2C Address: 0x76</text>
+  <!-- BME280 Sensor -->
+  <rect x="50" y="580" width="180" height="160" class="sensor" rx="5"/>
+  <text x="140" y="620" class="label" text-anchor="middle">BME280</text>
+  <text x="140" y="645" class="label-small" text-anchor="middle">Temperature</text>
+  <text x="140" y="665" class="label-small" text-anchor="middle">Humidity</text>
+  <text x="140" y="685" class="label-small" text-anchor="middle">Pressure</text>
+  <text x="140" y="710" class="label-small" text-anchor="middle">I2C Address: 0x76</text>
 
-  <!-- BMP280 Pins - extending right -->
+  <!-- BME280 Pins - extending right -->
   <line x1="230" y1="595" x2="250" y2="595" stroke="#ffd700" stroke-width="2"/>
   <circle cx="250" cy="595" r="4" class="pin"/>
   <text x="255" y="600" class="label-small">VCC (3.3V)</text>
 
-  <line x1="230" y1="630" x2="250" y2="630" stroke="#ffd700" stroke-width="2"/>
-  <circle cx="250" cy="630" r="4" class="pin"/>
-  <text x="255" y="635" class="label-small">GND</text>
+  <line x1="230" y1="625" x2="250" y2="625" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="250" cy="625" r="4" class="pin"/>
+  <text x="255" y="630" class="label-small">GND</text>
 
   <line x1="230" y1="665" x2="250" y2="665" stroke="#ffd700" stroke-width="2"/>
   <circle cx="250" cy="665" r="4" class="pin"/>
   <text x="255" y="670" class="label-small">SCL</text>
 
-  <line x1="230" y1="700" x2="250" y2="700" stroke="#ffd700" stroke-width="2"/>
-  <circle cx="250" cy="700" r="4" class="pin"/>
-  <text x="255" y="705" class="label-small">SDA</text>
+  <line x1="230" y1="695" x2="250" y2="695" stroke="#ffd700" stroke-width="2"/>
+  <circle cx="250" cy="695" r="4" class="pin"/>
+  <text x="255" y="700" class="label-small">SDA</text>
+
+  <!-- Unused SPI pins -->
+  <circle cx="250" cy="720" r="3" class="pin-unused"/>
+  <text x="255" y="724" class="label-unused">MISO (NC)</text>
+
+  <circle cx="250" cy="735" r="3" class="pin-unused"/>
+  <text x="255" y="739" class="label-unused">CS (NC)</text>
 
   <!-- OLED Display -->
   <rect x="670" y="580" width="180" height="140" class="display" rx="5"/>
@@ -101,18 +111,18 @@
   <circle cx="650" cy="700" r="4" class="pin"/>
   <text x="645" y="705" class="label-small" text-anchor="end">SDA</text>
 
-  <!-- Wiring - BMP280 to ESP32 (routes below the board) -->
+  <!-- Wiring - BME280 to ESP32 (routes below the board) -->
   <!-- Power (red) -->
   <path d="M 250 595 L 280 595 L 280 540 L 330 540 L 330 240" class="wire-power"/>
 
   <!-- Ground (black) -->
-  <path d="M 250 630 L 290 630 L 290 530 L 320 530 L 320 280" class="wire-ground"/>
+  <path d="M 250 625 L 290 625 L 290 530 L 320 530 L 320 280" class="wire-ground"/>
 
   <!-- SCL (blue) -->
   <path d="M 250 665 L 300 665 L 300 520 L 310 520 L 310 400 L 330 400" class="wire-scl"/>
 
   <!-- SDA (green) -->
-  <path d="M 250 700 L 310 700 L 310 510 L 300 510 L 300 360 L 330 360" class="wire-sda"/>
+  <path d="M 250 695 L 310 695 L 310 510 L 300 510 L 300 360 L 330 360" class="wire-sda"/>
 
   <!-- Wiring - OLED to ESP32 (routes below the board) -->
   <!-- Power (red) -->
@@ -130,10 +140,10 @@
   <!-- Notes Section -->
   <text x="450" y="780" class="subtitle" text-anchor="middle">Hardware Notes</text>
 
-  <text x="450" y="810" class="note" text-anchor="middle">• I2C bus shared between BMP280 and OLED (different addresses)</text>
-  <text x="450" y="830" class="note" text-anchor="middle">• BMP280 will be upgraded to BME280 (adds humidity sensor)</text>
-  <text x="450" y="850" class="note" text-anchor="middle">• No relays, no DHT11, no IR hardware on Main controller</text>
-  <text x="450" y="870" class="note" text-anchor="middle">• All HVAC control happens on ESP32 Remote</text>
+  <text x="450" y="810" class="note" text-anchor="middle">• BME280 uses I2C mode - only connect VCC, GND, SCL, SDA (leave MISO and CS unconnected)</text>
+  <text x="450" y="830" class="note" text-anchor="middle">• I2C bus shared between BME280 and OLED (different addresses: 0x76 and 0x3C)</text>
+  <text x="450" y="850" class="note" text-anchor="middle">• BME280 adds humidity sensing (Temperature + Humidity + Pressure)</text>
+  <text x="450" y="870" class="note" text-anchor="middle">• No relays, no DHT11, no IR hardware on Main controller</text>
 
   <!-- Legend -->
   <text x="450" y="915" class="subtitle" text-anchor="middle">Wire Color Guide</text>
