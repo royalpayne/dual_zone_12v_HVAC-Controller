@@ -1,7 +1,7 @@
 # Remote Thermostat Controller (ESP32)
 # =====================================
-# Controls Pico's relays/IR remotely via API
-# ESP32 is the brain, Pico is the actuator
+# Controls remote device's relays/IR remotely via API
+# ESP32 is the brain, remote ESP32 is the actuator
 
 import time
 import config
@@ -147,9 +147,9 @@ class RemoteThermostatController:
         print(f"{dry_run}HEAT ON (temp: {self.current_temp:.1f}F, setpoint: {self.heat_setpoint}F)")
         if not config.DRY_RUN:
             try:
-                self.pico.set_furnace(True)
+                self.remote.set_furnace(True)
             except Exception as e:
-                print(f"Pico furnace error: {e}")
+                print(f"Remote furnace error: {e}")
         self.heating_active = True
         self.last_state_change = time.time()
 
@@ -159,9 +159,9 @@ class RemoteThermostatController:
         print(f"{dry_run}HEAT OFF (temp: {self.current_temp:.1f}F, setpoint: {self.heat_setpoint}F)")
         if not config.DRY_RUN:
             try:
-                self.pico.set_furnace(False)
+                self.remote.set_furnace(False)
             except Exception as e:
-                print(f"Pico furnace error: {e}")
+                print(f"Remote furnace error: {e}")
         self.heating_active = False
         self.last_state_change = time.time()
 
@@ -171,9 +171,9 @@ class RemoteThermostatController:
         print(f"{dry_run}COOL ON (temp: {self.current_temp:.1f}F, setpoint: {self.cool_setpoint}F)")
         if not config.DRY_RUN:
             try:
-                self.pico.set_rooftop(True)
+                self.remote.set_rooftop(True)
             except Exception as e:
-                print(f"Pico rooftop error: {e}")
+                print(f"Remote rooftop error: {e}")
         self.cooling_active = True
         self.last_state_change = time.time()
 
@@ -183,9 +183,9 @@ class RemoteThermostatController:
         print(f"{dry_run}COOL OFF (temp: {self.current_temp:.1f}F, setpoint: {self.cool_setpoint}F)")
         if not config.DRY_RUN:
             try:
-                self.pico.set_rooftop(False)
+                self.remote.set_rooftop(False)
             except Exception as e:
-                print(f"Pico rooftop error: {e}")
+                print(f"Remote rooftop error: {e}")
         self.cooling_active = False
         self.last_state_change = time.time()
 
@@ -194,10 +194,10 @@ class RemoteThermostatController:
         if self.heating_active or self.cooling_active:
             if not config.DRY_RUN:
                 try:
-                    self.pico.set_furnace(False)
-                    self.pico.set_rooftop(False)
+                    self.remote.set_furnace(False)
+                    self.remote.set_rooftop(False)
                 except Exception as e:
-                    print(f"Pico all-off error: {e}")
+                    print(f"Remote all-off error: {e}")
             self.heating_active = False
             self.cooling_active = False
             self.last_state_change = time.time()

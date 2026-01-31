@@ -1,15 +1,15 @@
-# Thermostat Web Server - With Pico Remote Integration
+# Thermostat Web Server - With Remote Integration
 import socket
 import json
 import config
-from pico_client import PicoClient
+from remote_client import RemoteClient
 
 class ThermostatWebServer:
-    def __init__(self, thermostat, scheduler=None, pico=None):
+    def __init__(self, thermostat, scheduler=None, remote=None):
         self.thermostat = thermostat
         self.scheduler = scheduler
         self.socket = None
-        self.pico = pico
+        self.remote = remote
         self.pressure_history = []  # Track pressure for trend
         self.max_history = 3
 
@@ -41,12 +41,12 @@ class ThermostatWebServer:
             return self._api_status()
         elif 'GET /api/schedule' in request:
             return self._api_schedule()
-        elif 'GET /api/pico' in request:
-            return self._api_pico_status()
+        elif 'GET /api/remote' in request:
+            return self._api_remote_status()
         elif 'POST /api/schedule/' in request:
             return self._handle_schedule_post(request)
-        elif 'POST /api/pico/' in request:
-            return self._handle_pico_post(request)
+        elif 'POST /api/remote/' in request:
+            return self._handle_remote_post(request)
         elif 'POST /api/' in request:
             return self._handle_post(request)
         else:
@@ -54,23 +54,23 @@ class ThermostatWebServer:
 
     def _api_status(self):
         status = self.thermostat.get_status()
-        # Add Pico connection status
-        pico_status = self.pico.get_status()
-        status['pico_connected'] = pico_status is not None
-        if pico_status:
-            status['pico'] = pico_status
+        # Add remote connection status
+        remote_status = self.remote.get_status()
+        status['remote_connected'] = remote_status is not None
+        if remote_status:
+            status['remote'] = remote_status
         # Add pressure trend
         if status.get('pressure'):
             status['pressure_trend'] = self._get_pressure_trend(status['pressure'])
         body = json.dumps(status)
         return f"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{body}"
 
-    def _api_pico_status(self):
-        pico_status = self.pico.get_status()
-        if pico_status:
-            body = json.dumps(pico_status)
+    def _api_remote_status(self):
+        remote_status = self.remote.get_status()
+        if remote_status:
+            body = json.dumps(remote_status)
         else:
-            body = json.dumps({'error': 'Pico not connected'})
+            body = json.dumps({'error': 'Remote not connected'})
         return f"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{body}"
 
     def _get_pressure_trend(self, current_pressure):
@@ -146,31 +146,31 @@ class ThermostatWebServer:
             pass
         return self._api_status()
 
-    def _handle_pico_post(self, request):
+    def _handle_remote_post(self, request):
         try:
             body_start = request.find('\r\n\r\n') + 4
             body = request[body_start:]
             data = json.loads(body)
 
-            if 'POST /api/pico/mode' in request:
-                self.pico.set_mode(int(data.get('mode', 0)))
-            elif 'POST /api/pico/heat_setpoint' in request:
-                self.pico.set_heat_setpoint(int(data.get('temp', 68)))
-            elif 'POST /api/pico/cool_setpoint' in request:
-                self.pico.set_cool_setpoint(int(data.get('temp', 75)))
-            elif 'POST /api/pico/boost' in request:
-                self.pico.set_boost(data.get('on', False))
-            elif 'POST /api/pico/sync' in request:
-                # Sync ESP32 setpoints to Pico (one call at a time with short delay)
+            if 'POST /api/remote/mode' in request:
+                self.remote.set_mode(int(data.get('mode', 0)))
+            elif 'POST /api/remote/heat_setpoint' in request:
+                self.remote.set_heat_setpoint(int(data.get('temp', 68)))
+            elif 'POST /api/remote/cool_setpoint' in request:
+                self.remote.set_cool_setpoint(int(data.get('temp', 75)))
+            elif 'POST /api/remote/boost' in request:
+                self.remote.set_boost(data.get('on', False))
+            elif 'POST /api/remote/sync' in request:
+                # Sync ESP32 setpoints to remote (one call at a time with short delay)
                 import time
-                self.pico.set_heat_setpoint(int(self.thermostat.heat_setpoint))
+                self.remote.set_heat_setpoint(int(self.thermostat.heat_setpoint))
                 time.sleep(0.2)
-                self.pico.set_cool_setpoint(int(self.thermostat.cool_setpoint))
+                self.remote.set_cool_setpoint(int(self.thermostat.cool_setpoint))
                 time.sleep(0.2)
-                self.pico.set_mode(self.thermostat.mode)
+                self.remote.set_mode(self.thermostat.mode)
         except Exception as e:
-            print(f"Pico POST error: {e}")
-        return self._api_pico_status()
+            print(f"Remote POST error: {e}")
+        return self._api_remote_status()
 
     def _serve_html(self):
         html = """<!DOCTYPE html>
@@ -191,6 +191,12 @@ body{font-family:sans-serif;background:#1a1a2e;color:#eee;padding:20px}
 .btn.boost{background:#9d4edd}
 .setrow{display:flex;align-items:center;justify-content:space-between;margin:12px 0}
 .setval{font-size:28px;min-width:60px;text-align:center}
+.slider{width:100%;height:8px;border-radius:4px;background:#0f3460;outline:none;-webkit-appearance:none;margin:8px 0}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:#e94560;cursor:pointer}
+.slider::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#e94560;cursor:pointer;border:none}
+.slider.cool::-webkit-slider-thumb{background:#00b4d8}
+.slider.cool::-moz-range-thumb{background:#00b4d8}
+.setlabel{display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:4px}
 #status{text-align:center;padding:12px;border-radius:8px;background:#2a3f5f}
 #status.heating{background:#e94560}
 #status.cooling{background:#00b4d8}
@@ -202,7 +208,7 @@ body{font-family:sans-serif;background:#1a1a2e;color:#eee;padding:20px}
 h3{font-size:14px;color:#888;margin-bottom:8px}
 .zone{border-top:2px solid #0f3460;padding-top:16px;margin-top:16px}
 .zone-title{font-size:18px;color:#e94560;margin-bottom:12px;text-align:center}
-.pico-title{color:#00b4d8}
+.remote-title{color:#00b4d8}
 .temp-small{font-size:32px;text-align:center}
 .sync-card{background:#1f4068;text-align:center}
 .btn.sync{background:#38b000;padding:16px 32px;font-size:18px}
@@ -231,26 +237,20 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <button class="btn" id="s1" onclick="sys(1)">Portable</button>
 </div>
 <h3>HEAT SETPOINT</h3>
-<div class="setrow">
-<button class="btn" onclick="adj('heat',-1)">-</button>
-<span class="setval"><span id="hset">68</span>&deg;</span>
-<button class="btn" onclick="adj('heat',1)">+</button>
-</div>
+<div class="setlabel"><span>60°</span><span id="hset">68</span>°<span>85°</span></div>
+<input type="range" min="60" max="85" value="68" class="slider" id="hslider" oninput="setHeat(this.value)">
 <h3>COOL SETPOINT</h3>
-<div class="setrow">
-<button class="btn" onclick="adj('cool',-1)">-</button>
-<span class="setval"><span id="cset">75</span>&deg;</span>
-<button class="btn" onclick="adj('cool',1)">+</button>
-</div>
+<div class="setlabel"><span>60°</span><span id="cset">75</span>°<span>85°</span></div>
+<input type="range" min="60" max="85" value="75" class="slider cool" id="cslider" oninput="setCool(this.value)">
 </div>
 
 <div class="card sync-card">
-<button class="btn sync" id="syncbtn" onclick="syncZones()">SYNC TO REMOTE</button>
+<button class="btn sync synced" id="syncbtn" onclick="syncZones()">SYNCED!</button>
 <div style="margin-top:8px;font-size:12px;color:#888">Copy Kitchen settings to Living Room</div>
 </div>
 
 <div class="card">
-<div class="zone-title pico-title">Living Room (Remote)</div>
+<div class="zone-title remote-title">Living Room (Remote)</div>
 <div class="temp-small"><span id="ptemp">--</span>&deg;F</div>
 <div class="row"><span id="phum">--%</span></div>
 <div id="pstatus">Offline</div>
@@ -258,23 +258,17 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <div class="card">
 <h3>REMOTE MODE</h3>
 <div class="row">
-<button class="btn" id="pm0" onclick="pmode(0)">OFF</button>
-<button class="btn" id="pm1" onclick="pmode(1)">HEAT</button>
-<button class="btn" id="pm2" onclick="pmode(2)">COOL</button>
-<button class="btn" id="pm3" onclick="pmode(3)">AUTO</button>
+<button class="btn" id="pm0" onclick="rmode(0)">OFF</button>
+<button class="btn" id="pm1" onclick="rmode(1)">HEAT</button>
+<button class="btn" id="pm2" onclick="rmode(2)">COOL</button>
+<button class="btn" id="pm3" onclick="rmode(3)">AUTO</button>
 </div>
 <h3>REMOTE HEAT SETPOINT</h3>
-<div class="setrow">
-<button class="btn" onclick="padj('heat',-1)">-</button>
-<span class="setval"><span id="phset">68</span>&deg;</span>
-<button class="btn" onclick="padj('heat',1)">+</button>
-</div>
+<div class="setlabel"><span>60°</span><span id="phset">68</span>°<span>85°</span></div>
+<input type="range" min="60" max="85" value="68" class="slider" id="phslider" oninput="setRHeat(this.value)">
 <h3>REMOTE COOL SETPOINT</h3>
-<div class="setrow">
-<button class="btn" onclick="padj('cool',-1)">-</button>
-<span class="setval"><span id="pcset">75</span>&deg;</span>
-<button class="btn" onclick="padj('cool',1)">+</button>
-</div>
+<div class="setlabel"><span>60°</span><span id="pcset">75</span>°<span>85°</span></div>
+<input type="range" min="60" max="85" value="75" class="slider cool" id="pcslider" oninput="setRCool(this.value)">
 <h3>BOOST (Portable Unit)</h3>
 <div class="row">
 <button class="btn" id="boost" onclick="boost()">BOOST OFF</button>
@@ -282,15 +276,23 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 </div>
 
 <script>
-var hs=68,cs=75,phs=68,pcs=75,pboost=false;
+var hs=68,cs=75,rhs=68,rcs=75,rboost=false;
+var adjustingHeat=false,adjustingCool=false,adjustingRHeat=false,adjustingRCool=false;
+var heatTimer,coolTimer,rheatTimer,rcoolTimer;
 function upd(d){
 document.getElementById('temp').textContent=d.temp?d.temp.toFixed(1):'--';
 document.getElementById('hum').textContent=d.humidity?d.humidity+'%':'--%';
 document.getElementById('pres').textContent=d.pressure?(d.pressure*0.02953).toFixed(2):'--';
 var trend=d.pressure_trend||'steady';
 document.getElementById('ptrend').textContent=trend=='rising'?'↑':trend=='falling'?'↓':'→';
+if(!adjustingHeat){
 document.getElementById('hset').textContent=d.heat_setpoint;
+document.getElementById('hslider').value=d.heat_setpoint;
+}
+if(!adjustingCool){
 document.getElementById('cset').textContent=d.cool_setpoint;
+document.getElementById('cslider').value=d.cool_setpoint;
+}
 hs=d.heat_setpoint;cs=d.cool_setpoint;
 var st=document.getElementById('status');
 st.className=d.heating_active?'heating':d.cooling_active?'cooling':'';
@@ -298,36 +300,44 @@ st.textContent=d.heating_active?'HEATING':d.cooling_active?'COOLING':'Idle';
 for(var i=0;i<4;i++)document.getElementById('m'+i).className='btn'+(d.mode==i?' active':'');
 document.getElementById('s0').className='btn'+(d.cool_system==0?' cool':'');
 document.getElementById('s1').className='btn'+(d.cool_system==1?' cool':'');
-if(d.pico){updPico(d.pico);}else{
+if(d.remote){updRemote(d.remote);}else{
 var ps=document.getElementById('pstatus');ps.className='offline';ps.textContent='Offline';}
 }
-function updPico(p){
-document.getElementById('ptemp').textContent=p.temp?p.temp.toFixed(1):'--';
-document.getElementById('phum').textContent=p.humidity?p.humidity+'%':'--%';
-document.getElementById('phset').textContent=p.heat_setpoint;
-document.getElementById('pcset').textContent=p.cool_setpoint;
-phs=p.heat_setpoint;pcs=p.cool_setpoint;pboost=p.boost_active;
+function updRemote(r){
+document.getElementById('ptemp').textContent=r.temp?r.temp.toFixed(1):'--';
+document.getElementById('phum').textContent=r.humidity?r.humidity+'%':'--%';
+if(!adjustingRHeat){
+document.getElementById('phset').textContent=r.heat_setpoint;
+document.getElementById('phslider').value=r.heat_setpoint;
+}
+if(!adjustingRCool){
+document.getElementById('pcset').textContent=r.cool_setpoint;
+document.getElementById('pcslider').value=r.cool_setpoint;
+}
+rhs=r.heat_setpoint;rcs=r.cool_setpoint;rboost=r.boost_active;
 var ps=document.getElementById('pstatus');
-ps.className=p.boost_active?'boost':p.heating_active?'heating':p.cooling_active?'cooling':'';
-ps.textContent=p.boost_active?'BOOST':p.heating_active?'HEATING':p.cooling_active?'COOLING':'Idle';
-for(var i=0;i<4;i++)document.getElementById('pm'+i).className='btn'+(p.mode==i?' active':'');
-document.getElementById('boost').className='btn'+(p.boost_active?' boost':'');
-document.getElementById('boost').textContent=p.boost_active?'BOOST ON':'BOOST OFF';
+ps.className=r.boost_active?'boost':r.heating_active?'heating':r.cooling_active?'cooling':'';
+ps.textContent=r.boost_active?'BOOST':r.heating_active?'HEATING':r.cooling_active?'COOLING':'Idle';
+for(var i=0;i<4;i++)document.getElementById('pm'+i).className='btn'+(r.mode==i?' active':'');
+document.getElementById('boost').className='btn'+(r.boost_active?' boost':'');
+document.getElementById('boost').textContent=r.boost_active?'BOOST ON':'BOOST OFF';
 }
 function get(){fetch('/api/status').then(r=>r.json()).then(upd).catch(e=>console.log(e));}
 function mode(m){fetch('/api/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(upd);}
-function adj(t,d){var v=(t=='heat'?hs:cs)+d;fetch('/api/'+(t=='heat'?'heat':'cool')+'_setpoint',{method:'POST',body:JSON.stringify({temp:v})}).then(r=>r.json()).then(upd);}
+function setHeat(v){adjustingHeat=true;document.getElementById('hset').textContent=v;clearTimeout(heatTimer);heatTimer=setTimeout(function(){fetch('/api/heat_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){adjustingHeat=false;upd(d);});},300);}
+function setCool(v){adjustingCool=true;document.getElementById('cset').textContent=v;clearTimeout(coolTimer);coolTimer=setTimeout(function(){fetch('/api/cool_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){adjustingCool=false;upd(d);});},300);}
 function sys(s){fetch('/api/cool_system',{method:'POST',body:JSON.stringify({system:s})}).then(r=>r.json()).then(upd);}
-function pmode(m){fetch('/api/pico/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updPico);}
-function padj(t,d){var v=(t=='heat'?phs:pcs)+d;fetch('/api/pico/'+(t=='heat'?'heat':'cool')+'_setpoint',{method:'POST',body:JSON.stringify({temp:v})}).then(r=>r.json()).then(updPico);}
-function boost(){fetch('/api/pico/boost',{method:'POST',body:JSON.stringify({on:!pboost})}).then(r=>r.json()).then(updPico);}
+function rmode(m){fetch('/api/remote/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updRemote);}
+function setRHeat(v){adjustingRHeat=true;document.getElementById('phset').textContent=v;clearTimeout(rheatTimer);rheatTimer=setTimeout(function(){fetch('/api/remote/heat_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){adjustingRHeat=false;updRemote(d);});},300);}
+function setRCool(v){adjustingRCool=true;document.getElementById('pcset').textContent=v;clearTimeout(rcoolTimer);rcoolTimer=setTimeout(function(){fetch('/api/remote/cool_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){adjustingRCool=false;updRemote(d);});},300);}
+function boost(){fetch('/api/remote/boost',{method:'POST',body:JSON.stringify({on:!rboost})}).then(r=>r.json()).then(updRemote);}
 function syncZones(){
 var btn=document.getElementById('syncbtn');
 btn.textContent='SYNCING...';
 btn.className='btn sync synced';
-fetch('/api/pico/sync',{method:'POST',body:'{}'}).then(r=>r.json()).then(function(p){
-updPico(p);btn.textContent='SYNCED!';
-setTimeout(function(){btn.textContent='SYNC TO REMOTE';btn.className='btn sync';},2000);
+fetch('/api/remote/sync',{method:'POST',body:'{}'}).then(r=>r.json()).then(function(r){
+updRemote(r);btn.textContent='SYNCED!';
+setTimeout(function(){btn.textContent='SYNCED!';btn.className='btn sync synced';},2000);
 }).catch(function(){btn.textContent='SYNC FAILED';btn.className='btn sync';});
 }
 get();setInterval(get,3000);

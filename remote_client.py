@@ -1,19 +1,27 @@
-# Pico Remote API Client
-# =======================
-# Used by ESP32 to communicate with Pico remote
+# Remote ESP32 API Client
+# ========================
+# Used by main ESP32 to communicate with remote ESP32
 
 import socket
 import json
 
 
-class PicoClient:
-    def __init__(self, pico_ip, port=80):
-        self.pico_ip = pico_ip
+class RemoteClient:
+    def __init__(self, remote_ip, port=80):
+        self.remote_ip = remote_ip
         self.port = port
         self.connected = False
+        self.last_error_time = 0
+        self.error_backoff = 10  # Skip requests for 10 seconds after error
 
     def _request(self, endpoint, params=None):
-        """Make HTTP request to Pico using raw sockets"""
+        """Make HTTP request to remote device using raw sockets"""
+        import time
+
+        # Skip if recently had an error (backoff)
+        if time.time() - self.last_error_time < self.error_backoff:
+            return None
+
         try:
             # Build URL path
             path = endpoint
@@ -23,12 +31,12 @@ class PicoClient:
 
             # Create socket and connect
             s = socket.socket()
-            s.settimeout(3)
-            addr = socket.getaddrinfo(self.pico_ip, self.port)[0][-1]
+            s.settimeout(2.0)  # 2 second timeout for ESP32-to-ESP32 communication
+            addr = socket.getaddrinfo(self.remote_ip, self.port)[0][-1]
             s.connect(addr)
 
             # Send HTTP request
-            request = f"GET {path} HTTP/1.0\r\nHost: {self.pico_ip}\r\nConnection: close\r\n\r\n"
+            request = f"GET {path} HTTP/1.0\r\nHost: {self.remote_ip}\r\nConnection: close\r\n\r\n"
             s.send(request.encode())
 
             # Receive response
@@ -55,12 +63,15 @@ class PicoClient:
             return data
 
         except Exception as e:
-            print(f"Pico API error: {e}")
+            import time
+            self.last_error_time = time.time()
             self.connected = False
+            # Only print error once per backoff period to avoid spam
+            print(f"Remote API error: {e} (backing off for {self.error_backoff}s)")
             return None
 
     def get_status(self):
-        """Get Pico thermostat status"""
+        """Get remote thermostat status"""
         return self._request('/api/status')
 
     def set_mode(self, mode):
@@ -88,6 +99,6 @@ class PicoClient:
         return self._request('/api/relay/rooftop', {'on': 1 if on else 0})
 
     def is_connected(self):
-        """Check if Pico is reachable"""
+        """Check if remote is reachable"""
         status = self.get_status()
         return status is not None

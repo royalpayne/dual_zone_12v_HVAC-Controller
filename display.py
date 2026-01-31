@@ -67,6 +67,29 @@ class ThermostatDisplay:
         self.oled.pixel(x+5, y+3, 1)
         self.oled.pixel(x+6, y+2, 1)
 
+    def draw_large_text(self, text, x, y, scale=2):
+        """Draw text at larger size by scaling pixels"""
+        # Create temporary buffer to render normal text
+        import framebuf
+
+        # Calculate buffer size (8 pixels wide per char, 8 pixels tall)
+        width = len(text) * 8
+        height = 8
+        temp_buffer = bytearray((width * height) // 8)
+        temp_fb = framebuf.FrameBuffer(temp_buffer, width, height, framebuf.MONO_VLSB)
+
+        # Draw text to temporary buffer
+        temp_fb.text(text, 0, 0, 1)
+
+        # Scale and copy to main display
+        for py in range(height):
+            for px in range(width):
+                if temp_fb.pixel(px, py):
+                    # Draw scaled pixel block
+                    for sy in range(scale):
+                        for sx in range(scale):
+                            self.oled.pixel(x + px * scale + sx, y + py * scale + sy, 1)
+
     def get_pressure_trend(self, current_pressure):
         """
         Determine pressure trend: 'rising', 'falling', or 'steady'
@@ -120,22 +143,22 @@ class ThermostatDisplay:
         """Main thermostat display with graphical icons"""
         self.clear()
 
-        # Temperature (large)
+        # Temperature and humidity on top row (large text, 2x scale)
         if temp_f is not None:
-            temp_str = f"{temp_f:.1f}F"
+            temp_str = f"{int(temp_f)}F"
         else:
-            temp_str = "--.-F"
-        self.oled.text(temp_str, 0, 0)
+            temp_str = "--F"
+        self.draw_large_text(temp_str, 0, 0, 2)
 
-        # Humidity with droplet icon
+        # Humidity in large text on right side
         if humidity is not None:
-            hum_str = f"{humidity:.0f}%"
+            hum_str = f"{int(humidity)}%"
         else:
             hum_str = "--%"
-        self.draw_droplet(70, 0)  # Draw droplet icon
-        self.oled.text(hum_str, 80, 0)
+        # Position humidity on right side (128 - (3 chars * 16 pixels) = 80)
+        self.draw_large_text(hum_str, 80, 0, 2)
 
-        # Pressure with trend arrow (if available)
+        # Pressure with trend arrow
         if pressure is not None:
             # Convert hPa to inHg for US
             press_inhg = pressure * 0.02953
@@ -143,27 +166,27 @@ class ThermostatDisplay:
 
             # Draw trend arrow
             if trend == 'rising':
-                self.draw_arrow_up(0, 13)
+                self.draw_arrow_up(0, 20)
             elif trend == 'falling':
-                self.draw_arrow_down(0, 13)
+                self.draw_arrow_down(0, 20)
             else:  # steady
-                self.draw_arrow_right(0, 15)
+                self.draw_arrow_right(0, 22)
 
             # Draw pressure value
-            self.oled.text(f"{press_inhg:.2f}\"", 10, 12)
+            self.oled.text(f"{press_inhg:.2f}\"", 10, 20)
 
         # Mode and setpoint
         mode_name = config.MODE_NAMES.get(mode, "???")
-        self.oled.text(f"Mode: {mode_name}", 0, 28)
-        self.oled.text(f"Set:  {setpoint:.0f}F", 0, 40)
+        self.oled.text(f"Mode: {mode_name}", 0, 34)
+        self.oled.text(f"Set:  {setpoint:.0f}F", 0, 46)
 
-        # Active status
+        # Active status on bottom row
         if heating_active:
-            self.oled.text(">>> HEATING <<<", 0, 54)
+            self.oled.text(">>> HEATING <<<", 0, 56)
         elif cooling_active:
-            self.oled.text(">>> COOLING <<<", 0, 54)
+            self.oled.text(">>> COOLING <<<", 0, 56)
         else:
-            self.oled.text("Idle", 0, 54)
+            self.oled.text("Idle", 0, 56)
 
         self.show()
     

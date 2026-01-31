@@ -25,6 +25,10 @@ except ImportError:
 class SensorHub:
     """Combines BME280/BMP280 and DHT11 for complete environmental readings"""
 
+    # Cache interval: only read sensors every 1000ms (1 second)
+    # This prevents blocking the web server on every API call
+    CACHE_INTERVAL_MS = 1000
+
     def __init__(self, i2c=None):
         self.sensor = None
         self.sensor_type = None
@@ -54,58 +58,67 @@ class SensorHub:
                 print("BMP280 initialized (temp + pressure)")
             except Exception as e:
                 print(f"BMP280 init failed: {e}")
-        
+
         # Initialize DHT11
         try:
             self.dht11 = dht.DHT11(Pin(config.DHT11_PIN))
             print("DHT11 initialized (humidity)")
         except Exception as e:
             print(f"DHT11 init failed: {e}")
-        
+
         # Cache last readings
         self._last_temp_f = None
         self._last_humidity = None
         self._last_pressure = None
-        self._last_read = 0
+        self._last_sensor_read = 0  # Last time BMP/BME was read
+        self._last_dht_read = 0      # Last time DHT11 was read
     
     def read(self):
         """
-        Read all sensors.
+        Read all sensors with caching to prevent blocking.
+        Only reads actual sensors if cache interval has elapsed.
         Returns: (temp_f, humidity, pressure_hpa)
         """
+        now = time.ticks_ms()
         temp_f = None
         humidity = None
         pressure = None
 
-        # Read BME280/BMP280
+        # Read BME280/BMP280 (only if cache expired)
         if self.sensor:
-            try:
-                if self.sensor_type == 'BME280':
-                    # BME280 returns temp, pressure, AND humidity
-                    temp_f, pressure, humidity = self.sensor.read_fahrenheit()
-                    self._last_temp_f = temp_f
-                    self._last_pressure = pressure
-                    self._last_humidity = humidity
-                else:
-                    # BMP280 returns only temp and pressure
-                    temp_f, pressure = self.sensor.read_fahrenheit()
-                    self._last_temp_f = temp_f
-                    self._last_pressure = pressure
-            except Exception as e:
-                print(f"{self.sensor_type} read error: {e}")
+            if time.ticks_diff(now, self._last_sensor_read) > self.CACHE_INTERVAL_MS:
+                try:
+                    if self.sensor_type == 'BME280':
+                        # BME280 returns temp, pressure, AND humidity
+                        temp_f, pressure, humidity = self.sensor.read_fahrenheit()
+                        self._last_temp_f = temp_f
+                        self._last_pressure = pressure
+                        self._last_humidity = humidity
+                    else:
+                        # BMP280 returns only temp and pressure
+                        temp_f, pressure = self.sensor.read_fahrenheit()
+                        self._last_temp_f = temp_f
+                        self._last_pressure = pressure
+                    self._last_sensor_read = now
+                except Exception as e:
+                    print(f"{self.sensor_type} read error: {e}")
+                    # Fall through to use cached values below
+
+            # Use cached values if we didn't just read or if read failed
+            if temp_f is None:
                 temp_f = self._last_temp_f
+            if pressure is None:
                 pressure = self._last_pressure
-                if self.sensor_type == 'BME280':
-                    humidity = self._last_humidity
+            if humidity is None and self.sensor_type == 'BME280':
+                humidity = self._last_humidity
 
         # Read DHT11 (only if BME280 not present or for backup)
         # DHT11 is slow - only read every 2+ seconds
-        now = time.ticks_ms()
-        if self.dht11 and time.ticks_diff(now, self._last_read) > 2000:
+        if self.dht11 and time.ticks_diff(now, self._last_dht_read) > 2000:
             try:
                 self.dht11.measure()
                 dht_humidity = self.dht11.humidity()
-                self._last_read = now
+                self._last_dht_read = now
 
                 # Use DHT11 humidity if BME280 humidity not available
                 if humidity is None:
@@ -119,10 +132,9 @@ class SensorHub:
                     self._last_temp_f = temp_f
             except Exception as e:
                 print(f"DHT11 read error: {e}")
-                if humidity is None:
-                    humidity = self._last_humidity
-        elif humidity is None:
-            # Use cached humidity if not reading DHT11 now
+
+        # Use cached humidity if not reading DHT11 now
+        if humidity is None:
             humidity = self._last_humidity
 
         return temp_f, humidity, pressure

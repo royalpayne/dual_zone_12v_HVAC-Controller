@@ -12,13 +12,13 @@ import config
 from sensor import SensorHub
 from ssd1306 import SSD1306_I2C
 from display import ThermostatDisplay
-from pico_client import PicoClient
+from remote_client import RemoteClient
 from thermostat_remote import RemoteThermostatController
 from webserver import ThermostatWebServer
 from scheduler import Scheduler
 
-# Pico Remote IP
-PICO_IP = "192.168.71.153"
+# Remote ESP32 IP
+REMOTE_IP = "192.168.71.153"
 
 
 def connect_wifi(display):
@@ -115,18 +115,18 @@ def main():
         if wlan.isconnected():
             ip = wlan.ifconfig()[0]
     
-    # Initialize Pico client for remote relay/IR control
-    pico = PicoClient(PICO_IP)
-    print(f"Pico remote at {PICO_IP}")
+    # Initialize remote ESP32 client for relay/IR control
+    remote = RemoteClient(REMOTE_IP)
+    print(f"Remote ESP32 at {REMOTE_IP}")
 
-    # Initialize thermostat controller (controls Pico remotely)
-    thermostat = RemoteThermostatController(pico)
+    # Initialize thermostat controller (controls remote ESP32)
+    thermostat = RemoteThermostatController(remote)
 
     # Initialize scheduler
     scheduler = Scheduler(thermostat)
 
-    # Initialize web server (pass pico client for direct API access)
-    webserver = ThermostatWebServer(thermostat, scheduler, pico)
+    # Initialize web server (pass remote client for direct API access)
+    webserver = ThermostatWebServer(thermostat, scheduler, remote)
     if ip:
         webserver.start()
         print(f"Open http://{ip} in your browser")
