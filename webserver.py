@@ -324,12 +324,12 @@ document.getElementById('boost').textContent=r.boost_active?'BOOST ON':'BOOST OF
 }
 function get(){fetch('/api/status').then(r=>r.json()).then(upd).catch(e=>console.log(e));}
 function mode(m){fetch('/api/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(upd);}
-function setHeat(v){adjustingHeat=true;document.getElementById('hset').textContent=v;clearTimeout(heatTimer);heatTimer=setTimeout(function(){fetch('/api/heat_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){adjustingHeat=false;upd(d);});},300);}
-function setCool(v){adjustingCool=true;document.getElementById('cset').textContent=v;clearTimeout(coolTimer);coolTimer=setTimeout(function(){fetch('/api/cool_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){adjustingCool=false;upd(d);});},300);}
+function setHeat(v){adjustingHeat=true;document.getElementById('hset').textContent=v;clearTimeout(heatTimer);heatTimer=setTimeout(function(){fetch('/api/heat_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){upd(d);setTimeout(function(){adjustingHeat=false;},500);});},500);}
+function setCool(v){adjustingCool=true;document.getElementById('cset').textContent=v;clearTimeout(coolTimer);coolTimer=setTimeout(function(){fetch('/api/cool_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){upd(d);setTimeout(function(){adjustingCool=false;},500);});},500);}
 function sys(s){fetch('/api/cool_system',{method:'POST',body:JSON.stringify({system:s})}).then(r=>r.json()).then(upd);}
 function rmode(m){fetch('/api/remote/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updRemote);}
-function setRHeat(v){adjustingRHeat=true;document.getElementById('phset').textContent=v;clearTimeout(rheatTimer);rheatTimer=setTimeout(function(){fetch('/api/remote/heat_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){adjustingRHeat=false;updRemote(d);});},300);}
-function setRCool(v){adjustingRCool=true;document.getElementById('pcset').textContent=v;clearTimeout(rcoolTimer);rcoolTimer=setTimeout(function(){fetch('/api/remote/cool_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){adjustingRCool=false;updRemote(d);});},300);}
+function setRHeat(v){adjustingRHeat=true;document.getElementById('phset').textContent=v;clearTimeout(rheatTimer);rheatTimer=setTimeout(function(){fetch('/api/remote/heat_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){updRemote(d);setTimeout(function(){adjustingRHeat=false;},500);});},500);}
+function setRCool(v){adjustingRCool=true;document.getElementById('pcset').textContent=v;clearTimeout(rcoolTimer);rcoolTimer=setTimeout(function(){fetch('/api/remote/cool_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){updRemote(d);setTimeout(function(){adjustingRCool=false;},500);});},500);}
 function boost(){fetch('/api/remote/boost',{method:'POST',body:JSON.stringify({on:!rboost})}).then(r=>r.json()).then(updRemote);}
 function syncZones(){
 var btn=document.getElementById('syncbtn');
