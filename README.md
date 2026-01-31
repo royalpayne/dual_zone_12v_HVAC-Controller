@@ -21,7 +21,11 @@ A DIY RV thermostat using two ESP32 microcontrollers to control three HVAC syste
 
 ## Wiring Diagrams
 
-**Complete system diagram:** See [wiring/dual_esp32_wiring.svg](wiring/dual_esp32_wiring.svg) for comprehensive color-coded wiring diagram with all connections.
+**ESP32 Main:** [wiring/esp32_main_wiring.svg](wiring/esp32_main_wiring.svg) - BMP280 and OLED connections
+
+**ESP32 Remote:** [wiring/esp32_remote_wiring.svg](wiring/esp32_remote_wiring.svg) - Complete HVAC hardware wiring
+
+Both diagrams include color-coded wiring and detailed hardware notes.
 
 ### ESP32 Main Wiring
 

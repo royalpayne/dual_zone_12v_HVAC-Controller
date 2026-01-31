@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1100" width="1200" height="1100">
+  <defs>
+    <style>
+      .board { fill: #2a2a2a; stroke: #000; stroke-width: 2; }
+      .pin { fill: #ffd700; stroke: #000; stroke-width: 1; }
+      .sensor { fill: #27ae60; stroke: #000; stroke-width: 2; }
+      .display { fill: #8e44ad; stroke: #000; stroke-width: 2; }
+      .relay { fill: #e67e22; stroke: #000; stroke-width: 2; }
+      .led { fill: #e74c3c; stroke: #000; stroke-width: 2; }
+
+      .wire-power { stroke: #ff0000; stroke-width: 3; fill: none; }
+      .wire-ground { stroke: #000000; stroke-width: 3; fill: none; }
+      .wire-sda { stroke: #00ff00; stroke-width: 3; fill: none; }
+      .wire-scl { stroke: #0000ff; stroke-width: 3; fill: none; }
+      .wire-data { stroke: #ff00ff; stroke-width: 3; fill: none; }
+      .wire-relay { stroke: #ffa500; stroke-width: 3; fill: none; }
+      .wire-ir { stroke: #ff69b4; stroke-width: 3; fill: none; }
+
+      .label { font-family: Arial, sans-serif; font-size: 14px; fill: #fff; }
+      .label-small { font-family: Arial, sans-serif; font-size: 11px; fill: #fff; }
+      .title { font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; fill: #fff; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 16px; fill: #ccc; }
+      .pin-label { font-family: monospace; font-size: 11px; fill: #000; }
+      .note { font-family: Arial, sans-serif; font-size: 12px; fill: #aaa; font-style: italic; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="1100" fill="#1a1a1a"/>
+
+  <!-- Title -->
+  <text x="600" y="40" class="title" text-anchor="middle">ESP32 REMOTE CONTROLLER</text>
+  <text x="600" y="65" class="subtitle" text-anchor="middle">192.168.71.153 - HVAC Hardware Control</text>
+
+  <!-- ESP32 Remote Board -->
+  <rect x="480" y="120" width="240" height="400" class="board" rx="5"/>
+  <text x="600" y="145" class="label" text-anchor="middle">ESP32 DevKit</text>
+  <text x="600" y="162" class="label-small" text-anchor="middle">Remote Controller</text>
+
+  <!-- ESP32 Pins (Left side) -->
+  <circle cx="490" cy="200" r="5" class="pin"/>
+  <text x="500" y="205" class="pin-label">3.3V</text>
+
+  <circle cx="490" cy="230" r="5" class="pin"/>
+  <text x="500" y="235" class="pin-label">GND</text>
+
+  <circle cx="490" cy="280" r="5" class="pin"/>
+  <text x="500" y="285" class="pin-label">GPIO 21 (SDA)</text>
+
+  <circle cx="490" cy="310" r="5" class="pin"/>
+  <text x="500" y="315" class="pin-label">GPIO 22 (SCL)</text>
+
+  <circle cx="490" cy="360" r="5" class="pin"/>
+  <text x="500" y="365" class="pin-label">GPIO 4 (DHT11)</text>
+
+  <circle cx="490" cy="410" r="5" class="pin"/>
+  <text x="500" y="415" class="pin-label">GPIO 25 (Relay)</text>
+
+  <circle cx="490" cy="440" r="5" class="pin"/>
+  <text x="500" y="445" class="pin-label">GPIO 26 (Relay)</text>
+
+  <circle cx="490" cy="480" r="5" class="pin"/>
+  <text x="500" y="485" class="pin-label">GPIO 18 (IR TX)</text>
+
+  <circle cx="490" cy="500" r="5" class="pin"/>
+  <text x="500" y="505" class="pin-label">GPIO 19 (IR RX)</text>
+
+  <!-- BMP280 Sensor -->
+  <rect x="80" y="600" width="160" height="120" class="sensor" rx="5"/>
+  <text x="160" y="635" class="label" text-anchor="middle">BMP280</text>
+  <text x="160" y="655" class="label-small" text-anchor="middle">Temperature</text>
+  <text x="160" y="670" class="label-small" text-anchor="middle">Pressure</text>
+  <text x="160" y="690" class="label-small" text-anchor="middle">I2C: 0x76</text>
+
+  <!-- BMP280 Pins -->
+  <circle cx="200" cy="610" r="4" class="pin"/>
+  <text x="210" y="615" class="label-small">VCC</text>
+  <circle cx="200" cy="635" r="4" class="pin"/>
+  <text x="210" y="640" class="label-small">GND</text>
+  <circle cx="200" cy="665" r="4" class="pin"/>
+  <text x="210" y="670" class="label-small">SCL</text>
+  <circle cx="200" cy="695" r="4" class="pin"/>
+  <text x="210" y="700" class="label-small">SDA</text>
+
+  <!-- DHT11 Sensor -->
+  <rect x="280" y="600" width="160" height="120" class="sensor" rx="5"/>
+  <text x="360" y="635" class="label" text-anchor="middle">DHT11</text>
+  <text x="360" y="655" class="label-small" text-anchor="middle">Humidity</text>
+  <text x="360" y="670" class="label-small" text-anchor="middle">Sensor</text>
+
+  <!-- DHT11 Pins -->
+  <circle cx="400" cy="610" r="4" class="pin"/>
+  <text x="410" y="615" class="label-small">VCC</text>
+  <circle cx="400" cy="640" r="4" class="pin"/>
+  <text x="410" y="645" class="label-small">GND</text>
+  <circle cx="400" cy="670" r="4" class="pin"/>
+  <text x="410" y="675" class="label-small">DATA</text>
+
+  <!-- OLED Display -->
+  <rect x="80" y="760" width="160" height="120" class="display" rx="5"/>
+  <text x="160" y="795" class="label" text-anchor="middle">OLED</text>
+  <text x="160" y="815" class="label-small" text-anchor="middle">128x64</text>
+  <text x="160" y="830" class="label-small" text-anchor="middle">SSD1306</text>
+  <text x="160" y="850" class="label-small" text-anchor="middle">I2C: 0x3C</text>
+
+  <!-- OLED Pins -->
+  <circle cx="200" cy="770" r="4" class="pin"/>
+  <text x="210" y="775" class="label-small">VCC</text>
+  <circle cx="200" cy="795" r="4" class="pin"/>
+  <text x="210" y="800" class="label-small">GND</text>
+  <circle cx="200" cy="825" r="4" class="pin"/>
+  <text x="210" y="830" class="label-small">SCL</text>
+  <circle cx="200" cy="855" r="4" class="pin"/>
+  <text x="210" y="860" class="label-small">SDA</text>
+
+  <!-- 2-Channel Relay Module -->
+  <rect x="960" y="600" width="180" height="160" class="relay" rx="5"/>
+  <text x="1050" y="635" class="label" text-anchor="middle">2-Channel Relay</text>
+  <text x="1050" y="655" class="label-small" text-anchor="middle">Active-Low Module</text>
+
+  <!-- Relay Pins -->
+  <circle cx="1000" cy="615" r="4" class="pin"/>
+  <text x="960" y="620" class="label-small" text-anchor="end">VCC</text>
+  <circle cx="1000" cy="645" r="4" class="pin"/>
+  <text x="960" y="650" class="label-small" text-anchor="end">GND</text>
+  <circle cx="1000" cy="685" r="4" class="pin"/>
+  <text x="960" y="690" class="label-small" text-anchor="end">IN1</text>
+  <circle cx="1000" cy="725" r="4" class="pin"/>
+  <text x="960" y="730" class="label-small" text-anchor="end">IN2</text>
+
+  <!-- Relay Output Labels -->
+  <text x="1050" y="695" class="label-small" text-anchor="middle">CH1 → Furnace</text>
+  <text x="1050" y="735" class="label-small" text-anchor="middle">CH2 → Rooftop AC</text>
+
+  <!-- IR LED -->
+  <rect x="960" y="800" width="180" height="80" class="led" rx="5"/>
+  <text x="1050" y="835" class="label" text-anchor="middle">IR LED (38kHz)</text>
+  <text x="1050" y="855" class="label-small" text-anchor="middle">Transmitter</text>
+
+  <!-- IR LED Pins -->
+  <circle cx="1000" cy="815" r="4" class="pin"/>
+  <text x="960" y="820" class="label-small" text-anchor="end">Signal</text>
+  <circle cx="1000" cy="845" r="4" class="pin"/>
+  <text x="960" y="850" class="label-small" text-anchor="end">GND</text>
+
+  <!-- Wiring - BMP280 -->
+  <path d="M 200 610 L 430 610 L 430 200 L 490 200" class="wire-power"/>
+  <path d="M 200 635 L 420 635 L 420 230 L 490 230" class="wire-ground"/>
+  <path d="M 200 665 L 410 665 L 410 310 L 490 310" class="wire-scl"/>
+  <path d="M 200 695 L 400 695 L 400 280 L 490 280" class="wire-sda"/>
+
+  <!-- Wiring - DHT11 -->
+  <path d="M 400 610 L 440 610 L 440 200 L 490 200" class="wire-power"/>
+  <path d="M 400 640 L 435 640 L 435 230 L 490 230" class="wire-ground"/>
+  <path d="M 400 670 L 450 670 L 450 360 L 490 360" class="wire-data"/>
+
+  <!-- Wiring - OLED -->
+  <path d="M 200 770 L 250 770 L 250 190 L 430 190 L 430 200 L 490 200" class="wire-power"/>
+  <path d="M 200 795 L 260 795 L 260 220 L 425 220 L 425 230 L 490 230" class="wire-ground"/>
+  <path d="M 200 825 L 270 825 L 270 320 L 405 320 L 405 310 L 490 310" class="wire-scl"/>
+  <path d="M 200 855 L 280 855 L 280 290 L 395 290 L 395 280 L 490 280" class="wire-sda"/>
+
+  <!-- Wiring - Relay Module -->
+  <path d="M 1000 615 L 750 615 L 750 200 L 490 200" class="wire-power"/>
+  <path d="M 1000 645 L 760 645 L 760 230 L 490 230" class="wire-ground"/>
+  <path d="M 1000 685 L 770 685 L 770 410 L 490 410" class="wire-relay"/>
+  <path d="M 1000 725 L 780 725 L 780 440 L 490 440" class="wire-relay"/>
+
+  <!-- Wiring - IR LED -->
+  <path d="M 1000 815 L 790 815 L 790 480 L 490 480" class="wire-ir"/>
+  <path d="M 1000 845 L 800 845 L 800 230 L 490 230" class="wire-ground"/>
+
+  <!-- Notes Section -->
+  <text x="600" y="950" class="subtitle" text-anchor="middle">Hardware Notes</text>
+
+  <text x="600" y="980" class="note" text-anchor="middle">• I2C bus shared between BMP280 and OLED (different addresses: 0x76 and 0x3C)</text>
+  <text x="600" y="1000" class="note" text-anchor="middle">• Relay module is active-low: LOW signal turns relay ON, HIGH turns relay OFF</text>
+  <text x="600" y="1020" class="note" text-anchor="middle">• IR Receiver on GPIO 19 is optional for learning remote codes</text>
+  <text x="600" y="1040" class="note" text-anchor="middle">• BMP280 will be upgraded to BME280 (adds humidity, making DHT11 redundant)</text>
+
+  <!-- Legend -->
+  <rect x="50" y="920" width="280" height="5" class="wire-power"/>
+  <text x="340" y="927" class="label-small">+3.3V Power (Red)</text>
+
+  <rect x="50" y="935" width="280" height="5" class="wire-ground"/>
+  <text x="340" y="942" class="label-small">Ground (Black)</text>
+
+  <rect x="420" y="920" width="180" height="5" class="wire-sda"/>
+  <text x="610" y="927" class="label-small">I2C SDA (Green)</text>
+
+  <rect x="420" y="935" width="180" height="5" class="wire-scl"/>
+  <text x="610" y="942" class="label-small">I2C SCL (Blue)</text>
+
+  <rect x="700" y="920" width="180" height="5" class="wire-data"/>
+  <text x="890" y="927" class="label-small">Data (Magenta)</text>
+
+  <rect x="700" y="935" width="180" height="5" class="wire-relay"/>
+  <text x="890" y="942" class="label-small">Relay (Orange)</text>
+
+  <rect x="950" y="920" width="180" height="5" class="wire-ir"/>
+  <text x="1140" y="927" class="label-small">IR Signal (Pink)</text>
+</svg>
