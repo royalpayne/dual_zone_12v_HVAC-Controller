@@ -16,17 +16,19 @@ fi
 cd esp32_remote
 
 echo ""
-echo "Step 1: Checking connection to ESP32..."
-mpremote connect /dev/ttyUSB0 exec "print('Connected to ESP32')" || {
-    echo "Failed to connect on /dev/ttyUSB0, trying /dev/ttyACM0..."
-    DEVICE=/dev/ttyACM0
-    mpremote connect $DEVICE exec "print('Connected to ESP32')" || {
-        echo "ERROR: Could not connect to ESP32 on any device"
-        exit 1
-    }
-} && DEVICE=/dev/ttyUSB0
+echo "Step 1: Detecting ESP32 device..."
 
-echo "✓ Connected on $DEVICE"
+# Try ttyUSB0 first (most common for ESP32)
+if [ -e /dev/ttyUSB0 ]; then
+    DEVICE=/dev/ttyUSB0
+    echo "✓ Found ESP32 on $DEVICE"
+elif [ -e /dev/ttyACM0 ]; then
+    DEVICE=/dev/ttyACM0
+    echo "✓ Found ESP32 on $DEVICE"
+else
+    echo "ERROR: No ESP32 device found (/dev/ttyUSB0 or /dev/ttyACM0)"
+    exit 1
+fi
 
 echo ""
 echo "Step 2: Uploading core files..."

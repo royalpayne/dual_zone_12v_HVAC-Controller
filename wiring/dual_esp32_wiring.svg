@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" width="1400" height="1000">
+  <defs>
+    <!-- Define styles -->
+    <style>
+      .board { fill: #2a2a2a; stroke: #000; stroke-width: 2; }
+      .pin { fill: #ffd700; stroke: #000; stroke-width: 1; }
+      .component { fill: #4a90e2; stroke: #000; stroke-width: 2; }
+      .relay { fill: #e67e22; stroke: #000; stroke-width: 2; }
+      .sensor { fill: #27ae60; stroke: #000; stroke-width: 2; }
+      .display { fill: #8e44ad; stroke: #000; stroke-width: 2; }
+      .led { fill: #e74c3c; stroke: #000; stroke-width: 2; }
+      .power { fill: #c0392b; stroke: #000; stroke-width: 2; }
+      .ground { fill: #34495e; stroke: #000; stroke-width: 2; }
+
+      /* Wire colors */
+      .wire-power { stroke: #ff0000; stroke-width: 2; fill: none; }
+      .wire-ground { stroke: #000000; stroke-width: 2; fill: none; }
+      .wire-i2c-sda { stroke: #00ff00; stroke-width: 2; fill: none; }
+      .wire-i2c-scl { stroke: #0000ff; stroke-width: 2; fill: none; }
+      .wire-data { stroke: #ff00ff; stroke-width: 2; fill: none; }
+      .wire-relay { stroke: #ffa500; stroke-width: 2; fill: none; }
+      .wire-ir { stroke: #ff69b4; stroke-width: 2; fill: none; }
+
+      .label { font-family: Arial, sans-serif; font-size: 12px; fill: #fff; }
+      .label-small { font-family: Arial, sans-serif; font-size: 10px; fill: #fff; }
+      .title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; fill: #fff; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 14px; fill: #ccc; }
+      .pin-label { font-family: monospace; font-size: 9px; fill: #000; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="1000" fill="#1a1a1a"/>
+
+  <!-- Title -->
+  <text x="700" y="30" class="title" text-anchor="middle">RV Thermostat - Dual ESP32 Wiring Diagram</text>
+  <text x="700" y="55" class="subtitle" text-anchor="middle">Complete Hardware Configuration</text>
+
+  <!-- ========== LEFT SIDE: ESP32 MAIN ========== -->
+  <text x="250" y="90" class="title" text-anchor="middle">ESP32 MAIN (192.168.71.152)</text>
+
+  <!-- ESP32 Main Board -->
+  <rect x="150" y="110" width="200" height="300" class="board" rx="5"/>
+  <text x="250" y="135" class="label" text-anchor="middle">ESP32 DevKit</text>
+
+  <!-- ESP32 Main Pins -->
+  <!-- 3.3V -->
+  <circle cx="170" cy="160" r="4" class="pin"/>
+  <text x="180" y="163" class="pin-label">3.3V</text>
+
+  <!-- GND -->
+  <circle cx="170" cy="180" r="4" class="pin"/>
+  <text x="180" y="183" class="pin-label">GND</text>
+
+  <!-- GPIO 21 (SDA) -->
+  <circle cx="170" cy="220" r="4" class="pin"/>
+  <text x="180" y="223" class="pin-label">GPIO 21 (SDA)</text>
+
+  <!-- GPIO 22 (SCL) -->
+  <circle cx="170" cy="240" r="4" class="pin"/>
+  <text x="180" y="243" class="pin-label">GPIO 22 (SCL)</text>
+
+  <!-- BMP280 Sensor (ESP32 Main) -->
+  <rect x="80" y="480" width="80" height="60" class="sensor" rx="3"/>
+  <text x="120" y="505" class="label" text-anchor="middle">BMP280</text>
+  <text x="120" y="520" class="label-small" text-anchor="middle">Temperature</text>
+  <text x="120" y="532" class="label-small" text-anchor="middle">Pressure</text>
+
+  <!-- BMP280 Pins -->
+  <circle cx="90" cy="485" r="3" class="pin"/>
+  <text x="95" y="488" class="label-small">VCC</text>
+  <circle cx="90" cy="500" r="3" class="pin"/>
+  <text x="95" y="503" class="label-small">GND</text>
+  <circle cx="90" cy="515" r="3" class="pin"/>
+  <text x="95" y="518" class="label-small">SCL</text>
+  <circle cx="90" cy="530" r="3" class="pin"/>
+  <text x="95" y="533" class="label-small">SDA</text>
+
+  <!-- OLED Display (ESP32 Main) -->
+  <rect x="80" y="580" width="80" height="60" class="display" rx="3"/>
+  <text x="120" y="605" class="label" text-anchor="middle">OLED</text>
+  <text x="120" y="620" class="label-small" text-anchor="middle">128x64</text>
+  <text x="120" y="632" class="label-small" text-anchor="middle">SSD1306</text>
+
+  <!-- OLED Pins -->
+  <circle cx="90" cy="585" r="3" class="pin"/>
+  <text x="95" y="588" class="label-small">VCC</text>
+  <circle cx="90" cy="600" r="3" class="pin"/>
+  <text x="95" y="603" class="label-small">GND</text>
+  <circle cx="90" cy="615" r="3" class="pin"/>
+  <text x="95" y="618" class="label-small">SCL</text>
+  <circle cx="90" cy="630" r="3" class="pin"/>
+  <text x="95" y="633" class="label-small">SDA</text>
+
+  <!-- ========== RIGHT SIDE: ESP32 REMOTE ========== -->
+  <text x="1050" y="90" class="title" text-anchor="middle">ESP32 REMOTE (192.168.71.153)</text>
+
+  <!-- ESP32 Remote Board -->
+  <rect x="950" y="110" width="200" height="380" class="board" rx="5"/>
+  <text x="1050" y="135" class="label" text-anchor="middle">ESP32 DevKit</text>
+
+  <!-- ESP32 Remote Pins -->
+  <!-- 3.3V -->
+  <circle cx="970" cy="160" r="4" class="pin"/>
+  <text x="980" y="163" class="pin-label">3.3V</text>
+
+  <!-- GND -->
+  <circle cx="970" cy="180" r="4" class="pin"/>
+  <text x="980" y="183" class="pin-label">GND</text>
+
+  <!-- GPIO 21 (SDA) -->
+  <circle cx="970" cy="220" r="4" class="pin"/>
+  <text x="980" y="223" class="pin-label">GPIO 21 (SDA)</text>
+
+  <!-- GPIO 22 (SCL) -->
+  <circle cx="970" cy="240" r="4" class="pin"/>
+  <text x="980" y="243" class="pin-label">GPIO 22 (SCL)</text>
+
+  <!-- GPIO 4 (DHT11) -->
+  <circle cx="970" cy="280" r="4" class="pin"/>
+  <text x="980" y="283" class="pin-label">GPIO 4 (DHT11)</text>
+
+  <!-- GPIO 25 (Furnace) -->
+  <circle cx="970" cy="320" r="4" class="pin"/>
+  <text x="980" y="323" class="pin-label">GPIO 25 (Relay)</text>
+
+  <!-- GPIO 26 (Rooftop AC) -->
+  <circle cx="970" cy="340" r="4" class="pin"/>
+  <text x="980" y="343" class="pin-label">GPIO 26 (Relay)</text>
+
+  <!-- GPIO 18 (IR LED) -->
+  <circle cx="970" cy="380" r="4" class="pin"/>
+  <text x="980" y="383" class="pin-label">GPIO 18 (IR TX)</text>
+
+  <!-- GPIO 19 (IR RX) -->
+  <circle cx="970" cy="400" r="4" class="pin"/>
+  <text x="980" y="403" class="pin-label">GPIO 19 (IR RX)</text>
+
+  <!-- BMP280 Sensor (ESP32 Remote) -->
+  <rect x="1200" y="480" width="80" height="60" class="sensor" rx="3"/>
+  <text x="1240" y="505" class="label" text-anchor="middle">BMP280</text>
+  <text x="1240" y="520" class="label-small" text-anchor="middle">Temperature</text>
+  <text x="1240" y="532" class="label-small" text-anchor="middle">Pressure</text>
+
+  <!-- BMP280 Pins -->
+  <circle cx="1210" cy="485" r="3" class="pin"/>
+  <text x="1215" y="488" class="label-small">VCC</text>
+  <circle cx="1210" cy="500" r="3" class="pin"/>
+  <text x="1215" y="503" class="label-small">GND</text>
+  <circle cx="1210" cy="515" r="3" class="pin"/>
+  <text x="1215" y="518" class="label-small">SCL</text>
+  <circle cx="1210" cy="530" r="3" class="pin"/>
+  <text x="1215" y="533" class="label-small">SDA</text>
+
+  <!-- DHT11 Sensor -->
+  <rect x="1200" y="580" width="80" height="50" class="sensor" rx="3"/>
+  <text x="1240" y="603" class="label" text-anchor="middle">DHT11</text>
+  <text x="1240" y="618" class="label-small" text-anchor="middle">Humidity</text>
+
+  <!-- DHT11 Pins -->
+  <circle cx="1210" cy="585" r="3" class="pin"/>
+  <text x="1215" y="588" class="label-small">VCC</text>
+  <circle cx="1210" cy="600" r="3" class="pin"/>
+  <text x="1215" y="603" class="label-small">GND</text>
+  <circle cx="1210" cy="615" r="3" class="pin"/>
+  <text x="1215" y="618" class="label-small">DATA</text>
+
+  <!-- OLED Display (ESP32 Remote) -->
+  <rect x="1200" y="670" width="80" height="60" class="display" rx="3"/>
+  <text x="1240" y="695" class="label" text-anchor="middle">OLED</text>
+  <text x="1240" y="710" class="label-small" text-anchor="middle">128x64</text>
+  <text x="1240" y="722" class="label-small" text-anchor="middle">SSD1306</text>
+
+  <!-- OLED Pins -->
+  <circle cx="1210" cy="675" r="3" class="pin"/>
+  <text x="1215" y="678" class="label-small">VCC</text>
+  <circle cx="1210" cy="690" r="3" class="pin"/>
+  <text x="1215" y="693" class="label-small">GND</text>
+  <circle cx="1210" cy="705" r="3" class="pin"/>
+  <text x="1215" y="708" class="label-small">SCL</text>
+  <circle cx="1210" cy="720" r="3" class="pin"/>
+  <text x="1215" y="723" class="label-small">SDA</text>
+
+  <!-- 2-Channel Relay Module -->
+  <rect x="1200" y="780" width="120" height="80" class="relay" rx="3"/>
+  <text x="1260" y="805" class="label" text-anchor="middle">2-CH Relay</text>
+  <text x="1260" y="820" class="label-small" text-anchor="middle">Active-Low</text>
+
+  <!-- Relay Pins -->
+  <circle cx="1210" cy="790" r="3" class="pin"/>
+  <text x="1215" y="793" class="label-small">VCC</text>
+  <circle cx="1210" cy="805" r="3" class="pin"/>
+  <text x="1215" y="808" class="label-small">GND</text>
+  <circle cx="1210" cy="825" r="3" class="pin"/>
+  <text x="1215" y="828" class="label-small">IN1</text>
+  <circle cx="1210" cy="845" r="3" class="pin"/>
+  <text x="1215" y="848" class="label-small">IN2</text>
+
+  <!-- Relay Outputs -->
+  <text x="1305" y="803" class="label-small" text-anchor="end">CH1→Furnace</text>
+  <text x="1305" y="818" class="label-small" text-anchor="end">CH2→Rooftop AC</text>
+
+  <!-- IR LED -->
+  <circle cx="1240" cy="890" r="15" class="led"/>
+  <text x="1240" y="895" class="label" text-anchor="middle">IR</text>
+  <text x="1240" y="920" class="label-small" text-anchor="middle">38kHz LED</text>
+  <circle cx="1230" cy="885" r="3" class="pin"/>
+  <text x="1225" y="883" class="label-small" text-anchor="end">+</text>
+  <circle cx="1250" cy="885" r="3" class="pin"/>
+  <text x="1255" y="883" class="label-small">-</text>
+
+  <!-- ========== POWER RAILS (CENTER) ========== -->
+  <text x="700" y="480" class="title" text-anchor="middle">POWER DISTRIBUTION</text>
+
+  <!-- Power Rail -->
+  <rect x="600" y="500" width="200" height="40" class="power" rx="3"/>
+  <text x="700" y="525" class="label" text-anchor="middle">+3.3V Rail</text>
+
+  <!-- Ground Rail -->
+  <rect x="600" y="560" width="200" height="40" class="ground" rx="3"/>
+  <text x="700" y="585" class="label" text-anchor="middle">GND Rail</text>
+
+  <!-- ========== WIRING CONNECTIONS ========== -->
+
+  <!-- ESP32 Main - Power Connections -->
+  <!-- 3.3V to power rail -->
+  <path d="M 170 160 L 170 520 L 600 520" class="wire-power"/>
+  <!-- GND to ground rail -->
+  <path d="M 170 180 L 170 580 L 600 580" class="wire-ground"/>
+
+  <!-- ESP32 Remote - Power Connections -->
+  <!-- 3.3V to power rail -->
+  <path d="M 970 160 L 970 520 L 800 520" class="wire-power"/>
+  <!-- GND to ground rail -->
+  <path d="M 970 180 L 970 580 L 800 580" class="wire-ground"/>
+
+  <!-- BMP280 Main - Power -->
+  <path d="M 90 485 L 50 485 L 50 520 L 600 520" class="wire-power"/>
+  <path d="M 90 500 L 40 500 L 40 580 L 600 580" class="wire-ground"/>
+
+  <!-- BMP280 Main - I2C -->
+  <path d="M 90 515 L 30 515 L 30 240 L 170 240" class="wire-i2c-scl"/>
+  <path d="M 90 530 L 20 530 L 20 220 L 170 220" class="wire-i2c-sda"/>
+
+  <!-- OLED Main - Power -->
+  <path d="M 90 585 L 60 585 L 60 520 L 600 520" class="wire-power"/>
+  <path d="M 90 600 L 50 600 L 50 580 L 600 580" class="wire-ground"/>
+
+  <!-- OLED Main - I2C -->
+  <path d="M 90 615 L 40 615 L 40 260 L 140 260 L 140 240 L 170 240" class="wire-i2c-scl"/>
+  <path d="M 90 630 L 30 630 L 30 270 L 150 270 L 150 220 L 170 220" class="wire-i2c-sda"/>
+
+  <!-- BMP280 Remote - Power -->
+  <path d="M 1210 485 L 1350 485 L 1350 520 L 800 520" class="wire-power"/>
+  <path d="M 1210 500 L 1360 500 L 1360 580 L 800 580" class="wire-ground"/>
+
+  <!-- BMP280 Remote - I2C -->
+  <path d="M 1210 515 L 1180 515 L 1180 450 L 1100 450 L 1100 240 L 970 240" class="wire-i2c-scl"/>
+  <path d="M 1210 530 L 1170 530 L 1170 440 L 1090 440 L 1090 220 L 970 220" class="wire-i2c-sda"/>
+
+  <!-- DHT11 - Power and Data -->
+  <path d="M 1210 585 L 1340 585 L 1340 520 L 800 520" class="wire-power"/>
+  <path d="M 1210 600 L 1350 600 L 1350 580 L 800 580" class="wire-ground"/>
+  <path d="M 1210 615 L 1160 615 L 1160 280 L 970 280" class="wire-data"/>
+
+  <!-- OLED Remote - Power -->
+  <path d="M 1210 675 L 1330 675 L 1330 520 L 800 520" class="wire-power"/>
+  <path d="M 1210 690 L 1340 690 L 1340 580 L 800 580" class="wire-ground"/>
+
+  <!-- OLED Remote - I2C -->
+  <path d="M 1210 705 L 1190 705 L 1190 460 L 1110 460 L 1110 240 L 970 240" class="wire-i2c-scl"/>
+  <path d="M 1210 720 L 1180 720 L 1180 470 L 1100 470 L 1100 220 L 970 220" class="wire-i2c-sda"/>
+
+  <!-- Relay Module - Power -->
+  <path d="M 1210 790 L 1320 790 L 1320 520 L 800 520" class="wire-power"/>
+  <path d="M 1210 805 L 1330 805 L 1330 580 L 800 580" class="wire-ground"/>
+
+  <!-- Relay Module - Control -->
+  <path d="M 1210 825 L 1150 825 L 1150 320 L 970 320" class="wire-relay"/>
+  <path d="M 1210 845 L 1140 845 L 1140 340 L 970 340" class="wire-relay"/>
+
+  <!-- IR LED - Connections -->
+  <path d="M 1230 885 L 1230 870 L 1130 870 L 1130 380 L 970 380" class="wire-ir"/>
+  <path d="M 1250 885 L 1250 860 L 1310 860 L 1310 580 L 800 580" class="wire-ground"/>
+
+  <!-- ========== LEGEND ========== -->
+  <text x="700" y="950" class="subtitle" text-anchor="middle">Wire Color Legend</text>
+
+  <line x1="400" y1="970" x2="450" y2="970" class="wire-power"/>
+  <text x="455" y="973" class="label-small">+3.3V Power (Red)</text>
+
+  <line x1="400" y1="985" x2="450" y2="985" class="wire-ground"/>
+  <text x="455" y="988" class="label-small">Ground (Black)</text>
+
+  <line x1="600" y1="970" x2="650" y2="970" class="wire-i2c-sda"/>
+  <text x="655" y="973" class="label-small">I2C SDA (Green)</text>
+
+  <line x1="600" y1="985" x2="650" y2="985" class="wire-i2c-scl"/>
+  <text x="655" y="988" class="label-small">I2C SCL (Blue)</text>
+
+  <line x1="850" y1="970" x2="900" y2="970" class="wire-data"/>
+  <text x="905" y="973" class="label-small">Data Signal (Magenta)</text>
+
+  <line x1="850" y1="985" x2="900" y2="985" class="wire-relay"/>
+  <text x="905" y="988" class="label-small">Relay Control (Orange)</text>
+
+  <line x1="1050" y1="970" x2="1100" y2="970" class="wire-ir"/>
+  <text x="1105" y="973" class="label-small">IR Signal (Pink)</text>
+</svg>
