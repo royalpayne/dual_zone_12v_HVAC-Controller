@@ -6,7 +6,7 @@
 set -e
 
 DEVICE=${1:-/dev/ttyUSB0}
-FIRMWARE="esp32-20231005-v1.21.0.bin"
+FIRMWARE="ESP32_GENERIC-20240222-v1.22.2.bin"
 
 echo "========================================="
 echo "Flashing ESP32 Main Controller"
@@ -17,7 +17,7 @@ echo "========================================="
 if [ ! -f "$FIRMWARE" ]; then
     echo "Firmware file not found: $FIRMWARE"
     echo "Downloading MicroPython firmware..."
-    wget -O "$FIRMWARE" https://micropython.org/resources/firmware/esp32-20231005-v1.21.0.bin
+    wget -O "$FIRMWARE" https://micropython.org/resources/firmware/ESP32_GENERIC-20240222-v1.22.2.bin
 fi
 
 echo ""
