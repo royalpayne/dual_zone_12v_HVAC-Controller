@@ -138,8 +138,8 @@ class ThermostatDisplay:
             self.oled.text(config.WIFI_SSID[:16], 5, 40)
         self.show()
     
-    def draw_main_screen(self, temp_f, humidity, pressure, mode, setpoint,
-                          heating_active, cooling_active):
+    def draw_main_screen(self, temp_f, humidity, pressure, mode, heat_setpoint,
+                          cool_setpoint, heating_active, cooling_active):
         """Main thermostat display with graphical icons"""
         self.clear()
 
@@ -175,10 +175,10 @@ class ThermostatDisplay:
             # Draw pressure value
             self.oled.text(f"{press_inhg:.2f}\"", 10, 20)
 
-        # Mode and setpoint
+        # Mode and both setpoints
         mode_name = config.MODE_NAMES.get(mode, "???")
         self.oled.text(f"Mode: {mode_name}", 0, 34)
-        self.oled.text(f"Set:  {setpoint:.0f}F", 0, 46)
+        self.oled.text(f"H:{heat_setpoint:.0f} C:{cool_setpoint:.0f}", 0, 46)
 
         # Active status on bottom row
         if heating_active:

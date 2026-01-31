@@ -159,7 +159,8 @@ def main():
                     display.draw_main_screen(
                         temp_f, humidity, pressure,
                         thermostat.mode,
-                        thermostat.heat_setpoint if thermostat.mode == config.MODE_HEAT else thermostat.cool_setpoint,
+                        thermostat.heat_setpoint,
+                        thermostat.cool_setpoint,
                         thermostat.heating_active,
                         thermostat.cooling_active
                     )
