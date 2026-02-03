@@ -59,12 +59,13 @@ class SensorHub:
             except Exception as e:
                 print(f"BMP280 init failed: {e}")
 
-        # Initialize DHT11
-        try:
-            self.dht11 = dht.DHT11(Pin(config.DHT11_PIN))
-            print("DHT11 initialized (humidity)")
-        except Exception as e:
-            print(f"DHT11 init failed: {e}")
+        # Initialize DHT11 only if BME280 not available (BME280 has humidity)
+        if self.sensor_type != 'BME280':
+            try:
+                self.dht11 = dht.DHT11(Pin(config.DHT11_PIN))
+                print("DHT11 initialized (humidity)")
+            except Exception as e:
+                print(f"DHT11 init failed: {e}")
 
         # Cache last readings
         self._last_temp_f = None

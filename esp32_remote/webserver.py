@@ -47,8 +47,8 @@ class RemoteAPI:
             return self._api_heat_setpoint(request)
         elif 'GET /api/cool_setpoint' in request:
             return self._api_cool_setpoint(request)
-        elif 'GET /api/boost' in request:
-            return self._api_boost(request)
+        elif 'GET /api/whynter_mode' in request:
+            return self._api_whynter_mode(request)
         elif 'GET /api/relay/furnace' in request:
             return self._api_furnace(request)
         elif 'GET /api/relay/rooftop' in request:
@@ -92,10 +92,10 @@ class RemoteAPI:
             self.thermostat.set_cool_setpoint(float(params['temp']))
         return self._api_status()
     
-    def _api_boost(self, request):
+    def _api_whynter_mode(self, request):
         params = self._parse_query(request)
-        if 'on' in params:
-            self.thermostat.set_boost(params['on'] == '1')
+        if 'mode' in params:
+            self.thermostat.set_whynter_mode(int(params['mode']))
         return self._api_status()
     
     def _api_furnace(self, request):

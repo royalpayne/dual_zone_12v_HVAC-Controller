@@ -40,7 +40,7 @@ DEFAULT_MODE = 3  # AUTO
 HYSTERESIS = 1.5
 
 # Short-cycle protection (minimum seconds between state changes)
-MIN_CYCLE_TIME = 180  # 3 minutes
+MIN_CYCLE_TIME = 30  # 30 seconds
 
 # Sensor Settings
 SENSOR_READ_INTERVAL = 10  # seconds between readings
@@ -53,13 +53,13 @@ DRY_RUN = False  # When True, don't actually control relays
 # HARDWARE CONFIGURATION (typically not overridden)
 # ============================================================
 
-# Pin Assignments (ESP32 defaults)
-# I2C for BMP280 and OLED
-I2C_SDA_PIN = 21
-I2C_SCL_PIN = 22
+# Pin Assignments (ESP32-S3)
+# I2C for BME280 and OLED
+I2C_SDA_PIN = 8
+I2C_SCL_PIN = 9
 I2C_FREQ = 400000
 
-# DHT11 for humidity
+# DHT11 for humidity (backup, not needed with BME280)
 DHT11_PIN = 4
 
 # Relay pins

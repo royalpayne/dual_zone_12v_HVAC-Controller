@@ -36,7 +36,7 @@ FILES=(
     "thermostat_remote.py"
     "scheduler.py"
     "webserver.py"
-    "pico_client.py"
+    "remote_client.py"
     "sensor.py"
     "display.py"
     "bme280.py"

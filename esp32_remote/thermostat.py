@@ -23,9 +23,9 @@ class ThermostatController:
         # State tracking
         self.heating_active = False
         self.cooling_active = False
-        self.boost_active = False  # Portable unit for extreme temps
+        self.whynter_mode = 0  # 0=off, 1=cool, 2=dehum, 3=fan, 4=heat
         self.last_state_change = 0
-        self.last_boost_change = 0
+        self.last_whynter_change = 0
 
         # Initialize relay pins (active LOW for most relay modules)
         self.relay_furnace = Pin(config.RELAY_FURNACE_PIN, Pin.OUT)
@@ -65,13 +65,45 @@ class ThermostatController:
         self.cool_setpoint = max(config.MIN_SETPOINT,
                                   min(config.MAX_SETPOINT, temp))
 
+    def set_whynter_mode(self, mode):
+        """Set Whynter portable AC mode (0=off, 1=cool, 2=dehum, 3=heat)"""
+        if mode < 0 or mode > 3:
+            print(f"Invalid Whynter mode: {mode}")
+            return
+
+        if mode == self.whynter_mode:
+            print(f"Whynter already in mode {mode}")
+            return
+
+        if not self.ir_transmitter:
+            print("No IR transmitter available")
+            return
+
+        # Map mode numbers to IR mode names (skipping fan-only)
+        mode_map = {0: None, 1: 'cool', 2: 'dehum', 3: 'heat'}
+
+        if mode == 0:
+            # Turn off
+            print("Setting Whynter to OFF")
+            if not config.DRY_RUN:
+                self.ir_transmitter.send_off()
+        else:
+            # Turn on in specific mode
+            mode_name = mode_map[mode]
+            print(f"Setting Whynter to {mode_name.upper()} mode")
+            if not config.DRY_RUN:
+                self.ir_transmitter.set_mode(mode_name)
+
+        self.whynter_mode = mode
+        self.last_whynter_change = time.time()
+
     def _can_change_state(self):
         """Check if enough time has passed since last state change"""
         return (time.time() - self.last_state_change) >= config.MIN_CYCLE_TIME
 
-    def _can_change_boost(self):
-        """Check if enough time has passed since last boost change"""
-        return (time.time() - self.last_boost_change) >= config.MIN_CYCLE_TIME
+    def _can_change_whynter(self):
+        """Check if enough time has passed since last Whynter change"""
+        return (time.time() - self.last_whynter_change) >= config.MIN_CYCLE_TIME
 
     def run_control_loop(self):
         """Main control logic - call periodically"""
@@ -88,9 +120,6 @@ class ThermostatController:
             self._control_cool()
         elif self.mode == config.MODE_AUTO:
             self._control_auto()
-
-        # Check boost mode (portable unit for extreme temps)
-        self._control_boost()
 
     def _control_heat(self):
         """Heating control with hysteresis"""
@@ -138,30 +167,6 @@ class ThermostatController:
             if self._can_change_state():
                 self._cool_off()
 
-    def _control_boost(self):
-        """Boost mode - portable unit kicks in for extreme temps"""
-        if not self.ir_transmitter:
-            return
-
-        boost_needed = False
-
-        if self.mode == config.MODE_HEAT or (self.mode == config.MODE_AUTO and self.heating_active):
-            # Boost heating: temp is more than BOOST_THRESHOLD below setpoint
-            if self.current_temp <= (self.heat_setpoint - config.BOOST_THRESHOLD):
-                boost_needed = True
-
-        if self.mode == config.MODE_COOL or (self.mode == config.MODE_AUTO and self.cooling_active):
-            # Boost cooling: temp is more than BOOST_THRESHOLD above setpoint
-            if self.current_temp >= (self.cool_setpoint + config.BOOST_THRESHOLD):
-                boost_needed = True
-
-        # Apply boost state changes
-        if boost_needed and not self.boost_active:
-            if self._can_change_boost():
-                self._boost_on()
-        elif not boost_needed and self.boost_active:
-            if self._can_change_boost():
-                self._boost_off()
 
     def _heat_on(self):
         """Turn on furnace"""
@@ -203,56 +208,26 @@ class ThermostatController:
         self.cooling_active = False
         self.last_state_change = time.time()
 
-    def _boost_on(self):
-        """Turn on portable AC/heater for boost with aggressive settings"""
-        dry_run = "(DRY RUN) " if config.DRY_RUN else ""
-        mode_str = "HEAT" if self.heating_active else "COOL"
-        temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
-
-        if not config.DRY_RUN and self.ir_transmitter:
-            if self.heating_active:
-                # Boost heating: set to higher temp on high fan for max output
-                boost_temp = min(85, self.heat_setpoint + 5)  # Cap at reasonable max
-                print(f"{dry_run}BOOST ON (HEAT mode, current: {temp_str}F, boost target: {boost_temp}F, fan: high)")
-                self.ir_transmitter.set_heating(boost_temp, fan_speed='high')
-            else:
-                # Boost cooling: set to lower temp on high fan for max output
-                boost_temp = max(65, self.cool_setpoint - 5)  # Cap at reasonable min
-                print(f"{dry_run}BOOST ON (COOL mode, current: {temp_str}F, boost target: {boost_temp}F, fan: high)")
-                self.ir_transmitter.set_cooling(boost_temp, fan_speed='high')
-        else:
-            print(f"{dry_run}BOOST ON ({mode_str} mode, temp: {temp_str}F)")
-
-        self.boost_active = True
-        self.last_boost_change = time.time()
-
-    def _boost_off(self):
-        """Turn off portable AC/heater"""
-        dry_run = "(DRY RUN) " if config.DRY_RUN else ""
-        temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
-        print(f"{dry_run}BOOST OFF (temp: {temp_str}F)")
-        if not config.DRY_RUN and self.ir_transmitter:
-            self.ir_transmitter.send_off()
-        self.boost_active = False
-        self.last_boost_change = time.time()
 
     def _all_off(self):
         """Turn off all systems"""
         changed = False
-        if self.heating_active or self.cooling_active or self.boost_active:
+        if self.heating_active or self.cooling_active or self.whynter_mode != 0:
             if not config.DRY_RUN:
                 self.relay_furnace.value(1)
                 self.relay_rooftop.value(1)
-                if self.ir_transmitter:
+                if self.ir_transmitter and self.whynter_mode != 0:
                     self.ir_transmitter.send_off()
             self.heating_active = False
             self.cooling_active = False
-            self.boost_active = False
+            if self.whynter_mode != 0:
+                self.whynter_mode = 0
+                self.last_whynter_change = time.time()
             self.last_state_change = time.time()
-            self.last_boost_change = time.time()
 
     def get_status(self):
         """Get current status as dict"""
+        whynter_names = {0: 'Off', 1: 'Cool', 2: 'Dehum', 3: 'Heat'}
         return {
             'temp': self.current_temp,
             'humidity': self.current_humidity,
@@ -263,7 +238,8 @@ class ThermostatController:
             'cool_setpoint': self.cool_setpoint,
             'heating_active': self.heating_active,
             'cooling_active': self.cooling_active,
-            'boost_active': self.boost_active,
+            'whynter_mode': self.whynter_mode,
+            'whynter_mode_name': whynter_names.get(self.whynter_mode, '?'),
             'dry_run': config.DRY_RUN,
             'debug': config.DEBUG
         }

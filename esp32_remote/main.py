@@ -2,7 +2,7 @@
 # ================================
 #
 # Controls: Furnace relay, Rooftop AC relay, Portable AC via IR
-# Boost mode: Portable unit activates when temp exceeds setpoint by 10F
+# Whynter portable AC: Manual mode control (Cool, Dehum, Heat)
 
 import time
 import network
@@ -80,7 +80,6 @@ def main():
     """Main entry point"""
     print("ESP32 Remote starting...")
     print(f"DRY_RUN: {config.DRY_RUN}")
-    print(f"BOOST_THRESHOLD: {config.BOOST_THRESHOLD}F")
 
     # Initialize I2C
     i2c = I2C(0,
@@ -109,9 +108,9 @@ def main():
     # Connect to WiFi
     ip = connect_wifi(display)
 
-    # Initialize IR transmitter for Whynter portable AC
-    ir = WhynterIR(config.IR_LED_PIN)
-    print(f"IR module on GPIO {config.IR_LED_PIN}")
+    # Initialize IR transmitter/receiver for Whynter portable AC
+    ir = WhynterIR()  # Uses default pins: TX=18, RX=19
+    print(f"IR TX on GPIO {ir.tx_pin_num}, RX on GPIO {ir.rx_pin_num}")
     print(f"Learned IR codes: {ir.get_codes()}")
 
     # Initialize thermostat controller
@@ -163,7 +162,7 @@ def main():
             if config.DEBUG and (now - last_status_print >= 30):
                 status = thermostat.get_status()
                 temp_str = f"{status['temp']:.1f}" if status['temp'] is not None else "None"
-                print(f"Temp: {temp_str}F, Mode: {status['mode_name']}, Heat: {status['heating_active']}, Cool: {status['cooling_active']}, Boost: {status['boost_active']}")
+                print(f"Temp: {temp_str}F, Mode: {status['mode_name']}, Heat: {status['heating_active']}, Cool: {status['cooling_active']}, Whynter: {status['whynter_mode_name']}")
                 last_status_print = now
 
             time.sleep(0.1)

@@ -29,12 +29,23 @@ class WhynterIR:
 
     CARRIER_FREQ = 38000  # 38kHz carrier
 
-    def __init__(self, data_pin=None):
-        # Single data pin for both TX and RX
-        if data_pin is None:
-            data_pin = config.IR_LED_PIN
-        self.data_pin_num = data_pin
-        self.pin = Pin(data_pin, Pin.IN)  # Start in receive mode
+    def __init__(self, tx_pin=None, rx_pin=None):
+        # Separate pins for TX and RX modules
+        if tx_pin is None:
+            tx_pin = config.IR_LED_PIN
+        if rx_pin is None:
+            rx_pin = config.IR_RECEIVER_PIN
+
+        self.tx_pin_num = tx_pin
+        self.rx_pin_num = rx_pin
+
+        # Initialize TX pin (for transmitting to Whynter)
+        self.tx_pin = Pin(tx_pin, Pin.OUT)
+        self.tx_pin.value(0)
+
+        # Initialize RX pin (for learning from remote)
+        self.rx_pin = Pin(rx_pin, Pin.IN)
+
         self.pwm = None
 
         # Learned codes storage
@@ -94,78 +105,47 @@ class WhynterIR:
         except Exception as e:
             print(f"[IR] State save error: {e}")
 
-    def _set_tx_mode(self):
-        """Switch pin to transmit mode"""
-        if self.pwm:
-            self.pwm.deinit()
-            self.pwm = None
-        self.pin = Pin(self.data_pin_num, Pin.OUT)
-        self.pin.value(0)
-
-    def _set_rx_mode(self):
-        """Switch pin to receive mode"""
-        if self.pwm:
-            self.pwm.deinit()
-            self.pwm = None
-        self.pin = Pin(self.data_pin_num, Pin.IN)
-
-    def _carrier_on(self):
-        """Turn on 38kHz carrier"""
-        self.pwm = PWM(Pin(self.data_pin_num))
-        self.pwm.freq(self.CARRIER_FREQ)
-        self.pwm.duty_u16(21845)  # ~33% duty cycle
-
-    def _carrier_off(self):
-        """Turn off carrier"""
-        if self.pwm:
-            self.pwm.deinit()
-            self.pwm = None
-        self.pin = Pin(self.data_pin_num, Pin.OUT)
-        self.pin.value(0)
 
     def _send_raw(self, timings):
-        """Send raw timing sequence [mark, space, mark, space, ...]"""
+        """Send raw timing sequence [mark, space, mark, space, ...] using digital signal.
+        IR module handles 38kHz carrier internally."""
         if not timings or len(timings) < 4:
             print("[IR] No valid timings to send")
             return False
 
-        self._set_tx_mode()
-
+        # Use simple digital - module has built-in 38kHz carrier
         for i, duration in enumerate(timings):
-            if i % 2 == 0:  # Mark (carrier on)
-                self._carrier_on()
-            else:  # Space (carrier off)
-                self._carrier_off()
+            if i % 2 == 0:  # Mark (IR on)
+                self.tx_pin.value(1)
+            else:  # Space (IR off)
+                self.tx_pin.value(0)
             time.sleep_us(duration)
 
-        self._carrier_off()
-        self._set_rx_mode()  # Return to receive mode
+        self.tx_pin.value(0)
         return True
 
     def capture(self, timeout_ms=10000):
-        """Capture IR signal from remote control"""
+        """Capture IR signal from remote control using RX pin"""
         print("[IR] Point remote at receiver and press button...")
-
-        self._set_rx_mode()  # Ensure we're in receive mode
 
         timings = []
         last_change = time.ticks_us()
-        last_value = self.pin.value()
+        last_value = self.rx_pin.value()
         start = time.ticks_ms()
 
         # Wait for first transition (signal start)
-        while self.pin.value() == last_value:
+        while self.rx_pin.value() == last_value:
             if time.ticks_diff(time.ticks_ms(), start) > timeout_ms:
                 print("[IR] Timeout waiting for signal")
                 return None
 
         # Record start
         last_change = time.ticks_us()
-        last_value = self.pin.value()
+        last_value = self.rx_pin.value()
 
         # Capture transitions
         while True:
-            current = self.pin.value()
+            current = self.rx_pin.value()
             now = time.ticks_us()
 
             if current != last_value:
@@ -238,7 +218,7 @@ class WhynterIR:
             print("[IR] Mode button not learned - learn 'mode' first")
             return False
 
-        # Turn on first if off
+        # Turn on first if off - unit restores last mode used
         if not self.power_on:
             if not self.send_on():
                 return False
@@ -451,7 +431,8 @@ class WhynterIR:
         """Get IR status for API"""
         return {
             'codes': self.get_codes(),
-            'data_pin': self.data_pin_num,
+            'tx_pin': self.tx_pin_num,
+            'rx_pin': self.rx_pin_num,
             'power_on': self.power_on,
             'current_mode': self.current_mode,
             'current_temp': self.current_temp,

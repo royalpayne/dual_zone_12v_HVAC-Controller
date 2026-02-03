@@ -28,7 +28,7 @@ HYSTERESIS = 1.5
 BOOST_THRESHOLD = 10  # degrees F
 
 # Short-cycle protection (minimum seconds between state changes)
-MIN_CYCLE_TIME = 180  # 3 minutes
+MIN_CYCLE_TIME = 30  # 30 seconds
 
 # Sensor Settings
 SENSOR_READ_INTERVAL = 5  # seconds between readings
