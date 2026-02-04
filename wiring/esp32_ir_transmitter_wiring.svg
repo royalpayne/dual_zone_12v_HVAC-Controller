@@ -1,0 +1,231 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <style>
+      .title { font: bold 20px sans-serif; fill: #333; }
+      .label { font: 12px sans-serif; fill: #333; }
+      .label-bold { font: bold 12px sans-serif; fill: #333; }
+      .pin-label { font: 10px monospace; fill: #555; }
+      .component-label { font: bold 11px sans-serif; fill: #444; }
+      .value { font: 10px sans-serif; fill: #666; }
+      .wire-red { stroke: #e53935; stroke-width: 2.5; fill: none; }
+      .wire-black { stroke: #212121; stroke-width: 2.5; fill: none; }
+      .wire-blue { stroke: #1976D2; stroke-width: 2.5; fill: none; }
+      .wire-green { stroke: #43A047; stroke-width: 2.5; fill: none; }
+      .wire-yellow { stroke: #FBC02D; stroke-width: 2.5; fill: none; }
+    </style>
+    <!-- Arrowhead marker -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="600" fill="#fafafa"/>
+  
+  <!-- Title -->
+  <text x="400" y="35" text-anchor="middle" class="title">ESP32 IR Transmitter with 2N2222 Driver</text>
+  <text x="400" y="55" text-anchor="middle" class="value">GPIO18 Control | 940nm IR LED | ~50mA Output</text>
+  
+  <!-- ESP32 Board -->
+  <rect x="50" y="150" width="140" height="280" rx="8" fill="#2d2d2d" stroke="#1a1a1a" stroke-width="2"/>
+  <rect x="60" y="160" width="120" height="260" rx="4" fill="#1a1a1a"/>
+  <text x="120" y="200" text-anchor="middle" fill="#4fc3f7" font-size="14" font-weight="bold">ESP32</text>
+  <text x="120" y="218" text-anchor="middle" fill="#81d4fa" font-size="10">DevKit</text>
+  
+  <!-- ESP32 Pin Headers -->
+  <!-- Left side pins -->
+  <rect x="45" y="240" width="12" height="8" fill="#ffd700"/>
+  <text x="62" y="248" class="pin-label" fill="#aaa">3V3</text>
+  
+  <rect x="45" y="270" width="12" height="8" fill="#ffd700"/>
+  <text x="62" y="278" class="pin-label" fill="#aaa">GND</text>
+  
+  <rect x="45" y="300" width="12" height="8" fill="#ffd700"/>
+  <text x="62" y="308" class="pin-label" fill="#aaa">GPIO18</text>
+  
+  <!-- USB connector representation -->
+  <rect x="95" y="410" width="50" height="25" rx="2" fill="#555" stroke="#333"/>
+  <text x="120" y="427" text-anchor="middle" fill="#aaa" font-size="8">USB</text>
+  
+  <!-- Breadboard -->
+  <rect x="250" y="120" width="500" height="400" rx="4" fill="#f5f5dc" stroke="#ccc" stroke-width="2"/>
+  <text x="500" y="145" text-anchor="middle" class="component-label" fill="#888">BREADBOARD</text>
+  
+  <!-- Power rails -->
+  <rect x="260" y="155" width="480" height="25" fill="#ffebee" stroke="#ef9a9a" stroke-width="1"/>
+  <text x="270" y="172" fill="#c62828" font-size="10" font-weight="bold">+ 3.3V</text>
+  <line x1="260" y1="167" x2="740" y2="167" stroke="#ef9a9a" stroke-width="1" stroke-dasharray="2,2"/>
+  
+  <rect x="260" y="470" width="480" height="25" fill="#e3f2fd" stroke="#90caf9" stroke-width="1"/>
+  <text x="270" y="487" fill="#1565c0" font-size="10" font-weight="bold">− GND</text>
+  <line x1="260" y1="482" x2="740" y2="482" stroke="#90caf9" stroke-width="1" stroke-dasharray="2,2"/>
+  
+  <!-- Breadboard holes (simplified grid) -->
+  <g fill="#ddd">
+    <!-- Row markers -->
+    <text x="265" y="220" font-size="9" fill="#999">a</text>
+    <text x="265" y="260" font-size="9" fill="#999">b</text>
+    <text x="265" y="300" font-size="9" fill="#999">c</text>
+    <text x="265" y="340" font-size="9" fill="#999">d</text>
+    <text x="265" y="380" font-size="9" fill="#999">e</text>
+    <text x="265" y="420" font-size="9" fill="#999">f</text>
+  </g>
+  
+  <!-- 2N2222 Transistor -->
+  <g transform="translate(420, 320)">
+    <!-- Transistor body -->
+    <ellipse cx="0" cy="0" rx="25" ry="35" fill="#333" stroke="#222" stroke-width="2"/>
+    <text x="0" y="5" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">2N2222</text>
+    
+    <!-- Flat side indicator -->
+    <line x1="-20" y1="-30" x2="-20" y2="30" stroke="#555" stroke-width="3"/>
+    
+    <!-- Pins -->
+    <!-- Emitter (E) - left -->
+    <line x1="-25" y1="20" x2="-50" y2="20" stroke="#888" stroke-width="3"/>
+    <rect x="-55" y="16" width="8" height="8" fill="#ffd700"/>
+    <text x="-55" y="40" class="pin-label">E</text>
+    
+    <!-- Base (B) - center/left -->
+    <line x1="-25" y1="0" x2="-50" y2="0" stroke="#888" stroke-width="3"/>
+    <rect x="-55" y="-4" width="8" height="8" fill="#ffd700"/>
+    <text x="-55" y="15" class="pin-label">B</text>
+    
+    <!-- Collector (C) - right -->
+    <line x1="25" y1="0" x2="50" y2="0" stroke="#888" stroke-width="3"/>
+    <rect x="47" y="-4" width="8" height="8" fill="#ffd700"/>
+    <text x="50" y="15" class="pin-label">C</text>
+  </g>
+  
+  <!-- Transistor label -->
+  <text x="420" y="380" text-anchor="middle" class="component-label">Q1: 2N2222</text>
+  <text x="420" y="395" text-anchor="middle" class="value">NPN Transistor</text>
+  
+  <!-- 1K Resistor (Base) -->
+  <g transform="translate(320, 320)">
+    <rect x="-30" y="-8" width="60" height="16" fill="#d4a574" stroke="#8b6914" stroke-width="1"/>
+    <!-- Color bands -->
+    <rect x="-22" y="-8" width="6" height="16" fill="#8b4513"/>
+    <rect x="-12" y="-8" width="6" height="16" fill="#000"/>
+    <rect x="-2" y="-8" width="6" height="16" fill="#ff0000"/>
+    <rect x="8" y="-8" width="6" height="16" fill="#ffd700"/>
+    <!-- Leads -->
+    <line x1="-30" y1="0" x2="-45" y2="0" stroke="#888" stroke-width="2"/>
+    <line x1="30" y1="0" x2="45" y2="0" stroke="#888" stroke-width="2"/>
+  </g>
+  <text x="320" y="350" text-anchor="middle" class="component-label">R1: 1kΩ</text>
+  <text x="320" y="365" text-anchor="middle" class="value">Base Resistor</text>
+  
+  <!-- IR LED -->
+  <g transform="translate(550, 240)">
+    <!-- LED body -->
+    <polygon points="0,-25 20,0 0,25 0,-25" fill="#e0e0ff" stroke="#9090ff" stroke-width="2"/>
+    <line x1="0" y1="-25" x2="0" y2="25" stroke="#9090ff" stroke-width="2"/>
+    <!-- Cathode bar -->
+    <line x1="0" y1="-30" x2="0" y2="30" stroke="#666" stroke-width="3"/>
+    <!-- Anode lead -->
+    <line x1="20" y1="0" x2="45" y2="0" stroke="#888" stroke-width="2"/>
+    <!-- Cathode lead -->
+    <line x1="0" y1="0" x2="-25" y2="0" stroke="#888" stroke-width="2"/>
+    <!-- IR emission arrows -->
+    <line x1="30" y1="-15" x2="50" y2="-25" stroke="#9966ff" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+    <line x1="35" y1="0" x2="55" y2="0" stroke="#9966ff" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+    <line x1="30" y1="15" x2="50" y2="25" stroke="#9966ff" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  </g>
+  <text x="550" y="285" text-anchor="middle" class="component-label">IR LED</text>
+  <text x="550" y="300" text-anchor="middle" class="value">940nm</text>
+  
+  <!-- 100 Ohm Resistor (LED current limiting) -->
+  <g transform="translate(550, 167)">
+    <rect x="-30" y="-8" width="60" height="16" fill="#d4a574" stroke="#8b6914" stroke-width="1"/>
+    <!-- Color bands: Brown Black Brown Gold = 100Ω -->
+    <rect x="-22" y="-8" width="6" height="16" fill="#8b4513"/>
+    <rect x="-12" y="-8" width="6" height="16" fill="#000"/>
+    <rect x="-2" y="-8" width="6" height="16" fill="#8b4513"/>
+    <rect x="8" y="-8" width="6" height="16" fill="#ffd700"/>
+    <!-- Leads -->
+    <line x1="-30" y1="0" x2="-45" y2="0" stroke="#888" stroke-width="2"/>
+    <line x1="30" y1="0" x2="45" y2="0" stroke="#888" stroke-width="2"/>
+  </g>
+  <text x="630" y="172" class="component-label">R2: 100Ω</text>
+  
+  <!-- WIRING -->
+  
+  <!-- 3.3V from ESP32 to power rail (red) -->
+  <path d="M 57 244 L 57 167 L 260 167" class="wire-red"/>
+  <circle cx="57" cy="244" r="4" fill="#e53935"/>
+  
+  <!-- GND from ESP32 to ground rail (black) -->
+  <path d="M 57 274 L 57 482 L 260 482" class="wire-black"/>
+  <circle cx="57" cy="274" r="4" fill="#212121"/>
+  
+  <!-- GPIO18 to Base Resistor (yellow/signal) -->
+  <path d="M 57 304 L 200 304 L 200 320 L 275 320" class="wire-yellow"/>
+  <circle cx="57" cy="304" r="4" fill="#FBC02D"/>
+  
+  <!-- Base Resistor to Transistor Base (yellow continues) -->
+  <path d="M 350 320 L 365 320" class="wire-yellow"/>
+  
+  <!-- Transistor Emitter to GND (black) -->
+  <path d="M 365 340 L 365 482" class="wire-black"/>
+  <circle cx="365" cy="482" r="4" fill="#212121"/>
+  
+  <!-- Transistor Collector to IR LED Cathode (blue) -->
+  <path d="M 470 320 L 525 320 L 525 240" class="wire-blue"/>
+  
+  <!-- IR LED Anode to current limiting resistor (blue) -->
+  <path d="M 595 240 L 620 240 L 620 167 L 595 167" class="wire-blue"/>
+  
+  <!-- Current limiting resistor to 3.3V rail (red) -->
+  <path d="M 505 167 L 505 167" class="wire-red"/>
+  <circle cx="505" cy="167" r="4" fill="#e53935"/>
+  
+  <!-- Connection dots -->
+  <circle cx="525" cy="240" r="4" fill="#1976D2"/>
+  <circle cx="620" cy="167" r="4" fill="#e53935"/>
+  
+  <!-- Legend -->
+  <rect x="50" y="510" width="700" height="80" rx="4" fill="#fff" stroke="#ddd"/>
+  <text x="70" y="535" class="label-bold">Wiring Legend:</text>
+  
+  <line x1="70" y1="555" x2="100" y2="555" stroke="#e53935" stroke-width="3"/>
+  <text x="110" y="560" class="label">3.3V Power</text>
+  
+  <line x1="200" y1="555" x2="230" y2="555" stroke="#212121" stroke-width="3"/>
+  <text x="240" y="560" class="label">Ground (GND)</text>
+  
+  <line x1="350" y1="555" x2="380" y2="555" stroke="#FBC02D" stroke-width="3"/>
+  <text x="390" y="560" class="label">Signal (GPIO18)</text>
+  
+  <line x1="520" y1="555" x2="550" y2="555" stroke="#1976D2" stroke-width="3"/>
+  <text x="560" y="560" class="label">LED Circuit</text>
+  
+  <!-- Notes -->
+  <text x="70" y="580" class="value">Note: 2N2222 pinout (flat side facing you): E-B-C from left to right. IR LED: longer leg = Anode (+), shorter leg = Cathode (−)</text>
+  
+  <!-- Schematic symbol inset -->
+  <rect x="630" y="330" width="110" height="130" rx="4" fill="#fff" stroke="#ccc"/>
+  <text x="685" y="350" text-anchor="middle" class="label-bold">Schematic</text>
+  
+  <!-- Mini schematic -->
+  <g transform="translate(685, 400)">
+    <!-- NPN symbol -->
+    <line x1="-30" y1="0" x2="-10" y2="0" stroke="#333" stroke-width="1.5"/>
+    <line x1="-10" y1="-15" x2="-10" y2="15" stroke="#333" stroke-width="2"/>
+    <line x1="-10" y1="-8" x2="10" y2="-20" stroke="#333" stroke-width="1.5"/>
+    <line x1="-10" y1="8" x2="10" y2="20" stroke="#333" stroke-width="1.5"/>
+    <!-- Arrow on emitter -->
+    <polygon points="5,16 10,20 3,20" fill="#333"/>
+    <!-- Labels -->
+    <text x="-35" y="4" font-size="8" fill="#333">B</text>
+    <text x="12" y="-18" font-size="8" fill="#333">C</text>
+    <text x="12" y="24" font-size="8" fill="#333">E</text>
+    <!-- Connections -->
+    <text x="-40" y="-25" font-size="7" fill="#666">GPIO18</text>
+    <line x1="-30" y1="-20" x2="-30" y2="0" stroke="#666" stroke-width="1"/>
+    <text x="15" y="-35" font-size="7" fill="#666">to LED</text>
+    <line x1="10" y1="-20" x2="10" y2="-30" stroke="#666" stroke-width="1"/>
+    <text x="15" y="38" font-size="7" fill="#666">GND</text>
+    <line x1="10" y1="20" x2="10" y2="32" stroke="#666" stroke-width="1"/>
+  </g>
+</svg>

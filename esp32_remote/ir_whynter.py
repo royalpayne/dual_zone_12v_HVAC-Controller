@@ -5,6 +5,7 @@
 # Uses single data pin for both TX and RX
 
 from machine import Pin, PWM
+from esp32 import RMT
 import time
 import json
 import config
@@ -42,6 +43,11 @@ class WhynterIR:
         # Initialize TX pin (for transmitting to Whynter)
         self.tx_pin = Pin(tx_pin, Pin.OUT)
         self.tx_pin.value(0)
+
+        # Initialize RMT for hardware-timed IR transmission
+        # RMT(channel, pin, clock_div, tx_carrier=(freq, duty_percent, level))
+        # duty_percent=50 provides good brightness with transistor driver
+        self.rmt = RMT(0, pin=self.tx_pin, clock_div=80, tx_carrier=(self.CARRIER_FREQ, 50, 1))
 
         # Initialize RX pin (for learning from remote)
         self.rx_pin = Pin(rx_pin, Pin.IN)
@@ -107,22 +113,20 @@ class WhynterIR:
 
 
     def _send_raw(self, timings):
-        """Send raw timing sequence [mark, space, mark, space, ...] using digital signal.
-        IR module handles 38kHz carrier internally."""
+        """Send raw timing sequence [mark, space, mark, space, ...] using RMT hardware.
+        Uses ESP32's RMT peripheral for precise timing with 38kHz carrier."""
         if not timings or len(timings) < 4:
             print("[IR] No valid timings to send")
             return False
 
-        # Use simple digital - module has built-in 38kHz carrier
-        for i, duration in enumerate(timings):
-            if i % 2 == 0:  # Mark (IR on)
-                self.tx_pin.value(1)
-            else:  # Space (IR off)
-                self.tx_pin.value(0)
-            time.sleep_us(duration)
-
-        self.tx_pin.value(0)
-        return True
+        # Use ESP32 RMT for hardware-timed transmission
+        # RMT provides precise timing and automatic carrier generation
+        try:
+            self.rmt.write_pulses(tuple(timings))
+            return True
+        except Exception as e:
+            print(f"[IR] Transmission error: {e}")
+            return False
 
     def capture(self, timeout_ms=10000):
         """Capture IR signal from remote control using RX pin"""

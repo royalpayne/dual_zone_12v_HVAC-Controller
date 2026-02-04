@@ -332,5 +332,83 @@ curl -X POST http://192.168.71.153/api/ir/set_cooling -d '{"temperature": 68, "f
 
 ---
 
-*Last updated: 2026-01-31 - Migrated from Raspberry Pi Pico W to dual ESP32 architecture*
-*Agent ID for resume: ab1610c*
+## IR Testing Log (2026-02-03)
+
+### Current Hardware Configuration
+- **ESP32**: ESP32-S3 (upgraded from regular ESP32)
+- **IR LED**: 940nm, GPIO 18
+- **Resistor**: 100Ω (GPIO 18 → resistor → LED anode, cathode → GND)
+- **LED Status**: ✅ VERIFIED WORKING (visible on phone camera)
+- **Library**: peterhinch IR library (in /peterhinch_ir/)
+- **Carrier Frequency**: 38 kHz
+
+### Test Scripts
+1. `/esp32_remote/test_peterhinch_ir.py` - Single transmission
+2. `/esp32_remote/test_whynter_repeat.py` - 3x repetition with delays
+3. `/arduino_ir/arduino_ir.ino` - Arduino alternative
+
+### Whynter Power Code (Captured)
+```python
+power_code = [
+    9075, 4568,  # Leader (NEC-like protocol)
+    625, 548, 624, 544, 571, 598, 567, 1742,
+    545, 650, 541, 623, 572, 1748, 603, 575,
+    571, 598, 567, 1742, 545, 650, 541, 1748,
+    603, 575, 571, 598, 567, 1742, 545, 1748,
+    603, 1748, 571, 598, 567, 1742, 545, 650,
+    541, 1748, 603, 1748, 571, 1748, 567, 1742,
+    545, 650, 541, 1748, 603, 575, 571, 598,
+    567, 1742, 545, 650, 541, 623, 572, 1748, 577
+]
+```
+
+### Testing Checklist
+- ✅ IR LED wired correctly (100Ω resistor)
+- ✅ IR LED emitting light (visible on phone camera)
+- ✅ Code uploads and runs
+- ✅ IR transmission successful (3x transmissions sent)
+- ❓ A/C unit responding to IR signals - **AWAITING USER FEEDBACK**
+
+### Test Results (2026-02-03 22:31-23:30)
+
+**✅ PROBLEM SOLVED! A/C NOW RESPONDS!**
+
+**Root Cause**: LED brightness insufficient with 50% PWM duty cycle
+**Solution**: Increase PWM duty cycle to 75% (duty=768 instead of 512)
+
+**Tests Performed**:
+1. RMT-based transmission (50% duty) - No response
+2. Freshly captured IR code - No response
+3. Raw PWM transmission (50% duty) - No response
+4. Multiple frequencies (36-40kHz) - No response
+5. Fixed disconnected wiring - Circuit working
+6. Increased duty cycle to 75% - ✅ **SUCCESS!**
+
+### Working Configuration
+
+**Hardware**: GPIO 18 → 100Ω resistor → IR LED (940nm) → GND
+
+**Software**:
+```python
+PWM(Pin(18), freq=38000, duty=768)  # 75% duty cycle (768/1024)
+```
+
+**Captured Code** (confirmed working):
+```python
+[9000, 4603, 525, 629, 548, 628, 526, 650, 527, 1759, 541, 655, 521, 681,
+ 523, 1755, 572, 631, 528, 648, 522, 634, 519, 655, 544, 1757, 546, 634,
+ 545, 1782, 522, 732, 445, 658, 544, 1755, 549, 628, 522, 635, 541, 634,
+ 520, 658, 545, 1782, 519, 657, 547, 1757, 520, 658, 519, 657, 520, 1783,
+ 518, 637, 542, 636, 541, 659, 519, 1782, 656, 523, 520]
+```
+
+**Test Script**: `/esp32_remote/test_whynter_working.py`
+
+**Alternative Solutions**:
+- Use smaller resistor (68Ω or 47Ω) with 50% duty cycle
+- Use multiple IR LEDs in parallel for more output power
+
+---
+
+*Last updated: 2026-02-03 - IR transmission WORKING*
+*Previous session: ab1610c*
