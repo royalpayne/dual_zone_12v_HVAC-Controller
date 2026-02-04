@@ -332,83 +332,75 @@ curl -X POST http://192.168.71.153/api/ir/set_cooling -d '{"temperature": 68, "f
 
 ---
 
-## IR Testing Log (2026-02-03)
+## IR Testing Log (2026-02-04)
 
 ### Current Hardware Configuration
 - **ESP32**: ESP32-S3 (upgraded from regular ESP32)
-- **IR LED**: 940nm, GPIO 18
-- **Resistor**: 100Ω (GPIO 18 → resistor → LED anode, cathode → GND)
-- **LED Status**: ✅ VERIFIED WORKING (visible on phone camera)
-- **Library**: peterhinch IR library (in /peterhinch_ir/)
+- **IR LEDs**: 4x 940nm IR LEDs in parallel, GPIO 18
+- **Transistor**: 2N2222 NPN transistor for LED driver
+- **Power**: 5V supply for maximum LED brightness
+- **Current Limiting**: NO resistor (temporary - awaiting 22Ω resistor)
+- **Library**: ESP32 RMT hardware for precise timing
 - **Carrier Frequency**: 38 kHz
 
-### Test Scripts
-1. `/esp32_remote/test_peterhinch_ir.py` - Single transmission
-2. `/esp32_remote/test_whynter_repeat.py` - 3x repetition with delays
-3. `/arduino_ir/arduino_ir.ino` - Arduino alternative
-
-### Whynter Power Code (Captured)
-```python
-power_code = [
-    9075, 4568,  # Leader (NEC-like protocol)
-    625, 548, 624, 544, 571, 598, 567, 1742,
-    545, 650, 541, 623, 572, 1748, 603, 575,
-    571, 598, 567, 1742, 545, 650, 541, 1748,
-    603, 575, 571, 598, 567, 1742, 545, 1748,
-    603, 1748, 571, 598, 567, 1742, 545, 650,
-    541, 1748, 603, 1748, 571, 1748, 567, 1742,
-    545, 650, 541, 1748, 603, 575, 571, 598,
-    567, 1742, 545, 650, 541, 623, 572, 1748, 577
-]
+### Circuit Diagram
+```
+GPIO 18 → 1kΩ resistor → 2N2222 BASE
+2N2222 EMITTER → GND
+5V → (no resistor currently) → 4x IR LED anodes (parallel) → All cathodes → 2N2222 COLLECTOR
 ```
 
-### Testing Checklist
-- ✅ IR LED wired correctly (100Ω resistor)
-- ✅ IR LED emitting light (visible on phone camera)
-- ✅ Code uploads and runs
-- ✅ IR transmission successful (3x transmissions sent)
-- ❓ A/C unit responding to IR signals - **AWAITING USER FEEDBACK**
-
-### Test Results (2026-02-03 22:31-23:30)
-
-**✅ PROBLEM SOLVED! A/C NOW RESPONDS!**
-
-**Root Cause**: LED brightness insufficient with 50% PWM duty cycle
-**Solution**: Increase PWM duty cycle to 75% (duty=768 instead of 512)
-
-**Tests Performed**:
-1. RMT-based transmission (50% duty) - No response
-2. Freshly captured IR code - No response
-3. Raw PWM transmission (50% duty) - No response
-4. Multiple frequencies (36-40kHz) - No response
-5. Fixed disconnected wiring - Circuit working
-6. Increased duty cycle to 75% - ✅ **SUCCESS!**
-
-### Working Configuration
-
-**Hardware**: GPIO 18 → 100Ω resistor → IR LED (940nm) → GND
-
-**Software**:
+### Whynter Power Code (NEC Protocol)
 ```python
-PWM(Pin(18), freq=38000, duty=768)  # 75% duty cycle (768/1024)
+power_code = [8983, 4602, 584, 595, 551, 609, 547, 624, 584, 1721, 575, 605,
+              579, 601, 548, 1774, 550, 626, 557, 618, 533, 628, 575, 599,
+              588, 1715, 584, 593, 584, 1743, 528, 648, 552, 703, 500, 1727,
+              579, 599, 552, 606, 593, 580, 585, 593, 581, 1746, 525, 652,
+              530, 1773, 585, 595, 551, 626, 530, 1772, 529, 627, 578, 603,
+              576, 606, 570, 1748, 554, 625, 652]
 ```
 
-**Captured Code** (confirmed working):
+### Test Results (2026-02-04)
+
+**Status**: ⚠️ **INCONSISTENT - Needs 22Ω Resistor**
+
+**Problem**: Without proper current limiting, IR transmission is unreliable
+- A/C turned OFF at least once during testing
+- Subsequent attempts at 1 meter failed
+- Hardware works but needs stable current regulation
+
+**Key Findings**:
+1. ✅ RMT hardware transmission working correctly
+2. ✅ Captured IR code is valid (NEC protocol)
+3. ✅ 4 LEDs + transistor circuit functional
+4. ❌ Without resistor: inconsistent brightness/range at 1 meter
+5. ⏳ Need 22Ω resistor for stable ~150mA current (75mA per LED pair)
+
+**Software Implementation**:
+- Updated [ir_whynter.py](esp32_remote/ir_whynter.py) to use ESP32 RMT hardware
+- RMT provides precise timing with automatic 38kHz carrier generation
+- 50% duty cycle with transistor driver
+
 ```python
-[9000, 4603, 525, 629, 548, 628, 526, 650, 527, 1759, 541, 655, 521, 681,
- 523, 1755, 572, 631, 528, 648, 522, 634, 519, 655, 544, 1757, 546, 634,
- 545, 1782, 522, 732, 445, 658, 544, 1755, 549, 628, 522, 635, 541, 634,
- 520, 658, 545, 1782, 519, 657, 547, 1757, 520, 658, 519, 657, 520, 1783,
- 518, 637, 542, 636, 541, 659, 519, 1782, 656, 523, 520]
+from esp32 import RMT
+self.rmt = RMT(0, pin=self.tx_pin, clock_div=80, tx_carrier=(38000, 50, 1))
+self.rmt.write_pulses(tuple(timings))
 ```
 
-**Test Script**: `/esp32_remote/test_whynter_working.py`
+### Next Steps
+1. **Install 22Ω resistor** between 5V and LED anodes when it arrives
+2. **Test at 1 meter** - should provide reliable 150mA for good range
+3. **If still insufficient range**, consider:
+   - Adding 2 more LEDs (6 total) for more IR output
+   - Using focusing lenses to concentrate beam
+   - Commercial IR transmitter module
 
-**Alternative Solutions**:
-- Use smaller resistor (68Ω or 47Ω) with 50% duty cycle
-- Use multiple IR LEDs in parallel for more output power
+### Working Range
+- **Whynter remote**: 3 meters (reference)
+- **Current setup**: Inconsistent at 1 meter without resistor
+- **Target with 22Ω**: 1+ meters reliable operation
 
 ---
 
-*Last updated: 2026-02-03 - IR transmission WORKING*
-*Previous session: ab1610c*
+*Last updated: 2026-02-04 - Awaiting 22Ω resistor for stable operation*
+*Previous session: d0a50f6*
