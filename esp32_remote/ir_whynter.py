@@ -46,8 +46,8 @@ class WhynterIR:
 
         # Initialize RMT for hardware-timed IR transmission
         # RMT(channel, pin, clock_div, tx_carrier=(freq, duty_percent, level))
-        # duty_percent=50 provides good brightness with transistor driver
-        self.rmt = RMT(0, pin=self.tx_pin, clock_div=80, tx_carrier=(self.CARRIER_FREQ, 50, 1))
+        # duty_percent=75 for high-current pulse testing (200mA+ brief bursts)
+        self.rmt = RMT(0, pin=self.tx_pin, clock_div=80, tx_carrier=(self.CARRIER_FREQ, 75, 1))
 
         # Initialize RX pin (for learning from remote)
         self.rx_pin = Pin(rx_pin, Pin.IN)

@@ -26,11 +26,11 @@ class RemoteAPI:
     def handle_requests(self):
         try:
             client, addr = self.socket.accept()
-            client.settimeout(2.0)
+            client.settimeout(5.0)
             try:
                 request = client.recv(1024).decode('utf-8')
                 response = self._handle_request(request)
-                client.send(response.encode('utf-8'))
+                client.sendall(response.encode('utf-8'))
             except Exception as e:
                 print(f"Request error: {e}")
             finally:
