@@ -87,7 +87,7 @@ class RemoteClient:
         return self._request('/api/cool_setpoint', {'temp': temp})
 
     def set_whynter_mode(self, mode):
-        """Set Whynter portable AC mode (0=off, 1=cool, 2=dehum, 3=heat)"""
+        """Set Whynter portable AC mode (0=off, 1=on/cool)"""
         return self._request('/api/whynter_mode', {'mode': mode})
 
     def set_furnace(self, on):

@@ -97,10 +97,10 @@ def main():
         print(f"OLED init failed: {e}")
         display = None
     
-    # Initialize sensors (BMP280 + DHT11)
+    # Initialize sensors (BME280/BMP280)
     sensor = SensorHub(i2c)
     sensor_status = sensor.get_status()
-    print(f"Sensors: BMP280={sensor_status['bmp280']}, DHT11={sensor_status['dht11']}")
+    print(f"Sensor: {sensor_status['sensor_type']}")
     
     # Connect to WiFi
     if display:

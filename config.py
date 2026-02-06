@@ -59,9 +59,6 @@ I2C_SDA_PIN = 8
 I2C_SCL_PIN = 9
 I2C_FREQ = 400000
 
-# DHT11 for humidity (backup, not needed with BME280)
-DHT11_PIN = 4
-
 # Relay pins
 RELAY_FURNACE_PIN = 25
 RELAY_ROOFTOP_AC_PIN = 26

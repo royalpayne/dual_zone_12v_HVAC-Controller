@@ -18,7 +18,7 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 
 **ESP32 Remote Controller** (30-pin):
 - ESP32 microcontroller (ESP32-D0WD-V3)
-- BME280 sensor (temp/humidity/pressure) - DHT11 REPLACED
+- BME280 sensor (temp/humidity/pressure)
 - SSD1306 OLED 128x64 display
 - 2-channel relay module (active-low)
 - 4x 940nm IR LEDs + 2N2222 transistor (GPIO 18)
@@ -70,7 +70,8 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 - **Short-cycle protection**: 3-minute minimum between state changes
 - **Modes**: OFF, HEAT, COOL, AUTO
 - **Default setpoints**: Heat 68°F, Cool 75°F
-- **Boost mode**: Auto-activates portable AC when temp > setpoint + 10°F
+- **Boost mode**: Auto-activates portable AC when temp > setpoint + 5°F
+- **Whynter control**: Simplified to ON/OFF (defaults to cool mode)
 
 ### Scheduling
 - Nest-style time-based modes (Home/Away/Sleep)
@@ -95,7 +96,7 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 ├── scheduler.py (time-based scheduling - 145 lines)
 ├── webserver.py (HTTP API - 265 lines)
 ├── remote_client.py (ESP32→Remote communication - 94 lines)
-├── sensor.py (BMP280 + DHT11 wrapper - 109 lines)
+├── sensor.py (BME280/BMP280 wrapper - 128 lines)
 ├── display.py (OLED UI - 95 lines)
 ├── bmp280.py, ssd1306.py (hardware drivers)
 ├── test.py, test_remote.py (component tests)
@@ -135,21 +136,19 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 
 **ESP32 Remote Config**:
 - I2C: GPIO 21 (SDA), GPIO 22 (SCL)
-- BMP280: I2C address 0x76
+- BME280: I2C address 0x76
 - OLED: I2C address 0x3C
-- DHT11: GPIO 4 (humidity sensor)
 - Furnace relay: GPIO 25
 - Rooftop AC relay: GPIO 26
 - IR LED: GPIO 18 (transmitter)
 - IR Receiver: GPIO 19 (optional)
 - Static IP: 192.168.71.153
-- Boost threshold: 10°F
+- Boost threshold: 5°F
 
 **Control Parameters**:
 - Hysteresis: 1.5°F
-- Min cycle time: 180 seconds
+- Min cycle time: 30 seconds
 - Sensor read interval: 5 seconds
-- DHT11 rate limit: 2+ seconds
 
 ---
 
@@ -251,7 +250,7 @@ python test_remote.py   # ESP32 Remote diagnostics
 ## Notable Code Patterns
 
 1. **Graceful degradation**: System continues working even if sensors fail
-2. **Rate limiting**: Prevents sensor over-polling (DHT11 2s minimum)
+2. **Rate limiting**: Prevents sensor over-polling (1s cache interval)
 3. **JSON persistence**: IR codes and schedules survive reboots
 4. **Hysteresis control**: Prevents chattering relays
 5. **Short-cycle protection**: Protects HVAC equipment
@@ -416,9 +415,11 @@ self.rmt.write_pulses(tuple(timings))
 - ✅ BME280 sensors working on both units (temp/humidity/pressure)
 - ✅ IR system functional - successfully controlled Whynter A/C
 - ✅ API endpoints working
-- ⚠️ Web UI not loading (fix ready, needs deployment)
+- ✅ Web UI working with simplified Whynter ON/OFF buttons
+- ✅ DHT11 code removed (BME280 provides all sensor data)
+- ✅ Boost threshold reduced to 5°F
 
 ---
 
-*Last updated: 2026-02-04 Evening - System operational, awaiting hardware upgrade*
-*Session: Reflashed firmware, fixed IR transmission, verified all functions*
+*Last updated: 2026-02-05 - Simplified Whynter control, removed DHT11, reduced boost threshold*
+*Changes: Whynter ON/OFF only (defaults to cool), BOOST_THRESHOLD 10→5, removed all DHT11 code*

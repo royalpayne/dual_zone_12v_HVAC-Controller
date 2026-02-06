@@ -66,8 +66,8 @@ class ThermostatController:
                                   min(config.MAX_SETPOINT, temp))
 
     def set_whynter_mode(self, mode):
-        """Set Whynter portable AC mode (0=off, 1=cool, 2=dehum, 3=heat)"""
-        if mode < 0 or mode > 3:
+        """Set Whynter portable AC mode (0=off, 1=on/cool)"""
+        if mode < 0 or mode > 1:
             print(f"Invalid Whynter mode: {mode}")
             return
 
@@ -79,20 +79,16 @@ class ThermostatController:
             print("No IR transmitter available")
             return
 
-        # Map mode numbers to IR mode names (skipping fan-only)
-        mode_map = {0: None, 1: 'cool', 2: 'dehum', 3: 'heat'}
-
         if mode == 0:
             # Turn off
             print("Setting Whynter to OFF")
             if not config.DRY_RUN:
                 self.ir_transmitter.send_off()
         else:
-            # Turn on in specific mode
-            mode_name = mode_map[mode]
-            print(f"Setting Whynter to {mode_name.upper()} mode")
+            # Turn on in cool mode (default)
+            print("Setting Whynter to COOL mode")
             if not config.DRY_RUN:
-                self.ir_transmitter.set_mode(mode_name)
+                self.ir_transmitter.set_mode('cool')
 
         self.whynter_mode = mode
         self.last_whynter_change = time.time()
@@ -227,7 +223,7 @@ class ThermostatController:
 
     def get_status(self):
         """Get current status as dict"""
-        whynter_names = {0: 'Off', 1: 'Cool', 2: 'Dehum', 3: 'Heat'}
+        whynter_names = {0: 'Off', 1: 'On'}
         return {
             'temp': self.current_temp,
             'humidity': self.current_humidity,

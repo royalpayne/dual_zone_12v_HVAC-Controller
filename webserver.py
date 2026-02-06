@@ -272,9 +272,7 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <h3>WHYNTER PORTABLE UNIT</h3>
 <div class="row">
 <button class="btn" id="w0" onclick="whynter(0)">OFF</button>
-<button class="btn" id="w1" onclick="whynter(1)">COOL</button>
-<button class="btn" id="w2" onclick="whynter(2)">DEHUM</button>
-<button class="btn" id="w3" onclick="whynter(3)">HEAT</button>
+<button class="btn" id="w1" onclick="whynter(1)">ON</button>
 </div>
 </div>
 
@@ -321,12 +319,11 @@ document.getElementById('pcslider').value=r.cool_setpoint;
 }
 rhs=r.heat_setpoint;rcs=r.cool_setpoint;rwhynter=r.whynter_mode||0;
 var ps=document.getElementById('pstatus');
-var whynterNames=['Off','Cool','Dehum','Heat'];
 var whynterActive=r.whynter_mode>0;
 ps.className=whynterActive?'whynter':r.heating_active?'heating':r.cooling_active?'cooling':'';
-ps.textContent=whynterActive?'WHYNTER: '+whynterNames[r.whynter_mode]:r.heating_active?'HEATING':r.cooling_active?'COOLING':'Idle';
+ps.textContent=whynterActive?'WHYNTER ON':r.heating_active?'HEATING':r.cooling_active?'COOLING':'Idle';
 for(var i=0;i<4;i++)document.getElementById('pm'+i).className='btn'+(r.mode==i?' active':'');
-for(var i=0;i<4;i++)document.getElementById('w'+i).className='btn'+(r.whynter_mode==i?' whynter':'');
+for(var i=0;i<2;i++)document.getElementById('w'+i).className='btn'+(r.whynter_mode==i?' whynter':'');
 }
 function get(){fetch('/api/status').then(r=>r.json()).then(upd).catch(e=>console.log(e));}
 function mode(m){fetch('/api/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(upd);}

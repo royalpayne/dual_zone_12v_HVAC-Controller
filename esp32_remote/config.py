@@ -25,7 +25,7 @@ MAX_SETPOINT = 90
 HYSTERESIS = 1.5
 
 # Boost mode - portable unit kicks in when temp exceeds setpoint by this amount
-BOOST_THRESHOLD = 10  # degrees F
+BOOST_THRESHOLD = 5  # degrees F
 
 # Short-cycle protection (minimum seconds between state changes)
 MIN_CYCLE_TIME = 30  # 30 seconds
@@ -45,9 +45,6 @@ DRY_RUN = True  # Enabled to prevent relay activation during testing
 I2C_SDA_PIN = 21
 I2C_SCL_PIN = 22
 I2C_FREQ = 400000
-
-# DHT11 for humidity
-DHT11_PIN = 4
 
 # Relay pins
 RELAY_FURNACE_PIN = 25
