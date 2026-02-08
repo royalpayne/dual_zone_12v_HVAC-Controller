@@ -1,5 +1,5 @@
-# Dr. Infrared Heater (with Humidifier) - IR Controller
-# =====================================================
+# Dr. Infrared Heater - IR Controller
+# ====================================
 # Uses captured raw IR data via Broadlink RM4 Mini
 # Proprietary protocol (not NEC) - codes captured from physical remote
 
@@ -10,21 +10,25 @@ from broadlink_client import pulses_to_broadlink, broadlink_to_pulses
 HEATER_STATE_FILE = "heater_state.json"
 
 # Raw Broadlink IR data captured from physical remote
-# Proprietary protocol: ~1200us/370us marks, ~7800us group gaps
+# Proprietary protocol - non-humidifier model
 _RAW_CODES = {
     'power': bytes.fromhex(
-        "2600ba00271509000b4507290cff260f280e0d28280f280e0b2a0c2a270f0b2a"
-        "0d280d290cff270f270f0c29270e290d0c2a0c2a270e0c2a0c290d290dfe270e"
-        "280e0c2a280d290d0d280e2a260f0c290c290c2a0cff270f270f0c292610260f"
-        "0d290d28280e0c2b0b2a0b2a0c000100260f270f0b2a270f26100c280d2a270f"
-        "0c2a0a2b0b2b0b000100260f270e0d292610270e0d280d2a270e0c2a0d270d2b"
-        "0b000100260f270f0c29270f270f0c290c29270f0c2a0c290c2a0c000d05"
+        "26002201270e280e0d28280e270e0e280d280e280d28290d0d280efe280e280e"
+        "0d28280e280e0d280d290d280d28290d0d290dff270e280e0d28280e280e0d28"
+        "0d290d280d29280d0e280dff270e280e0d29270e280e0d280e280d280e28280d"
+        "0e280dff280e270e0d29270e280e0d280e280d280e28280d0d2a0cff280e270e"
+        "0e28270e280e0d280e280d280e28290e0c290cff280e270e0e28270e280e0d29"
+        "0d280d290d28290e0c290cff280e270e0e28280e270e0d290d280d290d29280e"
+        "0c290cff280e270f0d28280e270e0d290d280d290d29270f0c290dfe280e280e"
+        "0d28280e280d0e280d280e280d29280e0c290dfe280e280f0c2a260e280e0d28"
+        "0d280e290c29280e0c2a0cff270e280e0d28280e290d0d280d290d290c2a270e"
+        "0c2a0c000d05"
     ),
 }
 
 
 class HeaterController:
-    """IR controller for Dr. Infrared Heater (humidifier model) via Broadlink"""
+    """IR controller for Dr. Infrared Heater via Broadlink"""
 
     def __init__(self, broadlink_client):
         self.bl = broadlink_client
