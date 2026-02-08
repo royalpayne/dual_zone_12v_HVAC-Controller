@@ -60,10 +60,11 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 
 ### Climate Control
 - **Multi-zone monitoring**: BMP280 sensors on both ESP32s for temperature/pressure
-- **Three HVAC systems** (all controlled by Remote ESP32):
+- **Four HVAC systems** (all controlled by Remote ESP32):
   - Furnace (relay on GPIO 25)
   - Rooftop AC (relay on GPIO 26)
   - Whynter ARC-14SH portable AC/heater (IR control on GPIO 18)
+  - IR Heater (IR control on GPIO 18, auto-triggers with furnace)
 
 ### Control Logic
 - **Hysteresis**: 1.5°F prevents rapid cycling
@@ -83,6 +84,11 @@ A DIY smart RV thermostat system controlling three HVAC systems (furnace, roofto
 - **State tracking**: Maintains AC state in `ir_state.json`
 - **Smart control**: Can achieve any target state from any starting point
 - **Capabilities**: Set specific temps, fan speeds, heating/cooling modes
+
+### IR Control (Heater)
+- **Learned command**: heater_power (toggle on/off)
+- **Auto-trigger**: Activates with furnace, deactivates when furnace turns off
+- **Status**: Awaiting high-power IR LEDs for sufficient range
 
 ---
 
@@ -415,11 +421,22 @@ self.rmt.write_pulses(tuple(timings))
 - ✅ BME280 sensors working on both units (temp/humidity/pressure)
 - ✅ IR system functional - successfully controlled Whynter A/C
 - ✅ API endpoints working
-- ✅ Web UI working with simplified Whynter ON/OFF buttons
+- ✅ Web UI working with simplified Whynter ON/OFF buttons + IR Heater ON/OFF
 - ✅ DHT11 code removed (BME280 provides all sensor data)
 - ✅ Boost threshold reduced to 5°F
+- ✅ IR heater control added to web UI and API
+- ⚠️ IR heater not responding - awaiting new high-power IR LEDs
+
+### IR Heater Control (Added 2026-02-05)
+- **Learned code**: `heater_power` (170 timings - different protocol than Whynter NEC)
+- **API endpoint**: `/api/heater_mode?mode=0|1` and `/api/ir/send?button=heater_power`
+- **Web UI**: IR HEATER ON/OFF buttons (orange) added to Living Room section
+- **Auto-trigger**: When furnace turns ON, IR heater auto-triggers; turns OFF when furnace turns OFF
+- **State tracking**: `heater_mode` in thermostat status (0=off, 1=on)
+- **Issue**: Current IR LEDs (4x 940nm, 100% duty cycle) insufficient power for heater receiver
+- **Next step**: Install new high-power IR LEDs (arriving tomorrow), re-test
 
 ---
 
-*Last updated: 2026-02-05 - Simplified Whynter control, removed DHT11, reduced boost threshold*
-*Changes: Whynter ON/OFF only (defaults to cool), BOOST_THRESHOLD 10→5, removed all DHT11 code*
+*Last updated: 2026-02-05 - Added IR heater control with auto-trigger on furnace activation*
+*Changes: heater_mode state, /api/heater_mode endpoint, web UI heater buttons, auto-trigger in _heat_on/_heat_off*

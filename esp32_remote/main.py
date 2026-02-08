@@ -1,8 +1,9 @@
 # ESP32 Remote - Main Entry Point
 # ================================
 #
-# Controls: Furnace relay, Rooftop AC relay, Portable AC via IR
-# Whynter portable AC: Manual mode control (Cool, Dehum, Heat)
+# Controls: Furnace relay, Rooftop AC relay, Portable AC + Heater via Broadlink IR
+# Whynter portable AC: Cool, Dehum, Heat modes
+# Dr. Heater: Power on/off
 
 import time
 import network
@@ -13,7 +14,9 @@ from sensor import SensorHub
 from ssd1306 import SSD1306_I2C
 from display import ThermostatDisplay
 from thermostat import ThermostatController
+from broadlink_client import BroadlinkClient
 from ir_whynter import WhynterIR
+from ir_heater import HeaterController
 from webserver import RemoteAPI
 
 
@@ -108,17 +111,29 @@ def main():
     # Connect to WiFi
     ip = connect_wifi(display)
 
-    # Initialize IR transmitter/receiver for Whynter portable AC
-    ir = WhynterIR()  # Uses default pins: TX=18, RX=19
-    print(f"IR TX on GPIO {ir.tx_pin_num}, RX on GPIO {ir.rx_pin_num}")
-    print(f"Learned IR codes: {ir.get_codes()}")
+    # Initialize Broadlink RM4 Mini (WiFi IR blaster)
+    bl = BroadlinkClient()
+    try:
+        bl.auth()
+        print(f"Broadlink connected at {bl.ip}")
+    except Exception as e:
+        print(f"Broadlink init failed: {e} (will retry on first use)")
+
+    # Initialize Whynter portable AC controller
+    whynter = WhynterIR(bl)
+    print(f"Whynter IR codes: {whynter.get_codes()}")
+
+    # Initialize Dr. Heater controller
+    heater = HeaterController(bl)
+    print(f"Heater IR codes: {heater.get_codes()}")
 
     # Initialize thermostat controller
     thermostat = ThermostatController()
-    thermostat.set_ir_transmitter(ir)
+    thermostat.set_ir_transmitter(whynter)
+    thermostat.set_heater_controller(heater)
 
-    # Initialize API server (share IR instance)
-    api = RemoteAPI(thermostat, ir)
+    # Initialize API server
+    api = RemoteAPI(thermostat, whynter=whynter, heater=heater, broadlink=bl)
     if ip:
         api.start(80)
         print(f"API: http://{ip}/api/status")
@@ -129,7 +144,8 @@ def main():
 
     print("ESP32 Remote running... Press Ctrl+C to stop")
     print(f"Furnace relay: GPIO {config.RELAY_FURNACE_PIN}")
-    print(f"Rooftop AC relay: GPIO {config.RELAY_ROOFTOP_AC_PIN}")
+    print(f"Compressor relay: GPIO {config.RELAY_COMPRESSOR_PIN}")
+    print(f"Fan relays: Low={config.RELAY_FAN_LOW_PIN}, High={config.RELAY_FAN_HIGH_PIN}")
 
     while True:
         try:
@@ -148,7 +164,7 @@ def main():
                 thermostat.run_control_loop()
 
                 # Update display
-                if display and temp_f is not None:
+                if display:
                     display.draw_main_screen(
                         temp_f, humidity, pressure,
                         thermostat.mode,

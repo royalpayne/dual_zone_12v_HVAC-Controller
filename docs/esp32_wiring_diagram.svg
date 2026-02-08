@@ -1,0 +1,384 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 920">
+  <style>
+    .title { font: bold 18px sans-serif; }
+    .subtitle { font: 12px sans-serif; fill: #666; }
+    .label { font: 11px sans-serif; }
+    .pin { font: bold 10px monospace; }
+    .pin-label { font: 9px monospace; fill: #555; }
+    .component { font: 11px sans-serif; }
+    .note { font: italic 10px sans-serif; fill: #888; }
+    .section-title { font: bold 14px sans-serif; }
+    .gpio { font: bold 9px monospace; fill: #fff; }
+    .i2c-wire { stroke: #9C27B0; stroke-width: 2; fill: none; }
+    .power-wire { stroke: #d32f2f; stroke-width: 2; fill: none; }
+    .gnd-wire { stroke: #333; stroke-width: 2; fill: none; }
+    .relay-wire { stroke: #2E7D32; stroke-width: 2; fill: none; stroke-dasharray: 5,3; }
+    .ir-wire { stroke: #FF6F00; stroke-width: 2; fill: none; stroke-dasharray: 5,3; }
+    .wifi-link { stroke: #1565C0; stroke-width: 2; fill: none; stroke-dasharray: 8,4; }
+  </style>
+
+  <!-- Title -->
+  <text x="550" y="24" text-anchor="middle" class="title">RV Thermostat System — Full Wiring Diagram</text>
+  <text x="550" y="42" text-anchor="middle" class="subtitle">Main ESP32-S3 (Kitchen) + Remote ESP32-S3-N16R8 (Living Room)</text>
+
+  <!-- ================================================================ -->
+  <!-- MAIN ESP32-S3 (Left Side) -->
+  <!-- ================================================================ -->
+  <rect x="30" y="60" width="460" height="400" rx="8" fill="#e8eaf6" stroke="#3949AB" stroke-width="2.5"/>
+  <text x="260" y="84" text-anchor="middle" class="section-title" fill="#1a237e">Main ESP32-S3 — Kitchen</text>
+  <text x="260" y="100" text-anchor="middle" class="note" fill="#5c6bc0">IP: 192.168.71.152 | /dev/ttyACM0 | Web UI + Brain</text>
+
+  <!-- ESP32 chip -->
+  <rect x="60" y="120" width="180" height="240" rx="6" fill="#263238" stroke="#455A64" stroke-width="2"/>
+  <text x="150" y="142" text-anchor="middle" font-size="11" font-weight="bold" fill="#B0BEC5">ESP32-S3</text>
+  <text x="150" y="156" text-anchor="middle" font-size="9" fill="#78909C">(Main Controller)</text>
+
+  <!-- Main GPIO pins (left side of chip) -->
+  <rect x="48" y="172" width="24" height="14" rx="2" fill="#1565C0"/>
+  <text x="60" y="183" text-anchor="middle" class="gpio">G8</text>
+  <text x="38" y="183" text-anchor="end" class="pin-label">SDA</text>
+
+  <rect x="48" y="192" width="24" height="14" rx="2" fill="#1565C0"/>
+  <text x="60" y="203" text-anchor="middle" class="gpio">G9</text>
+  <text x="38" y="203" text-anchor="end" class="pin-label">SCL</text>
+
+  <!-- Main GPIO pins (right side - unused but labeled) -->
+  <rect x="228" y="172" width="24" height="14" rx="2" fill="#78909C"/>
+  <text x="240" y="183" text-anchor="middle" class="gpio">3V3</text>
+
+  <rect x="228" y="192" width="24" height="14" rx="2" fill="#333"/>
+  <text x="240" y="203" text-anchor="middle" class="gpio">GND</text>
+
+  <rect x="228" y="212" width="24" height="14" rx="2" fill="#78909C"/>
+  <text x="240" y="223" text-anchor="middle" class="gpio">5V</text>
+
+  <!-- USB connector -->
+  <rect x="120" y="346" width="60" height="20" rx="3" fill="#555" stroke="#333" stroke-width="1"/>
+  <text x="150" y="360" text-anchor="middle" font-size="8" fill="#fff">USB-C</text>
+
+  <!-- I2C Bus lines from chip -->
+  <line x1="48" y1="179" x2="20" y2="179" class="i2c-wire"/>
+  <line x1="20" y1="179" x2="20" y2="290" class="i2c-wire"/>
+  <line x1="48" y1="199" x2="14" y2="199" class="i2c-wire"/>
+  <line x1="14" y1="199" x2="14" y2="290" class="i2c-wire"/>
+
+  <!-- BME280 sensor -->
+  <rect x="280" y="130" width="180" height="80" rx="5" fill="#E8F5E9" stroke="#2E7D32" stroke-width="1.5"/>
+  <text x="370" y="150" text-anchor="middle" class="component" font-weight="bold" fill="#1B5E20">BME280</text>
+  <text x="370" y="166" text-anchor="middle" class="pin-label" fill="#2E7D32">Temp + Humidity + Pressure</text>
+  <text x="370" y="180" text-anchor="middle" class="pin-label" fill="#2E7D32">I2C Addr: 0x76</text>
+  <rect x="295" y="190" width="28" height="12" rx="2" fill="#9C27B0"/>
+  <text x="309" y="200" text-anchor="middle" font-size="7" fill="#fff">SDA</text>
+  <rect x="327" y="190" width="28" height="12" rx="2" fill="#9C27B0"/>
+  <text x="341" y="200" text-anchor="middle" font-size="7" fill="#fff">SCL</text>
+  <rect x="359" y="190" width="28" height="12" rx="2" fill="#d32f2f"/>
+  <text x="373" y="200" text-anchor="middle" font-size="7" fill="#fff">3V3</text>
+  <rect x="391" y="190" width="28" height="12" rx="2" fill="#333"/>
+  <text x="405" y="200" text-anchor="middle" font-size="7" fill="#fff">GND</text>
+
+  <!-- OLED display -->
+  <rect x="280" y="225" width="180" height="80" rx="5" fill="#FFF3E0" stroke="#E65100" stroke-width="1.5"/>
+  <rect x="298" y="240" width="145" height="40" rx="3" fill="#263238" stroke="#455A64" stroke-width="1"/>
+  <text x="370" y="264" text-anchor="middle" font-size="10" fill="#4FC3F7">SSD1306 OLED</text>
+  <text x="370" y="295" text-anchor="middle" class="pin-label" fill="#E65100">I2C Addr: 0x3C | 128x64</text>
+  <rect x="295" y="288" width="28" height="12" rx="2" fill="#9C27B0"/>
+  <text x="309" y="298" text-anchor="middle" font-size="7" fill="#fff">SDA</text>
+  <rect x="327" y="288" width="28" height="12" rx="2" fill="#9C27B0"/>
+  <text x="341" y="298" text-anchor="middle" font-size="7" fill="#fff">SCL</text>
+  <rect x="359" y="288" width="28" height="12" rx="2" fill="#d32f2f"/>
+  <text x="373" y="298" text-anchor="middle" font-size="7" fill="#fff">3V3</text>
+  <rect x="391" y="288" width="28" height="12" rx="2" fill="#333"/>
+  <text x="405" y="298" text-anchor="middle" font-size="7" fill="#fff">GND</text>
+
+  <!-- I2C bus wires to BME280 -->
+  <path d="M20 290 L20 196 L295 196" class="i2c-wire"/>
+  <path d="M14 290 L14 196 L327 196" class="i2c-wire"/>
+  <!-- I2C bus wires to OLED -->
+  <path d="M20 290 L20 294 L295 294" class="i2c-wire"/>
+  <path d="M14 290 L14 294 L327 294" class="i2c-wire"/>
+
+  <!-- I2C label -->
+  <text x="17" y="240" text-anchor="middle" font-size="8" fill="#9C27B0" transform="rotate(-90,17,240)">I2C Bus (400kHz)</text>
+
+  <!-- Main pinout table -->
+  <rect x="50" y="375" width="420" height="75" rx="4" fill="#fff" stroke="#3949AB" stroke-width="1"/>
+  <text x="260" y="393" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a237e">Main ESP32-S3 Pin Assignment</text>
+  <line x1="50" y1="398" x2="470" y2="398" stroke="#3949AB" stroke-width="0.5"/>
+
+  <text x="70" y="413" class="pin-label" fill="#333" font-weight="bold">GPIO</text>
+  <text x="120" y="413" class="pin-label" fill="#333" font-weight="bold">Function</text>
+  <text x="250" y="413" class="pin-label" fill="#333" font-weight="bold">GPIO</text>
+  <text x="300" y="413" class="pin-label" fill="#333" font-weight="bold">Function</text>
+
+  <text x="70" y="428" class="pin-label">8</text>
+  <text x="120" y="428" class="pin-label">I2C SDA (BME280+OLED)</text>
+  <text x="250" y="428" class="pin-label">9</text>
+  <text x="300" y="428" class="pin-label">I2C SCL (BME280+OLED)</text>
+
+  <text x="70" y="443" class="pin-label">—</text>
+  <text x="120" y="443" class="pin-label">No relays on Main</text>
+  <text x="250" y="443" class="pin-label">—</text>
+  <text x="300" y="443" class="pin-label">No IR on Main</text>
+
+  <!-- ================================================================ -->
+  <!-- WiFi Link between boards -->
+  <!-- ================================================================ -->
+  <path d="M490 280 L510 260 L530 280 L550 260 L570 280 L590 260 L610 280" class="wifi-link"/>
+  <text x="550" y="250" text-anchor="middle" font-size="10" font-weight="bold" fill="#1565C0">WiFi HTTP API</text>
+  <text x="550" y="300" text-anchor="middle" font-size="8" fill="#1565C0">Main sends commands to Remote</text>
+
+  <!-- ================================================================ -->
+  <!-- REMOTE ESP32-S3-N16R8 (Right Side) -->
+  <!-- ================================================================ -->
+  <rect x="620" y="60" width="460" height="400" rx="8" fill="#E8F5E9" stroke="#2E7D32" stroke-width="2.5"/>
+  <text x="850" y="84" text-anchor="middle" class="section-title" fill="#1B5E20">Remote ESP32-S3-N16R8 — Living Room</text>
+  <text x="850" y="100" text-anchor="middle" class="note" fill="#388E3C">IP: 192.168.71.153 | /dev/ttyACM1 | Relays + IR</text>
+
+  <!-- ESP32 chip -->
+  <rect x="650" y="120" width="180" height="280" rx="6" fill="#263238" stroke="#455A64" stroke-width="2"/>
+  <text x="740" y="142" text-anchor="middle" font-size="11" font-weight="bold" fill="#B0BEC5">ESP32-S3</text>
+  <text x="740" y="156" text-anchor="middle" font-size="9" fill="#78909C">N16R8 (16MB/8MB)</text>
+
+  <!-- Left side pins -->
+  <rect x="638" y="172" width="24" height="14" rx="2" fill="#1565C0"/>
+  <text x="650" y="183" text-anchor="middle" class="gpio">G8</text>
+  <text x="628" y="183" text-anchor="end" class="pin-label">SDA</text>
+
+  <rect x="638" y="192" width="24" height="14" rx="2" fill="#1565C0"/>
+  <text x="650" y="203" text-anchor="middle" class="gpio">G9</text>
+  <text x="628" y="203" text-anchor="end" class="pin-label">SCL</text>
+
+  <rect x="638" y="222" width="24" height="14" rx="2" fill="#FF6F00"/>
+  <text x="650" y="233" text-anchor="middle" class="gpio">G17</text>
+  <text x="628" y="233" text-anchor="end" class="pin-label">IR RX</text>
+
+  <rect x="638" y="242" width="24" height="14" rx="2" fill="#FF6F00"/>
+  <text x="650" y="253" text-anchor="middle" class="gpio">G18</text>
+  <text x="628" y="253" text-anchor="end" class="pin-label">IR TX</text>
+
+  <!-- Right side pins -->
+  <rect x="818" y="172" width="24" height="14" rx="2" fill="#d32f2f"/>
+  <text x="830" y="183" text-anchor="middle" class="gpio">G38</text>
+  <text x="852" y="183" class="pin-label">Furnace</text>
+
+  <rect x="818" y="192" width="24" height="14" rx="2" fill="#2196F3"/>
+  <text x="830" y="203" text-anchor="middle" class="gpio">G39</text>
+  <text x="852" y="203" class="pin-label">Compressor</text>
+
+  <rect x="818" y="212" width="24" height="14" rx="2" fill="#4CAF50"/>
+  <text x="830" y="223" text-anchor="middle" class="gpio">G40</text>
+  <text x="852" y="223" class="pin-label">Fan Low</text>
+
+  <rect x="818" y="232" width="24" height="14" rx="2" fill="#4CAF50"/>
+  <text x="830" y="243" text-anchor="middle" class="gpio">G42</text>
+  <text x="852" y="243" class="pin-label">Fan High</text>
+
+  <!-- USB connector -->
+  <rect x="710" y="386" width="60" height="20" rx="3" fill="#555" stroke="#333" stroke-width="1"/>
+  <text x="740" y="400" text-anchor="middle" font-size="8" fill="#fff">USB (CH340)</text>
+
+  <!-- I2C devices for Remote -->
+  <!-- BME280 -->
+  <rect x="636" y="280" width="84" height="50" rx="4" fill="#E8F5E9" stroke="#2E7D32" stroke-width="1"/>
+  <text x="678" y="298" text-anchor="middle" font-size="9" font-weight="bold" fill="#1B5E20">BME280</text>
+  <text x="678" y="312" text-anchor="middle" font-size="7" fill="#2E7D32">0x76</text>
+  <path d="M638 179 L625 179 L625 300 L636 300" class="i2c-wire"/>
+  <path d="M638 199 L620 199 L620 305 L636 305" class="i2c-wire"/>
+
+  <!-- OLED -->
+  <rect x="730" y="280" width="84" height="50" rx="4" fill="#FFF3E0" stroke="#E65100" stroke-width="1"/>
+  <rect x="740" y="290" width="64" height="24" rx="2" fill="#263238"/>
+  <text x="772" y="306" text-anchor="middle" font-size="7" fill="#4FC3F7">OLED</text>
+  <text x="772" y="322" text-anchor="middle" font-size="7" fill="#E65100">0x3C</text>
+  <path d="M625 300 L625 310 L730 310" class="i2c-wire"/>
+  <path d="M620 305 L620 315 L730 315" class="i2c-wire"/>
+
+  <!-- IR components -->
+  <!-- VS1838B IR Receiver -->
+  <rect x="850" y="280" width="84" height="50" rx="4" fill="#FFF8E1" stroke="#FF6F00" stroke-width="1"/>
+  <text x="892" y="298" text-anchor="middle" font-size="9" font-weight="bold" fill="#E65100">VS1838B</text>
+  <text x="892" y="312" text-anchor="middle" font-size="7" fill="#FF6F00">IR Receiver</text>
+  <path d="M638 229 L630 229 L630 268 L892 268 L892 280" class="ir-wire"/>
+
+  <!-- IR LED + Transistor -->
+  <rect x="850" y="340" width="84" height="58" rx="4" fill="#FFF8E1" stroke="#FF6F00" stroke-width="1"/>
+  <text x="892" y="356" text-anchor="middle" font-size="9" font-weight="bold" fill="#E65100">IR LED</text>
+  <text x="892" y="370" text-anchor="middle" font-size="7" fill="#FF6F00">2N2222 driver</text>
+  <text x="892" y="382" text-anchor="middle" font-size="7" fill="#FF6F00">1K base R, 5V</text>
+  <text x="892" y="393" text-anchor="middle" font-size="7" fill="#FF6F00">~1 ft range</text>
+  <path d="M638 249 L633 249 L633 360 L850 360" class="ir-wire"/>
+
+  <!-- Relay block -->
+  <rect x="940" y="120" width="130" height="230" rx="5" fill="#ECEFF1" stroke="#455A64" stroke-width="1.5"/>
+  <text x="1005" y="140" text-anchor="middle" font-size="10" font-weight="bold" fill="#37474F">Relay Modules</text>
+
+  <!-- Furnace relay -->
+  <rect x="950" y="152" width="110" height="42" rx="3" fill="#FFEBEE" stroke="#d32f2f" stroke-width="1"/>
+  <text x="1005" y="168" text-anchor="middle" font-size="8" font-weight="bold" fill="#b71c1c">Furnace (G38)</text>
+  <text x="1005" y="180" text-anchor="middle" font-size="7" fill="#d32f2f">Active LOW | HL-52S</text>
+  <text x="1005" y="190" text-anchor="middle" font-size="7" fill="#d32f2f">Contact closure</text>
+  <line x1="842" y1="179" x2="950" y2="168" stroke="#d32f2f" stroke-width="1.5" class="relay-wire"/>
+
+  <!-- Compressor relay -->
+  <rect x="950" y="198" width="110" height="42" rx="3" fill="#E3F2FD" stroke="#2196F3" stroke-width="1"/>
+  <text x="1005" y="214" text-anchor="middle" font-size="8" font-weight="bold" fill="#0D47A1">Compressor (G39)</text>
+  <text x="1005" y="226" text-anchor="middle" font-size="7" fill="#2196F3">Active LOW | HL-52S</text>
+  <text x="1005" y="236" text-anchor="middle" font-size="7" fill="#2196F3">Brisk II compressor</text>
+  <line x1="842" y1="199" x2="950" y2="214" stroke="#2196F3" stroke-width="1.5" class="relay-wire"/>
+
+  <!-- Fan Low relay -->
+  <rect x="950" y="244" width="110" height="42" rx="3" fill="#E8F5E9" stroke="#4CAF50" stroke-width="1"/>
+  <text x="1005" y="260" text-anchor="middle" font-size="8" font-weight="bold" fill="#1B5E20">Fan Low (G40)</text>
+  <text x="1005" y="272" text-anchor="middle" font-size="7" fill="#4CAF50">Active HIGH | 5V mod</text>
+  <text x="1005" y="282" text-anchor="middle" font-size="7" fill="#4CAF50">10K pull-up to 3.3V</text>
+  <line x1="842" y1="219" x2="950" y2="260" stroke="#4CAF50" stroke-width="1.5" class="relay-wire"/>
+
+  <!-- Fan High relay -->
+  <rect x="950" y="290" width="110" height="42" rx="3" fill="#E8F5E9" stroke="#4CAF50" stroke-width="1"/>
+  <text x="1005" y="306" text-anchor="middle" font-size="8" font-weight="bold" fill="#1B5E20">Fan High (G42)</text>
+  <text x="1005" y="318" text-anchor="middle" font-size="7" fill="#4CAF50">Active HIGH | 5V mod</text>
+  <text x="1005" y="328" text-anchor="middle" font-size="7" fill="#4CAF50">10K pull-up to 3.3V</text>
+  <line x1="842" y1="239" x2="950" y2="306" stroke="#4CAF50" stroke-width="1.5" class="relay-wire"/>
+
+  <!-- Remote pinout table -->
+  <rect x="640" y="415" width="430" height="38" rx="4" fill="#fff" stroke="#2E7D32" stroke-width="1"/>
+  <text x="660" y="430" class="pin-label" font-weight="bold" fill="#333">G8:SDA  G9:SCL  G17:IR_RX  G18:IR_TX</text>
+  <text x="660" y="445" class="pin-label" font-weight="bold" fill="#333">G38:Furnace  G39:Comp  G40:Fan_Lo  G42:Fan_Hi</text>
+
+  <!-- ================================================================ -->
+  <!-- POWER SECTION (Bottom) -->
+  <!-- ================================================================ -->
+  <rect x="30" y="480" width="1050" height="110" rx="8" fill="#FFF3E0" stroke="#E65100" stroke-width="2"/>
+  <text x="555" y="500" text-anchor="middle" class="section-title" fill="#BF360C">Power Distribution</text>
+
+  <!-- 5V Buck Converter -->
+  <rect x="440" y="510" width="220" height="65" rx="5" fill="#FFCCBC" stroke="#BF360C" stroke-width="1.5"/>
+  <text x="550" y="530" text-anchor="middle" font-size="11" font-weight="bold" fill="#BF360C">5V Buck Converter</text>
+  <text x="550" y="546" text-anchor="middle" font-size="9" fill="#E65100">12V DC In → 5V Out</text>
+  <text x="550" y="560" text-anchor="middle" font-size="8" fill="#E65100">Powers: IR LEDs, HL-52S relay module, fan relay module</text>
+
+  <!-- Main power -->
+  <rect x="60" y="520" width="160" height="45" rx="4" fill="#fff" stroke="#E65100" stroke-width="1"/>
+  <text x="140" y="538" text-anchor="middle" font-size="9" font-weight="bold" fill="#BF360C">Main ESP32-S3</text>
+  <text x="140" y="553" text-anchor="middle" font-size="8" fill="#E65100">USB-C (5V from adapter)</text>
+
+  <!-- Remote power -->
+  <rect x="880" y="520" width="160" height="45" rx="4" fill="#fff" stroke="#E65100" stroke-width="1"/>
+  <text x="960" y="538" text-anchor="middle" font-size="9" font-weight="bold" fill="#BF360C">Remote ESP32-S3</text>
+  <text x="960" y="553" text-anchor="middle" font-size="8" fill="#E65100">USB (5V from buck/adapter)</text>
+
+  <!-- ================================================================ -->
+  <!-- FULL PINOUT TABLE (Bottom) -->
+  <!-- ================================================================ -->
+  <rect x="30" y="610" width="1050" height="300" rx="8" fill="#FAFAFA" stroke="#9E9E9E" stroke-width="1.5"/>
+  <text x="555" y="634" text-anchor="middle" class="section-title" fill="#333">Complete GPIO Pin Assignment</text>
+
+  <!-- Main ESP32 table -->
+  <rect x="50" y="648" width="480" height="245" rx="4" fill="#fff" stroke="#3949AB" stroke-width="1"/>
+  <rect x="50" y="648" width="480" height="22" rx="4" fill="#3949AB"/>
+  <text x="290" y="664" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">Main ESP32-S3 (192.168.71.152)</text>
+
+  <!-- Table header -->
+  <text x="70" y="686" font-size="10" font-weight="bold" fill="#333">GPIO</text>
+  <text x="120" y="686" font-size="10" font-weight="bold" fill="#333">Function</text>
+  <text x="290" y="686" font-size="10" font-weight="bold" fill="#333">Notes</text>
+  <line x1="55" y1="690" x2="525" y2="690" stroke="#ccc" stroke-width="0.5"/>
+
+  <text x="70" y="706" class="pin-label">8</text>
+  <text x="120" y="706" class="pin-label">I2C SDA</text>
+  <text x="290" y="706" class="pin-label">BME280 (0x76) + SSD1306 OLED (0x3C)</text>
+  <line x1="55" y1="710" x2="525" y2="710" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="70" y="726" class="pin-label">9</text>
+  <text x="120" y="726" class="pin-label">I2C SCL</text>
+  <text x="290" y="726" class="pin-label">400kHz bus frequency</text>
+  <line x1="55" y1="730" x2="525" y2="730" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="70" y="746" class="pin-label">—</text>
+  <text x="120" y="746" class="pin-label">USB-C</text>
+  <text x="290" y="746" class="pin-label">Native USB (ttyACM0), power + serial</text>
+  <line x1="55" y1="750" x2="525" y2="750" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="70" y="770" font-size="9" font-style="italic" fill="#888">Software roles:</text>
+  <line x1="55" y1="774" x2="525" y2="774" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="70" y="790" class="pin-label" fill="#666">—</text>
+  <text x="120" y="790" class="pin-label" fill="#666">WiFi STA</text>
+  <text x="290" y="790" class="pin-label" fill="#666">Web UI server (port 80), HTTP client to Remote</text>
+  <line x1="55" y1="794" x2="525" y2="794" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="70" y="810" class="pin-label" fill="#666">—</text>
+  <text x="120" y="810" class="pin-label" fill="#666">Thermostat brain</text>
+  <text x="290" y="810" class="pin-label" fill="#666">Reads local BME280, sends commands to Remote</text>
+  <line x1="55" y1="814" x2="525" y2="814" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="70" y="830" class="pin-label" fill="#666">—</text>
+  <text x="120" y="830" class="pin-label" fill="#666">Scheduler</text>
+  <text x="290" y="830" class="pin-label" fill="#666">Time-based mode changes (home/away/sleep)</text>
+  <line x1="55" y1="834" x2="525" y2="834" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="70" y="850" class="pin-label" fill="#666">—</text>
+  <text x="120" y="850" class="pin-label" fill="#666">OLED display</text>
+  <text x="290" y="850" class="pin-label" fill="#666">128x64 — temp, humidity, mode, setpoints</text>
+
+  <!-- Remote ESP32 table -->
+  <rect x="560" y="648" width="500" height="245" rx="4" fill="#fff" stroke="#2E7D32" stroke-width="1"/>
+  <rect x="560" y="648" width="500" height="22" rx="4" fill="#2E7D32"/>
+  <text x="810" y="664" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">Remote ESP32-S3-N16R8 (192.168.71.153)</text>
+
+  <!-- Table header -->
+  <text x="580" y="686" font-size="10" font-weight="bold" fill="#333">GPIO</text>
+  <text x="630" y="686" font-size="10" font-weight="bold" fill="#333">Function</text>
+  <text x="800" y="686" font-size="10" font-weight="bold" fill="#333">Notes</text>
+  <line x1="565" y1="690" x2="1055" y2="690" stroke="#ccc" stroke-width="0.5"/>
+
+  <text x="580" y="706" class="pin-label">8</text>
+  <text x="630" y="706" class="pin-label">I2C SDA</text>
+  <text x="800" y="706" class="pin-label">BME280 (0x76) + SSD1306 OLED (0x3C)</text>
+  <line x1="565" y1="710" x2="1055" y2="710" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="580" y="726" class="pin-label">9</text>
+  <text x="630" y="726" class="pin-label">I2C SCL</text>
+  <text x="800" y="726" class="pin-label">400kHz bus frequency</text>
+  <line x1="565" y1="730" x2="1055" y2="730" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="580" y="746" class="pin-label">17</text>
+  <text x="630" y="746" class="pin-label">IR Receiver</text>
+  <text x="800" y="746" class="pin-label">VS1838B (IR learning via Broadlink)</text>
+  <line x1="565" y1="750" x2="1055" y2="750" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="580" y="766" class="pin-label">18</text>
+  <text x="630" y="766" class="pin-label">IR Transmitter</text>
+  <text x="800" y="766" class="pin-label">2N2222 NPN driver, 1K base R, 5V LED supply</text>
+  <line x1="565" y1="770" x2="1055" y2="770" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="580" y="786" class="pin-label" fill="#d32f2f">38</text>
+  <text x="630" y="786" class="pin-label" fill="#d32f2f">Relay: Furnace</text>
+  <text x="800" y="786" class="pin-label">Active LOW (HL-52S module), contact closure</text>
+  <line x1="565" y1="790" x2="1055" y2="790" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="580" y="806" class="pin-label" fill="#2196F3">39</text>
+  <text x="630" y="806" class="pin-label" fill="#2196F3">Relay: Compressor</text>
+  <text x="800" y="806" class="pin-label">Active LOW (HL-52S module), Brisk II compressor</text>
+  <line x1="565" y1="810" x2="1055" y2="810" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="580" y="826" class="pin-label" fill="#4CAF50">40</text>
+  <text x="630" y="826" class="pin-label" fill="#4CAF50">Relay: Fan Low</text>
+  <text x="800" y="826" class="pin-label">Active HIGH (5V module), 10K pull-up, Brisk II low</text>
+  <line x1="565" y1="830" x2="1055" y2="830" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="580" y="846" class="pin-label" fill="#4CAF50">42</text>
+  <text x="630" y="846" class="pin-label" fill="#4CAF50">Relay: Fan High</text>
+  <text x="800" y="846" class="pin-label">Active HIGH (5V module), 10K pull-up, Brisk II high</text>
+  <line x1="565" y1="850" x2="1055" y2="850" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="580" y="866" class="pin-label" fill="#888">41</text>
+  <text x="630" y="866" class="pin-label" fill="#888">Unused</text>
+  <text x="800" y="866" class="pin-label" fill="#888">Medium speed removed (5-wire thermostat cable limit)</text>
+  <line x1="565" y1="870" x2="1055" y2="870" stroke="#eee" stroke-width="0.5"/>
+
+  <text x="580" y="886" class="pin-label" fill="#888">—</text>
+  <text x="630" y="886" class="pin-label" fill="#888">USB CH340</text>
+  <text x="800" y="886" class="pin-label" fill="#888">Serial 5B41036349, MAC 1c:db:d4:ad:d2:64</text>
+
+</svg>

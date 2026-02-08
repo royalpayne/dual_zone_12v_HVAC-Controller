@@ -160,6 +160,12 @@ class ThermostatWebServer:
                 self.remote.set_cool_setpoint(int(data.get('temp', 75)))
             elif 'POST /api/remote/whynter_mode' in request:
                 self.remote.set_whynter_mode(int(data.get('mode', 0)))
+            elif 'POST /api/remote/heater_mode' in request:
+                self.remote.set_heater_mode(int(data.get('mode', 0)))
+            elif 'POST /api/remote/fan_speed' in request:
+                self.remote.set_fan_speed(int(data.get('speed', 4)))
+            elif 'POST /api/remote/fan_only' in request:
+                self.remote.set_fan_only(data.get('on', False))
             elif 'POST /api/remote/sync' in request:
                 # Sync ESP32 setpoints to remote (one call at a time with short delay)
                 import time
@@ -189,6 +195,8 @@ body{font-family:sans-serif;background:#1a1a2e;color:#eee;padding:20px}
 .btn.active{background:#e94560}
 .btn.cool{background:#00b4d8}
 .btn.whynter{background:#9d4edd}
+.btn.heater{background:#ff6b35}
+.btn.fan{background:#38b000}
 .setrow{display:flex;align-items:center;justify-content:space-between;margin:12px 0}
 .setval{font-size:28px;min-width:60px;text-align:center}
 .slider{width:100%;height:8px;border-radius:4px;background:#0f3460;outline:none;-webkit-appearance:none;margin:8px 0}
@@ -269,15 +277,31 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <h3>REMOTE COOL SETPOINT</h3>
 <div class="setlabel"><span>60°</span><span id="pcset">75</span>°<span>85°</span></div>
 <input type="range" min="60" max="85" value="75" class="slider cool" id="pcslider" oninput="setRCool(this.value)">
+<h3>ROOFTOP FAN</h3>
+<div class="row">
+<button class="btn" id="f1" onclick="fanSpeed(1)">LOW</button>
+<button class="btn" id="f2" onclick="fanSpeed(2)">MED</button>
+<button class="btn" id="f3" onclick="fanSpeed(3)">HIGH</button>
+<button class="btn" id="f4" onclick="fanSpeed(4)">AUTO</button>
+</div>
+<div class="row">
+<button class="btn" id="fo0" onclick="fanOnly(0)">FAN OFF</button>
+<button class="btn" id="fo1" onclick="fanOnly(1)">FAN ONLY</button>
+</div>
 <h3>WHYNTER PORTABLE UNIT</h3>
 <div class="row">
 <button class="btn" id="w0" onclick="whynter(0)">OFF</button>
 <button class="btn" id="w1" onclick="whynter(1)">ON</button>
 </div>
+<h3>IR HEATER</h3>
+<div class="row">
+<button class="btn" id="h0" onclick="heater(0)">OFF</button>
+<button class="btn" id="h1" onclick="heater(1)">ON</button>
+</div>
 </div>
 
 <script>
-var hs=68,cs=75,rhs=68,rcs=75,rwhynter=0;
+var hs=68,cs=75,rhs=68,rcs=75,rwhynter=0,rheater=0;
 var adjustingHeat=false,adjustingCool=false,adjustingRHeat=false,adjustingRCool=false;
 var heatTimer,coolTimer,rheatTimer,rcoolTimer;
 function upd(d){
@@ -317,13 +341,18 @@ if(!adjustingRCool){
 document.getElementById('pcset').textContent=r.cool_setpoint;
 document.getElementById('pcslider').value=r.cool_setpoint;
 }
-rhs=r.heat_setpoint;rcs=r.cool_setpoint;rwhynter=r.whynter_mode||0;
+rhs=r.heat_setpoint;rcs=r.cool_setpoint;rwhynter=r.whynter_mode||0;rheater=r.heater_mode||0;
 var ps=document.getElementById('pstatus');
 var whynterActive=r.whynter_mode>0;
-ps.className=whynterActive?'whynter':r.heating_active?'heating':r.cooling_active?'cooling':'';
-ps.textContent=whynterActive?'WHYNTER ON':r.heating_active?'HEATING':r.cooling_active?'COOLING':'Idle';
+var heaterActive=r.heater_mode>0;
+ps.className=whynterActive?'whynter':heaterActive?'heating':r.heating_active?'heating':r.cooling_active?'cooling':'';
+ps.textContent=whynterActive?'WHYNTER ON':heaterActive?'IR HEATER ON':r.heating_active?'HEATING':r.cooling_active?'COOLING':r.fan_only?'FAN ONLY':'Idle';
 for(var i=0;i<4;i++)document.getElementById('pm'+i).className='btn'+(r.mode==i?' active':'');
 for(var i=0;i<2;i++)document.getElementById('w'+i).className='btn'+(r.whynter_mode==i?' whynter':'');
+for(var i=0;i<2;i++)document.getElementById('h'+i).className='btn'+(r.heater_mode==i?' heater':'');
+for(var i=1;i<=4;i++)document.getElementById('f'+i).className='btn'+(r.fan_speed==i?' fan':'');
+document.getElementById('fo0').className='btn'+(!r.fan_only?' active':'');
+document.getElementById('fo1').className='btn'+(r.fan_only?' fan':'');
 }
 function get(){fetch('/api/status').then(r=>r.json()).then(upd).catch(e=>console.log(e));}
 function mode(m){fetch('/api/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(upd);}
@@ -334,6 +363,9 @@ function rmode(m){fetch('/api/remote/mode',{method:'POST',body:JSON.stringify({m
 function setRHeat(v){adjustingRHeat=true;document.getElementById('phset').textContent=v;clearTimeout(rheatTimer);rheatTimer=setTimeout(function(){fetch('/api/remote/heat_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){setTimeout(function(){adjustingRHeat=false;},1000);});},500);}
 function setRCool(v){adjustingRCool=true;document.getElementById('pcset').textContent=v;clearTimeout(rcoolTimer);rcoolTimer=setTimeout(function(){fetch('/api/remote/cool_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){setTimeout(function(){adjustingRCool=false;},1000);});},500);}
 function whynter(m){fetch('/api/remote/whynter_mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updRemote);}
+function heater(m){fetch('/api/remote/heater_mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updRemote);}
+function fanSpeed(s){fetch('/api/remote/fan_speed',{method:'POST',body:JSON.stringify({speed:s})}).then(r=>r.json()).then(updRemote);}
+function fanOnly(on){fetch('/api/remote/fan_only',{method:'POST',body:JSON.stringify({on:on})}).then(r=>r.json()).then(updRemote);}
 function syncZones(){
 var btn=document.getElementById('syncbtn');
 btn.textContent='SYNCING...';

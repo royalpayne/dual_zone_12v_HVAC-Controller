@@ -8,10 +8,10 @@ import config
 
 
 class RemoteThermostatController:
-    """ESP32 thermostat that controls Pico remotely"""
+    """ESP32 thermostat that controls Remote ESP32 via API"""
 
-    def __init__(self, pico_client):
-        self.pico = pico_client
+    def __init__(self, remote_client):
+        self.remote = remote_client
 
         # Setpoints
         self.heat_setpoint = config.DEFAULT_HEAT_SETPOINT
@@ -45,7 +45,7 @@ class RemoteThermostatController:
         if mode in config.MODE_NAMES:
             self.mode = mode
             # Sync to Pico
-            self._sync_to_pico()
+            self._sync_to_remote()
             if mode == config.MODE_OFF:
                 self._all_off()
 
@@ -53,13 +53,13 @@ class RemoteThermostatController:
         """Set heating setpoint"""
         self.heat_setpoint = max(config.MIN_SETPOINT,
                                   min(config.MAX_SETPOINT, temp))
-        self._sync_to_pico()
+        self._sync_to_remote()
 
     def set_cool_setpoint(self, temp):
         """Set cooling setpoint"""
         self.cool_setpoint = max(config.MIN_SETPOINT,
                                   min(config.MAX_SETPOINT, temp))
-        self._sync_to_pico()
+        self._sync_to_remote()
 
     def set_cool_system(self, system):
         """Set which cooling system to use"""
@@ -70,19 +70,19 @@ class RemoteThermostatController:
         """Check if enough time has passed since last state change"""
         return (time.time() - self.last_state_change) >= config.MIN_CYCLE_TIME
 
-    def _sync_to_pico(self):
-        """Sync settings to Pico (debounced)"""
+    def _sync_to_remote(self):
+        """Sync settings to Remote (debounced)"""
         now = time.time()
         if now - self.last_pico_sync < 1:  # Don't sync more than once per second
             return
         self.last_pico_sync = now
 
         try:
-            self.pico.set_mode(self.mode)
-            self.pico.set_heat_setpoint(int(self.heat_setpoint))
-            self.pico.set_cool_setpoint(int(self.cool_setpoint))
+            self.remote.set_mode(self.mode)
+            self.remote.set_heat_setpoint(int(self.heat_setpoint))
+            self.remote.set_cool_setpoint(int(self.cool_setpoint))
         except Exception as e:
-            print(f"Pico sync error: {e}")
+            print(f"Remote sync error: {e}")
 
     def run_control_loop(self):
         """Main control logic - monitors and sends commands to Pico"""
@@ -142,7 +142,7 @@ class RemoteThermostatController:
                 self._cool_off()
 
     def _heat_on(self):
-        """Turn on heating via Pico"""
+        """Turn on heating via Remote"""
         dry_run = "(DRY RUN) " if config.DRY_RUN else ""
         print(f"{dry_run}HEAT ON (temp: {self.current_temp:.1f}F, setpoint: {self.heat_setpoint}F)")
         if not config.DRY_RUN:
@@ -154,7 +154,7 @@ class RemoteThermostatController:
         self.last_state_change = time.time()
 
     def _heat_off(self):
-        """Turn off heating via Pico"""
+        """Turn off heating via Remote"""
         dry_run = "(DRY RUN) " if config.DRY_RUN else ""
         print(f"{dry_run}HEAT OFF (temp: {self.current_temp:.1f}F, setpoint: {self.heat_setpoint}F)")
         if not config.DRY_RUN:
@@ -166,36 +166,36 @@ class RemoteThermostatController:
         self.last_state_change = time.time()
 
     def _cool_on(self):
-        """Turn on cooling via Pico"""
+        """Turn on cooling via Remote"""
         dry_run = "(DRY RUN) " if config.DRY_RUN else ""
         print(f"{dry_run}COOL ON (temp: {self.current_temp:.1f}F, setpoint: {self.cool_setpoint}F)")
         if not config.DRY_RUN:
             try:
-                self.remote.set_rooftop(True)
+                self.remote.set_mode(config.MODE_COOL)
             except Exception as e:
-                print(f"Remote rooftop error: {e}")
+                print(f"Remote cool error: {e}")
         self.cooling_active = True
         self.last_state_change = time.time()
 
     def _cool_off(self):
-        """Turn off cooling via Pico"""
+        """Turn off cooling via Remote"""
         dry_run = "(DRY RUN) " if config.DRY_RUN else ""
         print(f"{dry_run}COOL OFF (temp: {self.current_temp:.1f}F, setpoint: {self.cool_setpoint}F)")
         if not config.DRY_RUN:
             try:
-                self.remote.set_rooftop(False)
+                self.remote.set_mode(config.MODE_OFF)
             except Exception as e:
-                print(f"Remote rooftop error: {e}")
+                print(f"Remote cool error: {e}")
         self.cooling_active = False
         self.last_state_change = time.time()
 
     def _all_off(self):
-        """Turn off all systems via Pico"""
+        """Turn off all systems via Remote"""
         if self.heating_active or self.cooling_active:
             if not config.DRY_RUN:
                 try:
                     self.remote.set_furnace(False)
-                    self.remote.set_rooftop(False)
+                    self.remote.set_mode(config.MODE_OFF)
                 except Exception as e:
                     print(f"Remote all-off error: {e}")
             self.heating_active = False

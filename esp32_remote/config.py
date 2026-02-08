@@ -38,21 +38,34 @@ DEBUG = False
 DRY_RUN = True  # Enabled to prevent relay activation during testing
 
 # ============================================================
-# HARDWARE CONFIGURATION (ESP32 Pin Assignments)
+# HARDWARE CONFIGURATION (ESP32-S3-N16R8 Pin Assignments)
 # ============================================================
+# GPIO 22-25 don't exist on ESP32-S3
+# GPIO 26-32 reserved for SPI flash
+# GPIO 33-37 reserved for Octal PSRAM
+# GPIO 19/20 reserved for native USB
 
-# I2C for BMP280 and OLED (ESP32 defaults)
-I2C_SDA_PIN = 21
-I2C_SCL_PIN = 22
+# I2C for BMP280 and OLED
+I2C_SDA_PIN = 8
+I2C_SCL_PIN = 9
 I2C_FREQ = 400000
 
-# Relay pins
-RELAY_FURNACE_PIN = 25
-RELAY_ROOFTOP_AC_PIN = 26
+# Relay pins (GPIO 38-42: no strapping conflicts on ESP32-S3-N16R8)
+RELAY_FURNACE_PIN = 38
+RELAY_COMPRESSOR_PIN = 39       # Rooftop AC compressor (was RELAY_ROOFTOP_AC_PIN)
+RELAY_FAN_LOW_PIN = 40          # Rooftop AC fan low speed
+RELAY_FAN_HIGH_PIN = 42         # Rooftop AC fan high speed
+# Note: Medium speed removed to fit existing 5-wire thermostat cable
 
-# IR pins
-IR_LED_PIN = 18           # IR transmitter
-IR_RECEIVER_PIN = 19      # IR receiver (optional, for future use)
+# Relay polarity: Fan relays use active HIGH (jumper on HIGH trigger)
+# because 3.3V GPIO can't pull HIGH enough vs 5V VCC for active LOW
+# Furnace/compressor use active LOW (separate module)
+FAN_RELAY_ACTIVE_HIGH = True    # True = value(1) engages relay
+
+# Broadlink RM4 Mini (WiFi IR blaster - replaces direct IR hardware)
+BROADLINK_IP = None       # Set after discovery, or static IP in config_local.py
+BROADLINK_TIMEOUT = 3     # UDP timeout seconds
+BROADLINK_RETRIES = 3     # Retry count for failed commands
 
 # I2C Addresses
 BMP280_ADDR = 0x76
@@ -78,6 +91,24 @@ MODE_NAMES = {
     MODE_COOL: "COOL",
     MODE_AUTO: "AUTO"
 }
+
+# Fan Speed (no medium - only 2 speeds to fit 5-wire cable)
+FAN_OFF = 0
+FAN_LOW = 1
+FAN_HIGH = 2
+FAN_AUTO = 3
+
+FAN_NAMES = {
+    FAN_OFF: "Off",
+    FAN_LOW: "Low",
+    FAN_HIGH: "High",
+    FAN_AUTO: "Auto"
+}
+
+# Compressor protection (seconds)
+COMPRESSOR_MIN_OFF_TIME = 180   # 3 minutes between off→on
+FAN_PRE_RUN = 3                 # Fan starts 3s before compressor
+FAN_POST_RUN = 30               # Fan runs 30s after compressor stops
 
 # ============================================================
 # LOCAL OVERRIDES

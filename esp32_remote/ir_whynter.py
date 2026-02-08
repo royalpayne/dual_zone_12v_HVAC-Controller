@@ -1,88 +1,102 @@
 # Whynter ARC-14SH IR Controller
 # ================================
-# IR send/receive for portable AC/Heatpump control
-# Supports learning IR codes from the original remote
-# Uses single data pin for both TX and RX
+# Protocol-based IR control for portable AC/Heatpump
+# Sends full state in each 32-bit command via Broadlink RM4 Mini
+# Protocol source: ESPHome PR #3641
 
-from machine import Pin, PWM
-from esp32 import RMT
 import time
 import json
-import config
+from broadlink_client import pulses_to_broadlink
 
-# File to store learned IR codes
-IR_CODES_FILE = "ir_codes.json"
+# State file for persistence across reboots
 IR_STATE_FILE = "ir_state.json"
 
-# Whynter mode cycle order (pressing MODE button cycles through these)
+# Whynter modes
 MODES = ['cool', 'dehum', 'fan', 'heat']
 
-# Fan speed cycle order (pressing FAN button cycles through these)
+# Fan speeds
 FAN_SPEEDS = ['auto', 'low', 'med', 'high']
 
-# Temperature range for Whynter units
-MIN_TEMP = 61  # Fahrenheit
-MAX_TEMP = 89  # Fahrenheit
+# Temperature range (Fahrenheit)
+MIN_TEMP = 61
+MAX_TEMP = 89
+
+# IR Protocol timing (microseconds) - ESPHome ARC-14S/ARC-14SH
+HEADER_MARK = 8000
+HEADER_SPACE = 4000
+BIT_MARK = 600
+ONE_SPACE = 1600
+ZERO_SPACE = 550
+
+# 32-bit command layout
+COMMAND_HEADER = 0x12 << 24  # Bits 31-24
+
+# Fan speed (bits 22-20)
+_FAN_BITS = {
+    'high': 0b001 << 20,
+    'med':  0b010 << 20,
+    'low':  0b100 << 20,
+    'auto': 0b000 << 20,
+}
+
+# Mode (bits 19-16)
+_MODE_BITS = {
+    'fan':   0b0001 << 16,
+    'dehum': 0b0010 << 16,
+    'heat':  0b0100 << 16,
+    'cool':  0b1000 << 16,
+}
+
+FAHRENHEIT_BIT = 1 << 10  # Bit 10
+POWER_BIT = 1 << 8        # Bit 8
+
+
+def _reverse_bits(byte_val):
+    """Reverse bits of an 8-bit value for temperature encoding"""
+    result = 0
+    for i in range(8):
+        if byte_val & (1 << i):
+            result |= 1 << (7 - i)
+    return result
+
+
+def _encode_command(power, mode, fan, temp_f):
+    """Build 32-bit Whynter command word"""
+    cmd = COMMAND_HEADER
+    cmd |= _FAN_BITS.get(fan, 0)
+    cmd |= _MODE_BITS.get(mode, _MODE_BITS['cool'])
+    cmd |= FAHRENHEIT_BIT
+    if power:
+        cmd |= POWER_BIT
+    cmd |= _reverse_bits(temp_f) & 0xFF
+    return cmd
+
+
+def _command_to_pulses(cmd):
+    """Convert 32-bit command to IR pulse timings (microseconds)"""
+    pulses = [HEADER_MARK, HEADER_SPACE]
+    for i in range(31, -1, -1):
+        pulses.append(BIT_MARK)
+        if (cmd >> i) & 1:
+            pulses.append(ONE_SPACE)
+        else:
+            pulses.append(ZERO_SPACE)
+    pulses.append(BIT_MARK)  # Final mark
+    return pulses
 
 
 class WhynterIR:
-    """IR transmitter/receiver for Whynter portable AC"""
+    """Protocol-based IR controller for Whynter ARC-14SH via Broadlink"""
 
-    CARRIER_FREQ = 38000  # 38kHz carrier
+    def __init__(self, broadlink_client):
+        self.bl = broadlink_client
 
-    def __init__(self, tx_pin=None, rx_pin=None):
-        # Separate pins for TX and RX modules
-        if tx_pin is None:
-            tx_pin = config.IR_LED_PIN
-        if rx_pin is None:
-            rx_pin = config.IR_RECEIVER_PIN
-
-        self.tx_pin_num = tx_pin
-        self.rx_pin_num = rx_pin
-
-        # Initialize TX pin (for transmitting to Whynter)
-        self.tx_pin = Pin(tx_pin, Pin.OUT)
-        self.tx_pin.value(0)
-
-        # Initialize RMT for hardware-timed IR transmission
-        # RMT(channel, pin, clock_div, tx_carrier=(freq, duty_percent, level))
-        # duty_percent=75 for high-current pulse testing (200mA+ brief bursts)
-        self.rmt = RMT(0, pin=self.tx_pin, clock_div=80, tx_carrier=(self.CARRIER_FREQ, 75, 1))
-
-        # Initialize RX pin (for learning from remote)
-        self.rx_pin = Pin(rx_pin, Pin.IN)
-
-        self.pwm = None
-
-        # Learned codes storage
-        self.codes = {}
-        self.load_codes()
-
-        # Track current portable AC state
-        self.current_mode = 'cool'  # Default assumption
+        # Track current state
+        self.current_mode = 'cool'
         self.power_on = False
-        self.current_temp = 72  # Default temp setpoint
-        self.current_fan = 'auto'  # Default fan speed
+        self.current_temp = 72
+        self.current_fan = 'auto'
         self.load_state()
-
-    def load_codes(self):
-        """Load IR codes from file"""
-        try:
-            with open(IR_CODES_FILE, 'r') as f:
-                self.codes = json.load(f)
-                print(f"[IR] Loaded {len(self.codes)} codes")
-        except:
-            print("[IR] No saved codes, starting fresh")
-            self.codes = {}
-
-    def save_codes(self):
-        """Save IR codes to file"""
-        try:
-            with open(IR_CODES_FILE, 'w') as f:
-                json.dump(self.codes, f)
-            print(f"[IR] Saved {len(self.codes)} codes")
-        except Exception as e:
-            print(f"[IR] Save error: {e}")
 
     def load_state(self):
         """Load current AC state from file"""
@@ -95,7 +109,7 @@ class WhynterIR:
                 self.current_fan = state.get('fan', 'auto')
                 print(f"[IR] State: power={self.power_on}, mode={self.current_mode}, temp={self.current_temp}, fan={self.current_fan}")
         except:
-            print("[IR] No saved state, assuming defaults")
+            print("[IR] No saved state, using defaults")
 
     def save_state(self):
         """Save current AC state to file"""
@@ -111,141 +125,48 @@ class WhynterIR:
         except Exception as e:
             print(f"[IR] State save error: {e}")
 
+    def _send_command(self, power, mode=None, fan=None, temp=None):
+        """Build and send an IR command with current or overridden state"""
+        mode = mode or self.current_mode
+        fan = fan or self.current_fan
+        temp = temp if temp is not None else self.current_temp
 
-    def _send_raw(self, timings):
-        """Send raw timing sequence [mark, space, mark, space, ...] using RMT hardware.
-        Uses ESP32's RMT peripheral for precise timing with 38kHz carrier."""
-        if not timings or len(timings) < 4:
-            print("[IR] No valid timings to send")
-            return False
+        cmd = _encode_command(power, mode, fan, temp)
+        pulses = _command_to_pulses(cmd)
+        bl_data = pulses_to_broadlink(pulses)
 
-        # Use ESP32 RMT for hardware-timed transmission
-        # RMT provides precise timing and automatic carrier generation
         try:
-            self.rmt.write_pulses(tuple(timings))
-            return True
+            result = self.bl.send_data(bl_data)
+            if result:
+                self.power_on = power
+                self.current_mode = mode
+                self.current_fan = fan
+                self.current_temp = temp
+                self.save_state()
+            return result
         except Exception as e:
-            print(f"[IR] Transmission error: {e}")
+            print(f"[IR] Send error: {e}")
             return False
-
-    def capture(self, timeout_ms=10000):
-        """Capture IR signal from remote control using RX pin"""
-        print("[IR] Point remote at receiver and press button...")
-
-        timings = []
-        last_change = time.ticks_us()
-        last_value = self.rx_pin.value()
-        start = time.ticks_ms()
-
-        # Wait for first transition (signal start)
-        while self.rx_pin.value() == last_value:
-            if time.ticks_diff(time.ticks_ms(), start) > timeout_ms:
-                print("[IR] Timeout waiting for signal")
-                return None
-
-        # Record start
-        last_change = time.ticks_us()
-        last_value = self.rx_pin.value()
-
-        # Capture transitions
-        while True:
-            current = self.rx_pin.value()
-            now = time.ticks_us()
-
-            if current != last_value:
-                duration = time.ticks_diff(now, last_change)
-                timings.append(duration)
-                last_change = now
-                last_value = current
-
-            # End capture after gap (no transitions for 50ms)
-            gap = time.ticks_diff(now, last_change)
-            if gap > 50000 and len(timings) > 10:
-                break
-
-            # Timeout
-            if time.ticks_diff(time.ticks_ms(), start) > timeout_ms:
-                break
-
-        if len(timings) < 10:
-            print("[IR] No valid signal captured")
-            return None
-
-        print(f"[IR] Captured {len(timings)} timing values")
-        return timings
-
-    def learn(self, code_name, timeout_ms=10000):
-        """Learn and save an IR code"""
-        timings = self.capture(timeout_ms)
-        if timings:
-            self.codes[code_name] = timings
-            self.save_codes()
-            print(f"[IR] Learned '{code_name}' ({len(timings)} pulses)")
-            return True
-        return False
-
-    def send(self, code_name):
-        """Send a learned IR code"""
-        if code_name not in self.codes:
-            print(f"[IR] Unknown code: {code_name}")
-            return False
-
-        timings = self.codes[code_name]
-        print(f"[IR] Sending '{code_name}'")
-        return self._send_raw(timings)
 
     def send_off(self):
-        """Send power off command"""
-        if self.send('power'):
-            self.power_on = False
-            self.save_state()
-            return True
-        return False
+        """Turn off the Whynter"""
+        print("[IR] Whynter OFF")
+        return self._send_command(power=False)
 
     def send_on(self):
-        """Turn on (to current mode)"""
-        if not self.power_on:
-            if self.send('power'):
-                self.power_on = True
-                self.save_state()
-                return True
-            return False
-        return True  # Already on
+        """Turn on the Whynter (to current mode/temp/fan)"""
+        if self.power_on:
+            return True
+        print(f"[IR] Whynter ON ({self.current_mode}, {self.current_temp}F, {self.current_fan})")
+        return self._send_command(power=True)
 
     def set_mode(self, target_mode):
-        """Cycle to a specific mode (cool/dehum/fan/heat)"""
+        """Set to a specific mode (cool/dehum/fan/heat) and turn on"""
         if target_mode not in MODES:
             print(f"[IR] Invalid mode: {target_mode}")
             return False
-
-        if 'mode' not in self.codes:
-            print("[IR] Mode button not learned - learn 'mode' first")
-            return False
-
-        # Turn on first if off - unit restores last mode used
-        if not self.power_on:
-            if not self.send_on():
-                return False
-            time.sleep(0.5)
-
-        # Calculate how many presses needed to reach target
-        current_idx = MODES.index(self.current_mode)
-        target_idx = MODES.index(target_mode)
-        presses = (target_idx - current_idx) % len(MODES)
-
-        if presses == 0:
-            print(f"[IR] Already in {target_mode} mode")
-            return True
-
-        print(f"[IR] Cycling from {self.current_mode} to {target_mode} ({presses} presses)")
-
-        for i in range(presses):
-            self.send('mode')
-            time.sleep(0.3)  # Wait between presses
-
-        self.current_mode = target_mode
-        self.save_state()
-        return True
+        print(f"[IR] Whynter {target_mode} mode")
+        return self._send_command(power=True, mode=target_mode)
 
     def send_cool_on(self):
         """Turn on in cooling mode"""
@@ -264,179 +185,46 @@ class WhynterIR:
         return self.set_mode('fan')
 
     def set_temperature(self, target_temp):
-        """Set temperature to specific value"""
+        """Set temperature (sends full state command)"""
         if target_temp < MIN_TEMP or target_temp > MAX_TEMP:
             print(f"[IR] Temp {target_temp} out of range ({MIN_TEMP}-{MAX_TEMP})")
             return False
-
-        if 'temp_up' not in self.codes or 'temp_down' not in self.codes:
-            print("[IR] Temperature buttons not learned - learn 'temp_up' and 'temp_down' first")
-            return False
-
-        # Turn on first if off
-        if not self.power_on:
-            if not self.send_on():
-                return False
-            time.sleep(0.5)
-
-        # Calculate how many button presses needed
-        diff = target_temp - self.current_temp
-
-        if diff == 0:
-            print(f"[IR] Already at {target_temp}°F")
-            return True
-
-        button = 'temp_up' if diff > 0 else 'temp_down'
-        presses = abs(diff)
-
-        print(f"[IR] Setting temp from {self.current_temp}°F to {target_temp}°F ({presses} presses)")
-
-        for i in range(presses):
-            self.send(button)
-            time.sleep(0.3)  # Wait between presses
-
-        self.current_temp = target_temp
-        self.save_state()
-        return True
+        print(f"[IR] Set temp {target_temp}F")
+        return self._send_command(power=True, temp=target_temp)
 
     def set_fan_speed(self, target_fan):
-        """Set fan speed (auto, low, med, high)"""
+        """Set fan speed (auto/low/med/high)"""
         if target_fan not in FAN_SPEEDS:
             print(f"[IR] Invalid fan speed: {target_fan}")
             return False
-
-        if 'fan' not in self.codes:
-            print("[IR] Fan button not learned - learn 'fan' first")
-            return False
-
-        # Turn on first if off
-        if not self.power_on:
-            if not self.send_on():
-                return False
-            time.sleep(0.5)
-
-        # Calculate how many presses needed to reach target
-        current_idx = FAN_SPEEDS.index(self.current_fan)
-        target_idx = FAN_SPEEDS.index(target_fan)
-        presses = (target_idx - current_idx) % len(FAN_SPEEDS)
-
-        if presses == 0:
-            print(f"[IR] Already at {target_fan} fan speed")
-            return True
-
-        print(f"[IR] Setting fan from {self.current_fan} to {target_fan} ({presses} presses)")
-
-        for i in range(presses):
-            self.send('fan')
-            time.sleep(0.3)  # Wait between presses
-
-        self.current_fan = target_fan
-        self.save_state()
-        return True
+        print(f"[IR] Set fan {target_fan}")
+        return self._send_command(power=True, fan=target_fan)
 
     def set_cooling(self, target_temp, fan_speed='auto'):
         """Set to cooling mode at specific temperature and fan speed"""
-        print(f"[IR] Setting cooling: {target_temp}°F, fan={fan_speed}")
-
-        # Set mode first
-        if not self.set_mode('cool'):
-            return False
-        time.sleep(0.5)
-
-        # Set temperature
-        if not self.set_temperature(target_temp):
-            return False
-        time.sleep(0.5)
-
-        # Set fan speed
-        if not self.set_fan_speed(fan_speed):
-            return False
-
-        print(f"[IR] Cooling configured: {target_temp}°F, {fan_speed} fan")
-        return True
+        print(f"[IR] Cooling: {target_temp}F, fan={fan_speed}")
+        return self._send_command(power=True, mode='cool', temp=target_temp, fan=fan_speed)
 
     def set_heating(self, target_temp, fan_speed='auto'):
         """Set to heating mode at specific temperature and fan speed"""
-        print(f"[IR] Setting heating: {target_temp}°F, fan={fan_speed}")
-
-        # Set mode first
-        if not self.set_mode('heat'):
-            return False
-        time.sleep(0.5)
-
-        # Set temperature
-        if not self.set_temperature(target_temp):
-            return False
-        time.sleep(0.5)
-
-        # Set fan speed
-        if not self.set_fan_speed(fan_speed):
-            return False
-
-        print(f"[IR] Heating configured: {target_temp}°F, {fan_speed} fan")
-        return True
+        print(f"[IR] Heating: {target_temp}F, fan={fan_speed}")
+        return self._send_command(power=True, mode='heat', temp=target_temp, fan=fan_speed)
 
     def achieve_state(self, power=None, mode=None, temp=None, fan=None):
-        """
-        Achieve a specific state regardless of current state.
-        This is the master control method for automatic operation.
-
-        Args:
-            power: True/False or None to leave unchanged
-            mode: 'cool'/'heat'/'fan'/'dehum' or None
-            temp: Target temperature or None
-            fan: Target fan speed or None
-        """
-        print(f"[IR] Achieving state: power={power}, mode={mode}, temp={temp}, fan={fan}")
-
-        # Handle power off
+        """Set the Whynter to an exact state in a single command"""
         if power is False:
             return self.send_off()
-
-        # Handle power on
-        if power is True and not self.power_on:
-            if not self.send_on():
-                return False
-            time.sleep(0.5)
-
-        # Set mode if specified
-        if mode is not None and mode != self.current_mode:
-            if not self.set_mode(mode):
-                return False
-            time.sleep(0.5)
-
-        # Set temperature if specified
-        if temp is not None and temp != self.current_temp:
-            if not self.set_temperature(temp):
-                return False
-            time.sleep(0.5)
-
-        # Set fan speed if specified
-        if fan is not None and fan != self.current_fan:
-            if not self.set_fan_speed(fan):
-                return False
-
-        print(f"[IR] State achieved successfully")
-        return True
+        p = power if power is not None else self.power_on
+        return self._send_command(power=p, mode=mode, temp=temp, fan=fan)
 
     def get_codes(self):
-        """Get list of learned code names"""
-        return list(self.codes.keys())
-
-    def delete_code(self, code_name):
-        """Delete a learned code"""
-        if code_name in self.codes:
-            del self.codes[code_name]
-            self.save_codes()
-            return True
-        return False
+        """Get list of available commands (protocol-based, always available)"""
+        return ['power', 'cool', 'heat', 'dehum', 'fan', 'temp', 'fan_speed']
 
     def get_status(self):
         """Get IR status for API"""
         return {
-            'codes': self.get_codes(),
-            'tx_pin': self.tx_pin_num,
-            'rx_pin': self.rx_pin_num,
+            'protocol': 'whynter_arc14sh',
             'power_on': self.power_on,
             'current_mode': self.current_mode,
             'current_temp': self.current_temp,

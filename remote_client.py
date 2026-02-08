@@ -90,13 +90,21 @@ class RemoteClient:
         """Set Whynter portable AC mode (0=off, 1=on/cool)"""
         return self._request('/api/whynter_mode', {'mode': mode})
 
+    def set_heater_mode(self, mode):
+        """Set IR heater mode (0=off, 1=on)"""
+        return self._request('/api/heater_mode', {'mode': mode})
+
     def set_furnace(self, on):
         """Direct furnace relay control"""
         return self._request('/api/relay/furnace', {'on': 1 if on else 0})
 
-    def set_rooftop(self, on):
-        """Direct rooftop AC relay control"""
-        return self._request('/api/relay/rooftop', {'on': 1 if on else 0})
+    def set_fan_speed(self, speed):
+        """Set fan speed (0=off, 1=low, 2=med, 3=high, 4=auto)"""
+        return self._request('/api/fan_speed', {'speed': speed})
+
+    def set_fan_only(self, on):
+        """Set fan-only mode (no compressor)"""
+        return self._request('/api/fan_only', {'on': 1 if on else 0})
 
     def is_connected(self):
         """Check if remote is reachable"""

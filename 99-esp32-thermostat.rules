@@ -1,0 +1,9 @@
+# RV Thermostat ESP32-S3 udev rules
+# Install: sudo cp 99-esp32-thermostat.rules /etc/udev/rules.d/
+# Reload: sudo udevadm control --reload-rules && sudo udevadm trigger
+
+# Main ESP32-S3 (thermostat controller, BME280 + OLED)
+SUBSYSTEM=="tty", ATTRS{serial}=="5B41038621", SYMLINK+="esp32_main"
+
+# Remote ESP32-S3 N16R8 (relays, IR, BMP280 + OLED)
+SUBSYSTEM=="tty", ATTRS{serial}=="5B41036349", SYMLINK+="esp32_remote"

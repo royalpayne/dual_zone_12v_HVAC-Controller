@@ -1,0 +1,258 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 620">
+  <style>
+    .title { font: bold 16px sans-serif; }
+    .subtitle { font: 12px sans-serif; fill: #666; }
+    .label { font: 12px sans-serif; }
+    .pin { font: bold 10px monospace; }
+    .component { font: 11px sans-serif; }
+    .note { font: italic 10px sans-serif; fill: #888; }
+    .wire-common { stroke: #888; stroke-width: 2.5; fill: none; }
+    .wire-compressor { stroke: #2196F3; stroke-width: 2.5; fill: none; }
+    .wire-fan-low { stroke: #e53935; stroke-width: 2.5; fill: none; }
+    .wire-fan-high { stroke: #333; stroke-width: 2.5; fill: none; }
+    .wire-furnace { stroke: #795548; stroke-width: 2.5; fill: none; }
+    .wire-unused { stroke: #FFD600; stroke-width: 2; fill: none; stroke-dasharray: 6,3; }
+    .wire-ground { stroke: #4CAF50; stroke-width: 2; fill: none; stroke-dasharray: 6,3; }
+    .junction { stroke: #333; stroke-width: 1; }
+  </style>
+
+  <!-- Title -->
+  <text x="460" y="22" text-anchor="middle" class="title">Parallel Thermostat Wiring: ESP32 + Dometic Control Box</text>
+  <text x="460" y="38" text-anchor="middle" class="subtitle">T-splice at 6-pin output connector (control board P/N 3313199.000 to Brisk II)</text>
+
+  <!-- ==================== DOMETIC CONTROL BOX (Left) ==================== -->
+  <rect x="30" y="60" width="200" height="270" rx="6" fill="#e8eaf6" stroke="#3949AB" stroke-width="2"/>
+  <text x="130" y="82" text-anchor="middle" class="component" font-weight="bold" fill="#1a237e">Dometic Control Box</text>
+  <text x="130" y="96" text-anchor="middle" class="note" fill="#5c6bc0">P/N 3313199.000 (Etratech)</text>
+  <text x="130" y="110" text-anchor="middle" class="note" fill="#5c6bc0">Relays K3, K4, K5 inside</text>
+
+  <!-- Thermostat data input (top of box) -->
+  <text x="130" y="130" text-anchor="middle" font-size="9" fill="#999">CT Thermostat (digital)</text>
+  <line x1="130" y1="133" x2="130" y2="55" stroke="#aaa" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="130" y="52" text-anchor="middle" font-size="8" fill="#aaa">Data cable from wall</text>
+
+  <!-- Freeze sensor connector -->
+  <text x="55" y="155" font-size="8" fill="#999">Freeze</text>
+  <text x="55" y="163" font-size="8" fill="#999">Sensor</text>
+  <line x1="55" y1="166" x2="55" y2="185" stroke="#aaa" stroke-width="1" stroke-dasharray="2,2"/>
+
+  <!-- Furnace screw terminals (separate from 6-pin) -->
+  <text x="130" y="300" text-anchor="middle" font-size="9" fill="#795548" font-weight="bold">FURNACE screw terminals</text>
+  <text x="130" y="315" text-anchor="middle" font-size="8" fill="#999">(separate from 6-pin connector)</text>
+
+  <!-- 6-pin output connector on right edge -->
+  <rect x="215" y="148" width="30" height="140" rx="3" fill="#fff" stroke="#555" stroke-width="1.5"/>
+  <text x="230" y="145" text-anchor="middle" font-size="8" fill="#555" font-weight="bold">6-pin</text>
+
+  <!-- Pin dots on connector -->
+  <circle cx="230" cy="160" r="4" fill="#2196F3" class="junction"/>
+  <text x="213" y="163" text-anchor="end" font-size="7" fill="#2196F3">1</text>
+
+  <circle cx="230" cy="186" r="4" fill="#333" class="junction"/>
+  <text x="213" y="189" text-anchor="end" font-size="7" fill="#333">2</text>
+
+  <circle cx="230" cy="212" r="4" fill="#FFD600" stroke="#999" stroke-width="0.5" class="junction"/>
+  <text x="213" y="215" text-anchor="end" font-size="7" fill="#999">3</text>
+
+  <circle cx="230" cy="238" r="4" fill="#e53935" class="junction"/>
+  <text x="213" y="241" text-anchor="end" font-size="7" fill="#e53935">4</text>
+
+  <circle cx="230" cy="258" r="4" fill="#888" class="junction"/>
+  <text x="213" y="261" text-anchor="end" font-size="7" fill="#888">5</text>
+
+  <circle cx="230" cy="278" r="4" fill="#4CAF50" class="junction"/>
+  <text x="213" y="281" text-anchor="end" font-size="7" fill="#4CAF50">6</text>
+
+  <!-- ==================== BRISK II AC UNIT (Right) ==================== -->
+  <rect x="660" y="60" width="230" height="230" rx="6" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+  <text x="775" y="82" text-anchor="middle" class="component" font-weight="bold" fill="#bf360c">Dometic Brisk II</text>
+  <text x="775" y="96" text-anchor="middle" class="note" fill="#e65100">Rooftop AC Unit (Cool Only)</text>
+
+  <!-- AC unit terminals -->
+  <circle cx="660" cy="160" r="5" fill="#2196F3" class="junction"/>
+  <text x="675" y="164" class="pin" fill="#2196F3">COMP</text>
+  <text x="790" y="164" text-anchor="middle" font-size="9" fill="#666">Compressor Contactor</text>
+
+  <circle cx="660" cy="196" r="5" fill="#333" class="junction"/>
+  <text x="675" y="200" class="pin" fill="#333">FAN HI</text>
+  <text x="790" y="200" text-anchor="middle" font-size="9" fill="#666">Fan Motor High Tap</text>
+
+  <circle cx="660" cy="232" r="5" fill="#e53935" class="junction"/>
+  <text x="675" y="236" class="pin" fill="#e53935">FAN LO</text>
+  <text x="790" y="236" text-anchor="middle" font-size="9" fill="#666">Fan Motor Low Tap</text>
+
+  <circle cx="660" cy="262" r="5" fill="#888" class="junction"/>
+  <text x="675" y="266" class="pin" fill="#888">COM</text>
+  <text x="790" y="266" text-anchor="middle" font-size="9" fill="#666">Common (24V Return)</text>
+
+  <!-- ==================== FURNACE (Below AC) ==================== -->
+  <rect x="660" y="300" width="230" height="50" rx="6" fill="#efebe9" stroke="#795548" stroke-width="2"/>
+  <text x="775" y="320" text-anchor="middle" class="component" font-weight="bold" fill="#4e342e">Furnace</text>
+  <text x="775" y="336" text-anchor="middle" class="note" fill="#795548">Separate Unit (own blower)</text>
+
+  <!-- ==================== T-SPLICE JUNCTION POINTS ==================== -->
+  <!-- Spread across x=370, 410, 450, 490 -->
+  <text x="430" y="127" text-anchor="middle" font-size="9" fill="#555" font-weight="bold">T-Splice Points</text>
+  <text x="430" y="138" text-anchor="middle" font-size="8" fill="#999">(at 6-pin connector)</text>
+
+  <circle cx="370" cy="160" r="6" fill="#2196F3" stroke="#0D47A1" stroke-width="1.5"/>
+  <circle cx="410" cy="186" r="6" fill="#333" stroke="#111" stroke-width="1.5"/>
+  <circle cx="450" cy="238" r="6" fill="#e53935" stroke="#b71c1c" stroke-width="1.5"/>
+  <circle cx="490" cy="258" r="6" fill="#888" stroke="#555" stroke-width="1.5"/>
+
+  <!-- ==================== WIRES: Control Box to T-Splices ==================== -->
+  <line x1="234" y1="160" x2="364" y2="160" class="wire-compressor"/>
+  <text x="290" y="155" font-size="8" fill="#2196F3">Blue</text>
+
+  <line x1="234" y1="186" x2="404" y2="186" class="wire-fan-high"/>
+  <text x="310" y="181" font-size="8" fill="#333">Black</text>
+
+  <line x1="234" y1="238" x2="444" y2="238" class="wire-fan-low"/>
+  <text x="330" y="233" font-size="8" fill="#e53935">Red</text>
+
+  <line x1="234" y1="258" x2="484" y2="258" class="wire-common"/>
+  <text x="350" y="253" font-size="8" fill="#888">White</text>
+
+  <!-- Unused wires (yellow + green/yellow) go straight through -->
+  <line x1="234" y1="212" x2="655" y2="212" class="wire-unused"/>
+  <text x="440" y="207" font-size="8" fill="#999">Yellow (unused)</text>
+
+  <line x1="234" y1="278" x2="580" y2="278" class="wire-ground"/>
+  <text x="400" y="274" font-size="8" fill="#4CAF50">Green/Yel (ground)</text>
+
+  <!-- ==================== WIRES: T-Splices to AC Unit ==================== -->
+  <line x1="376" y1="160" x2="655" y2="160" class="wire-compressor"/>
+  <line x1="416" y1="186" x2="580" y2="186" class="wire-fan-high"/>
+  <!-- Fan high routes to AC terminal at y=196 -->
+  <path d="M580 186 L600 186 Q610 186 610 196 L655 196" class="wire-fan-high"/>
+
+  <line x1="456" y1="238" x2="580" y2="238" class="wire-fan-low"/>
+  <!-- Fan low routes to AC terminal at y=232 -->
+  <path d="M580 238 L600 238 Q610 238 610 232 L655 232" class="wire-fan-low"/>
+
+  <line x1="496" y1="258" x2="580" y2="258" class="wire-common"/>
+  <path d="M580 258 L600 258 Q610 258 610 262 L655 262" class="wire-common"/>
+
+  <!-- ==================== FURNACE WIRES (separate path) ==================== -->
+  <path d="M130 325 L370 325 L655 325" class="wire-furnace" stroke-dasharray="6,3"/>
+  <text x="400" y="340" font-size="8" fill="#795548">Furnace blue wires (separate from 6-pin)</text>
+
+  <!-- ==================== ESP32 RELAY BOARD (Bottom) ==================== -->
+  <rect x="115" y="400" width="590" height="145" rx="6" fill="#e8f5e9" stroke="#2E7D32" stroke-width="2"/>
+  <text x="410" y="419" text-anchor="middle" class="component" font-weight="bold" fill="#1B5E20">ESP32-S3 Relay Board (4-Channel)</text>
+  <text x="410" y="433" text-anchor="middle" class="note" fill="#388E3C">IP: 192.168.71.153 | Relay NO contacts in parallel with control box outputs</text>
+
+  <!-- Relay 1: Compressor (GPIO 39, Active LOW) -->
+  <rect x="130" y="443" width="125" height="90" rx="4" fill="#e3f2fd" stroke="#2196F3" stroke-width="1.5"/>
+  <text x="192" y="461" text-anchor="middle" class="pin" fill="#0D47A1">Relay 1: COMP</text>
+  <text x="192" y="475" text-anchor="middle" font-size="9" fill="#2196F3">GPIO 39 (Active LOW)</text>
+  <circle cx="155" cy="512" r="3.5" fill="#888"/>
+  <circle cx="230" cy="512" r="3.5" fill="#2196F3"/>
+  <line x1="158" y1="512" x2="225" y2="503" stroke="#555" stroke-width="1.5"/>
+  <text x="155" y="525" text-anchor="middle" font-size="7" fill="#888">COM</text>
+  <text x="230" y="525" text-anchor="middle" font-size="7" fill="#2196F3">NO</text>
+
+  <!-- Relay 2: Fan Low (GPIO 40, Active HIGH) -->
+  <rect x="265" y="443" width="125" height="90" rx="4" fill="#ffebee" stroke="#e53935" stroke-width="1.5"/>
+  <text x="327" y="461" text-anchor="middle" class="pin" fill="#b71c1c">Relay 2: FAN LO</text>
+  <text x="327" y="475" text-anchor="middle" font-size="9" fill="#e53935">GPIO 40 (Active HIGH)</text>
+  <circle cx="290" cy="512" r="3.5" fill="#888"/>
+  <circle cx="365" cy="512" r="3.5" fill="#e53935"/>
+  <line x1="293" y1="512" x2="360" y2="503" stroke="#555" stroke-width="1.5"/>
+  <text x="290" y="525" text-anchor="middle" font-size="7" fill="#888">COM</text>
+  <text x="365" y="525" text-anchor="middle" font-size="7" fill="#e53935">NO</text>
+
+  <!-- Relay 3: Fan High (GPIO 42, Active HIGH) -->
+  <rect x="400" y="443" width="125" height="90" rx="4" fill="#f5f5f5" stroke="#333" stroke-width="1.5"/>
+  <text x="462" y="461" text-anchor="middle" class="pin" fill="#111">Relay 3: FAN HI</text>
+  <text x="462" y="475" text-anchor="middle" font-size="9" fill="#333">GPIO 42 (Active HIGH)</text>
+  <circle cx="425" cy="512" r="3.5" fill="#888"/>
+  <circle cx="500" cy="512" r="3.5" fill="#333"/>
+  <line x1="428" y1="512" x2="495" y2="503" stroke="#555" stroke-width="1.5"/>
+  <text x="425" y="525" text-anchor="middle" font-size="7" fill="#888">COM</text>
+  <text x="500" y="525" text-anchor="middle" font-size="7" fill="#333">NO</text>
+
+  <!-- Relay 4: Furnace (GPIO 38, Active LOW) -->
+  <rect x="535" y="443" width="125" height="90" rx="4" fill="#efebe9" stroke="#795548" stroke-width="1.5"/>
+  <text x="597" y="461" text-anchor="middle" class="pin" fill="#4E342E">Relay 4: FURNACE</text>
+  <text x="597" y="475" text-anchor="middle" font-size="9" fill="#795548">GPIO 38 (Active LOW)</text>
+  <circle cx="560" cy="512" r="3.5" fill="#888"/>
+  <circle cx="635" cy="512" r="3.5" fill="#795548"/>
+  <line x1="563" y1="512" x2="630" y2="503" stroke="#555" stroke-width="1.5"/>
+  <text x="560" y="525" text-anchor="middle" font-size="7" fill="#888">COM</text>
+  <text x="635" y="525" text-anchor="middle" font-size="7" fill="#795548">NO</text>
+
+  <!-- ==================== ESP32 RELAY WIRES (dashed) ==================== -->
+  <!-- Common bus: all relay COM pins share White wire -->
+  <line x1="155" y1="515" x2="155" y2="550" class="wire-common" stroke-dasharray="4,2" stroke-width="2"/>
+  <line x1="290" y1="515" x2="290" y2="550" class="wire-common" stroke-dasharray="4,2" stroke-width="2"/>
+  <line x1="425" y1="515" x2="425" y2="550" class="wire-common" stroke-dasharray="4,2" stroke-width="2"/>
+  <line x1="560" y1="515" x2="560" y2="550" class="wire-common" stroke-dasharray="4,2" stroke-width="2"/>
+
+  <!-- Horizontal common bus -->
+  <line x1="105" y1="550" x2="560" y2="550" class="wire-common" stroke-dasharray="4,2" stroke-width="2"/>
+  <circle cx="155" cy="550" r="3" fill="#888"/>
+  <circle cx="290" cy="550" r="3" fill="#888"/>
+  <circle cx="425" cy="550" r="3" fill="#888"/>
+  <circle cx="560" cy="550" r="3" fill="#888"/>
+  <circle cx="105" cy="550" r="3" fill="#888"/>
+  <text x="105" y="563" text-anchor="middle" font-size="7" fill="#888">White Common</text>
+
+  <!-- Common bus rises to common T-splice -->
+  <path d="M105 550 L105 258 L484 258" class="wire-common" stroke-dasharray="4,2" stroke-width="2"/>
+
+  <!-- Signal wires from relay NO pins to their T-splice junctions -->
+  <!-- Compressor: NO at (230,512) -> up to y=365 -> right to x=370 -> up to junction (370,160) -->
+  <path d="M230 509 L230 365 L370 365 L370 166" class="wire-compressor" stroke-dasharray="4,2" stroke-width="2"/>
+
+  <!-- Fan Low: NO at (365,512) -> up to y=373 -> right to x=450 -> up to junction (450,238) -->
+  <path d="M365 509 L365 373 L450 373 L450 244" class="wire-fan-low" stroke-dasharray="4,2" stroke-width="2"/>
+
+  <!-- Fan High: NO at (500,512) -> up to y=381 -> left to x=410 -> up to junction (410,186) -->
+  <path d="M500 509 L500 381 L410 381 L410 192" class="wire-fan-high" stroke-dasharray="4,2" stroke-width="2"/>
+
+  <!-- Furnace: NO at (635,512) -> up to y=325 -> T-splice on furnace wire -->
+  <path d="M635 509 L635 325" class="wire-furnace" stroke-dasharray="4,2" stroke-width="2"/>
+  <circle cx="635" cy="325" r="5" fill="#795548" stroke="#3E2723" stroke-width="1.5"/>
+
+  <!-- ==================== LEGEND ==================== -->
+  <rect x="30" y="365" width="75" height="120" rx="4" fill="#fafafa" stroke="#ddd"/>
+  <text x="67" y="381" text-anchor="middle" class="component" font-weight="bold">Wire Colors</text>
+
+  <line x1="38" y1="394" x2="56" y2="394" stroke="#2196F3" stroke-width="2.5"/>
+  <text x="60" y="398" font-size="8" class="label">Blue (Comp)</text>
+
+  <line x1="38" y1="410" x2="56" y2="410" stroke="#333" stroke-width="2.5"/>
+  <text x="60" y="414" font-size="8" class="label">Blk (Fan Hi)</text>
+
+  <line x1="38" y1="426" x2="56" y2="426" stroke="#e53935" stroke-width="2.5"/>
+  <text x="60" y="430" font-size="8" class="label">Red (Fan Lo)</text>
+
+  <line x1="38" y1="442" x2="56" y2="442" stroke="#888" stroke-width="2.5"/>
+  <text x="60" y="446" font-size="8" class="label">Wht (Com)</text>
+
+  <line x1="38" y1="458" x2="56" y2="458" stroke="#795548" stroke-width="2.5"/>
+  <text x="60" y="462" font-size="8" class="label">Brn (Furnace)</text>
+
+  <line x1="38" y1="474" x2="56" y2="474" stroke="#FFD600" stroke-width="2" stroke-dasharray="4,2"/>
+  <text x="60" y="478" font-size="8" class="label">Yel (unused)</text>
+
+  <!-- ==================== LINE STYLE LEGEND ==================== -->
+  <line x1="735" y1="310" x2="765" y2="310" stroke="#999" stroke-width="2"/>
+  <text x="770" y="314" font-size="9" fill="#999">= Existing 6-pin wires</text>
+  <line x1="735" y1="325" x2="765" y2="325" stroke="#999" stroke-width="2" stroke-dasharray="4,2"/>
+  <text x="770" y="329" font-size="9" fill="#999">= ESP32 relay wires (new)</text>
+
+  <!-- ==================== FAILSAFE NOTE ==================== -->
+  <rect x="30" y="572" width="420" height="42" rx="4" fill="#e3f2fd" stroke="#1565C0" stroke-width="1"/>
+  <text x="40" y="587" class="label" font-weight="bold" fill="#0D47A1">FAILSAFE: Relays are Normally Open (NO).</text>
+  <text x="40" y="601" class="label" fill="#1565C0">If ESP32 loses power, all relays open. Dometic thermostat</text>
+  <text x="40" y="611" class="label" fill="#1565C0">controls AC via its own control box relays (K3-K5).</text>
+
+  <!-- ==================== PARALLEL NOTE ==================== -->
+  <rect x="460" y="572" width="430" height="42" rx="4" fill="#fce4ec" stroke="#c62828" stroke-width="1"/>
+  <text x="470" y="587" class="label" font-weight="bold" fill="#b71c1c">PARALLEL: Either system can activate loads.</text>
+  <text x="470" y="601" class="label" fill="#c62828">Control box relays (K3-K5) OR ESP32 relays can</text>
+  <text x="470" y="611" class="label" fill="#c62828">independently close compressor, fan, or furnace circuits.</text>
+
+</svg>

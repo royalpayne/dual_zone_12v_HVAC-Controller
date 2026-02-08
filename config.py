@@ -75,6 +75,13 @@ OLED_ADDR = 0x3C
 DISPLAY_WIDTH = 128
 DISPLAY_HEIGHT = 64
 
+# USB Battery Pack Keep-Alive (prevents auto-shutoff)
+# Note: Most USB packs need 50-100mA to stay awake - use LiPo + TP4056 instead
+KEEPALIVE_ENABLED = False
+KEEPALIVE_PIN = 2  # Unused GPIO - connect 100-200 ohm resistor to GND
+KEEPALIVE_INTERVAL = 5  # seconds between pulses
+KEEPALIVE_PULSE_MS = 50  # pulse duration in milliseconds
+
 # ============================================================
 # CONSTANTS (not overridable)
 # ============================================================

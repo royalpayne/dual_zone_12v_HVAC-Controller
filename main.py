@@ -131,9 +131,20 @@ def main():
         webserver.start()
         print(f"Open http://{ip} in your browser")
     
+    # Initialize USB battery keep-alive (prevents auto-shutoff)
+    keepalive_pin = None
+    if getattr(config, 'KEEPALIVE_ENABLED', False):
+        try:
+            keepalive_pin = Pin(config.KEEPALIVE_PIN, Pin.OUT)
+            keepalive_pin.off()
+            print(f"USB keep-alive enabled on GPIO {config.KEEPALIVE_PIN}")
+        except Exception as e:
+            print(f"Keep-alive init failed: {e}")
+
     # Main loop
     last_sensor_read = 0
-    
+    last_keepalive = 0
+
     print("Thermostat running... Press Ctrl+C to stop")
     
     while True:
@@ -143,6 +154,14 @@ def main():
             
             # Read sensors periodically
             now = time.time()
+
+            # USB battery keep-alive pulse (draw current to prevent auto-shutoff)
+            if keepalive_pin and (now - last_keepalive >= config.KEEPALIVE_INTERVAL):
+                keepalive_pin.on()
+                time.sleep_ms(config.KEEPALIVE_PULSE_MS)
+                keepalive_pin.off()
+                last_keepalive = now
+
             if now - last_sensor_read >= config.SENSOR_READ_INTERVAL:
                 temp_f, humidity, pressure = sensor.read()
                 thermostat.update_readings(temp_f, humidity, pressure)
