@@ -52,6 +52,12 @@
   - Bits 7-0: Temperature (bit-reversed byte)
 - API: `/api/whynter?power=on|off`, `?mode=cool|heat|dehum|fan`, `?temp=61-89`, `?fan=auto|low|med|high`
 
+## Dr. Infrared Heater IR (with Humidifier)
+- **Raw captured** — proprietary protocol (not NEC), codes captured from physical remote
+- ~1200us/370us mark encoding, ~7800us gaps between groups
+- Power code hardcoded in ir_heater.py, additional buttons can be learned via `/api/heater?learn=<name>`
+- API: `/api/heater?power=on|off|toggle`
+
 ## Relay Wiring Notes
 - Furnace/compressor (GPIO 38-39): Active LOW module, 5V VCC, works with 3.3V GPIO
 - Fan speed (GPIO 40, 42): Active HIGH module (jumper on HIGH trigger), 5V VCC

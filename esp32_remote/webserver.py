@@ -63,12 +63,10 @@ class RemoteAPI:
             return self._api_furnace(request)
         elif 'GET /api/whynter' in request:
             return self._api_whynter(request)
-        elif 'GET /api/ir/learn' in request:
-            return self._api_ir_learn(request)
+        elif 'GET /api/heater' in request:
+            return self._api_heater(request)
         elif 'GET /api/ir/codes' in request:
             return self._api_ir_codes()
-        elif 'GET /api/ir/send' in request:
-            return self._api_ir_send(request)
         elif 'GET /api/broadlink/status' in request:
             return self._api_broadlink_status()
         else:
@@ -196,20 +194,26 @@ class RemoteAPI:
             self.whynter.set_fan_speed(params['fan'])
         return self._json_response(self.whynter.get_status())
 
-    def _api_ir_learn(self, request):
-        """Learn an IR code via Broadlink (for heater only)"""
+    def _api_heater(self, request):
+        """Control Dr. Heater via captured IR codes"""
         if not self.heater:
-            return self._json_response({'success': False, 'error': 'Heater not available'})
+            return self._json_response({'error': 'Heater not available'})
         params = self._parse_query(request)
-        button = params.get('button', 'unknown')
-        print(f"[IR] Learning '{button}' for heater")
-        success = self.heater.learn(button, timeout_ms=10000)
-        if success:
-            return self._json_response({
-                'success': True, 'button': button,
-                'device': 'heater', 'codes': self.heater.get_codes()
-            })
-        return self._json_response({'success': False, 'error': 'No signal captured'})
+        # /api/heater?power=on|off|toggle
+        # /api/heater?learn=<name>  (learn new button from remote)
+        # /api/heater (no params = get status)
+        if 'power' in params:
+            if params['power'] == 'on':
+                self.heater.send_on()
+            elif params['power'] == 'off':
+                self.heater.send_off()
+            else:
+                self.heater.send_power()
+        elif 'learn' in params:
+            name = params['learn']
+            success = self.heater.learn(name, timeout_ms=10000)
+            return self._json_response({'success': success, 'codes': self.heater.get_codes()})
+        return self._json_response(self.heater.get_status())
 
     def _api_ir_codes(self):
         """List IR codes for all devices"""
@@ -219,25 +223,6 @@ class RemoteAPI:
         if self.heater:
             codes['heater'] = self.heater.get_codes()
         return self._json_response({'codes': codes})
-
-    def _api_ir_send(self, request):
-        """Send an IR code"""
-        params = self._parse_query(request)
-        button = params.get('button', '')
-        device = params.get('device', 'whynter')
-        if device == 'heater' and self.heater and button in self.heater.codes:
-            self.heater.send(button)
-            return self._json_response({'success': True, 'button': button, 'device': device})
-        elif device == 'whynter' and self.whynter:
-            # Protocol-based: map button names to methods
-            if button == 'power':
-                self.whynter.send_off() if self.whynter.power_on else self.whynter.send_on()
-            elif button in ('cool', 'heat', 'dehum', 'fan'):
-                self.whynter.set_mode(button)
-            else:
-                return self._json_response({'success': False, 'error': f'Unknown button: {button}'})
-            return self._json_response({'success': True, 'button': button, 'device': device})
-        return self._json_response({'success': False, 'error': f'Code not found: {button}'})
 
     def _api_broadlink_status(self):
         """Get Broadlink connection status"""
