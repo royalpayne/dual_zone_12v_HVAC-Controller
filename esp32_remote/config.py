@@ -21,11 +21,17 @@ DEFAULT_COOL_SETPOINT = 75
 MIN_SETPOINT = 50
 MAX_SETPOINT = 90
 
+# Sensor calibration offsets (added to raw readings)
+TEMP_OFFSET = 0.0       # degrees F
+HUMIDITY_OFFSET = 0.0   # percent
+PRESSURE_OFFSET = 0.0   # hPa
+
 # Hysteresis (prevents rapid cycling)
 HYSTERESIS = 1.5
 
 # Boost mode - portable unit kicks in when temp exceeds setpoint by this amount
 BOOST_THRESHOLD = 5  # degrees F
+BOOST_STALL_TIME = 600  # seconds (10 min) - boost if rooftop AC runs this long with no temp drop
 
 # Short-cycle protection (minimum seconds between state changes)
 MIN_CYCLE_TIME = 30  # 30 seconds
@@ -54,13 +60,9 @@ I2C_FREQ = 400000
 RELAY_FURNACE_PIN = 38
 RELAY_COMPRESSOR_PIN = 39       # Rooftop AC compressor (was RELAY_ROOFTOP_AC_PIN)
 RELAY_FAN_LOW_PIN = 40          # Rooftop AC fan low speed
-RELAY_FAN_HIGH_PIN = 42         # Rooftop AC fan high speed
-# Note: Medium speed removed to fit existing 5-wire thermostat cable
+RELAY_FAN_HIGH_PIN = 41         # Rooftop AC fan high speed
 
-# Relay polarity: Fan relays use active HIGH (jumper on HIGH trigger)
-# because 3.3V GPIO can't pull HIGH enough vs 5V VCC for active LOW
-# Furnace/compressor use active LOW (separate module)
-FAN_RELAY_ACTIVE_HIGH = True    # True = value(1) engages relay
+# Relay polarity: All relays are active HIGH (value=1 = ON, value=0 = OFF)
 
 # Broadlink RM4 Mini (WiFi IR blaster - replaces direct IR hardware)
 BROADLINK_IP = None       # Set after discovery, or static IP in config_local.py

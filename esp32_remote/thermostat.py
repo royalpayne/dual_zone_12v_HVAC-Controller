@@ -35,18 +35,14 @@ class ThermostatController:
         self.last_heater_change = 0
         self.last_compressor_off = 0  # For short-cycle protection
         self.fan_post_run_until = 0   # Fan post-run timer
+        self.cooling_start_time = 0   # When rooftop AC started cooling
+        self.cooling_start_temp = None  # Temp when rooftop AC started
 
-        # Fan relay polarity helpers (active HIGH vs active LOW)
-        self._fan_on_val = 1 if config.FAN_RELAY_ACTIVE_HIGH else 0
-        self._fan_off_val = 0 if config.FAN_RELAY_ACTIVE_HIGH else 1
-
-        # Initialize relay pins
-        # Furnace/compressor: active LOW (value=1 = OFF)
-        self.relay_furnace = Pin(config.RELAY_FURNACE_PIN, Pin.OUT, value=1)
-        self.relay_compressor = Pin(config.RELAY_COMPRESSOR_PIN, Pin.OUT, value=1)
-        # Fan relays: active HIGH (value=0 = OFF) due to 5V relay module
-        self.relay_fan_low = Pin(config.RELAY_FAN_LOW_PIN, Pin.OUT, value=self._fan_off_val)
-        self.relay_fan_high = Pin(config.RELAY_FAN_HIGH_PIN, Pin.OUT, value=self._fan_off_val)
+        # Initialize relay pins — all active HIGH (value=0 = OFF, value=1 = ON)
+        self.relay_furnace = Pin(config.RELAY_FURNACE_PIN, Pin.OUT, value=0)
+        self.relay_compressor = Pin(config.RELAY_COMPRESSOR_PIN, Pin.OUT, value=0)
+        self.relay_fan_low = Pin(config.RELAY_FAN_LOW_PIN, Pin.OUT, value=0)
+        self.relay_fan_high = Pin(config.RELAY_FAN_HIGH_PIN, Pin.OUT, value=0)
 
         # IR controllers (set later if available)
         self.whynter = None  # Whynter portable AC (via Broadlink)
@@ -120,17 +116,21 @@ class ThermostatController:
             print("No Whynter controller available")
             return
 
+        success = config.DRY_RUN  # DRY_RUN always "succeeds"
         if mode == 0:
             print("Setting Whynter to OFF")
             if not config.DRY_RUN:
-                self.whynter.send_off()
+                success = self.whynter.send_off()
         else:
             print("Setting Whynter to COOL mode")
             if not config.DRY_RUN:
-                self.whynter.set_mode('cool')
+                success = self.whynter.set_mode('cool')
 
-        self.whynter_mode = mode
-        self.last_whynter_change = time.time()
+        if success:
+            self.whynter_mode = mode
+            self.last_whynter_change = time.time()
+        else:
+            print("Whynter IR send failed — state not updated")
 
     def set_heater_mode(self, mode):
         """Set Dr. Heater mode (0=off, 1=on)"""
@@ -151,14 +151,18 @@ class ThermostatController:
             return
 
         print(f"Setting heater to {'ON' if mode else 'OFF'}")
+        success = config.DRY_RUN  # DRY_RUN always "succeeds"
         if not config.DRY_RUN:
             if mode == 1:
-                self.heater.send_on()
+                success = self.heater.send_on()
             else:
-                self.heater.send_off()
+                success = self.heater.send_off()
 
-        self.heater_mode = mode
-        self.last_heater_change = time.time()
+        if success:
+            self.heater_mode = mode
+            self.last_heater_change = time.time()
+        else:
+            print("Heater IR send failed — state not updated")
 
     def _can_change_heat(self):
         """Check if enough time has passed since last furnace state change"""
@@ -187,20 +191,20 @@ class ThermostatController:
             return
 
         # Deactivate all fan relays first (mutual exclusion)
-        self.relay_fan_low.value(self._fan_off_val)
-        self.relay_fan_high.value(self._fan_off_val)
+        self.relay_fan_low.value(0)
+        self.relay_fan_high.value(0)
 
         # Activate the requested speed
         if speed == config.FAN_LOW:
-            self.relay_fan_low.value(self._fan_on_val)
+            self.relay_fan_low.value(1)
         elif speed == config.FAN_HIGH:
-            self.relay_fan_high.value(self._fan_on_val)
+            self.relay_fan_high.value(1)
 
     def _fan_off(self):
         """Turn off all fan relays"""
         if not config.DRY_RUN:
-            self.relay_fan_low.value(self._fan_off_val)
-            self.relay_fan_high.value(self._fan_off_val)
+            self.relay_fan_low.value(0)
+            self.relay_fan_high.value(0)
 
     def _auto_fan_speed(self):
         """Determine fan speed based on temp delta from setpoint"""
@@ -227,9 +231,13 @@ class ThermostatController:
             return
 
         if self.mode == config.MODE_OFF:
-            # Fan-only is a manual override, preserve it when mode=OFF
-            if not self.fan_only:
-                self._all_off()
+            # Mode OFF only kills relays (furnace/compressor/fan), not IR devices.
+            # IR devices (Whynter, heater) are manual overrides controlled independently.
+            # set_mode(OFF) already called _all_off() on transition.
+            if self.heating_active:
+                self._heat_off()
+            if self.cooling_active:
+                self._cool_off()
             return
 
         if self.mode == config.MODE_HEAT:
@@ -249,6 +257,26 @@ class ThermostatController:
         # Update auto fan speed if actively cooling/heating
         if self.fan_speed == config.FAN_AUTO and (self.cooling_active or self.fan_only):
             self._set_fan(config.FAN_AUTO)
+
+        # Whynter boost: auto-enable portable AC when needed
+        if self.cooling_active and self.whynter and self.whynter_mode == 0:
+            boost_reason = None
+            # Trigger 1: temp far exceeds setpoint
+            if self.current_temp >= (self.cool_setpoint + config.BOOST_THRESHOLD):
+                boost_reason = f"temp {self.current_temp:.1f}F > setpoint+{config.BOOST_THRESHOLD}"
+            # Trigger 2: rooftop AC stalled (running 10+ min with no temp drop)
+            elif (self.cooling_start_temp is not None
+                  and now - self.cooling_start_time >= config.BOOST_STALL_TIME
+                  and self.current_temp >= self.cooling_start_temp):
+                boost_reason = f"stall: {self.current_temp:.1f}F after {int((now - self.cooling_start_time) / 60)}min (started at {self.cooling_start_temp:.1f}F)"
+            if boost_reason and self._can_change_whynter():
+                print(f"Whynter boost: {boost_reason}")
+                self.set_whynter_mode(1)
+        # Auto-disable Whynter when temp comes back within range
+        elif self.cooling_active and self.whynter and self.whynter_mode != 0:
+            if self.current_temp <= (self.cool_setpoint + config.HYSTERESIS):
+                if self._can_change_whynter():
+                    self.set_whynter_mode(0)
 
     def _control_heat(self):
         """Heating control with hysteresis"""
@@ -300,7 +328,7 @@ class ThermostatController:
         temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
         print(f"{dry_run}HEAT ON (temp: {temp_str}F, setpoint: {self.heat_setpoint}F)")
         if not config.DRY_RUN:
-            self.relay_furnace.value(0)  # Active LOW
+            self.relay_furnace.value(1)  # Active HIGH = ON
         self.heating_active = True
         self.last_heat_change = time.time()
         # Auto-trigger IR heater when furnace turns on
@@ -313,7 +341,7 @@ class ThermostatController:
         temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
         print(f"{dry_run}HEAT OFF (temp: {temp_str}F, setpoint: {self.heat_setpoint}F)")
         if not config.DRY_RUN:
-            self.relay_furnace.value(1)  # Inactive HIGH
+            self.relay_furnace.value(0)  # Active HIGH = OFF
         self.heating_active = False
         self.last_heat_change = time.time()
         # Auto-turn off IR heater when furnace turns off
@@ -336,11 +364,13 @@ class ThermostatController:
         if not config.DRY_RUN:
             # Fan pre-run delay before compressor
             time.sleep(config.FAN_PRE_RUN)
-            self.relay_compressor.value(0)  # Active LOW
+            self.relay_compressor.value(1)  # Active HIGH = ON
 
         self.cooling_active = True
         self.fan_post_run_until = 0  # Cancel any post-run timer
         self.last_cool_change = time.time()
+        self.cooling_start_time = time.time()
+        self.cooling_start_temp = self.current_temp
 
     def _cool_off(self):
         """Turn off rooftop AC: compressor first, fan continues for post-run"""
@@ -349,11 +379,14 @@ class ThermostatController:
         print(f"{dry_run}COOL OFF (temp: {temp_str}F, setpoint: {self.cool_setpoint}F)")
 
         if not config.DRY_RUN:
-            self.relay_compressor.value(1)  # Compressor off first
+            self.relay_compressor.value(0)  # Active HIGH = OFF
 
         self.cooling_active = False
         self.last_compressor_off = time.time()
         self.last_cool_change = time.time()
+        # Auto-turn off Whynter boost when rooftop AC stops
+        if self.whynter_mode != 0:
+            self.set_whynter_mode(0)
 
         # Fan post-run: keep fan going to extract residual cooling
         if not self.fan_only:
@@ -365,10 +398,10 @@ class ThermostatController:
         """Turn off all systems"""
         if self.heating_active or self.cooling_active or self.fan_only or self.whynter_mode != 0 or self.heater_mode != 0:
             if not config.DRY_RUN:
-                self.relay_furnace.value(1)
-                self.relay_compressor.value(1)
-                self.relay_fan_low.value(self._fan_off_val)
-                self.relay_fan_high.value(self._fan_off_val)
+                self.relay_furnace.value(0)
+                self.relay_compressor.value(0)
+                self.relay_fan_low.value(0)
+                self.relay_fan_high.value(0)
                 if self.whynter and self.whynter_mode != 0:
                     self.whynter.send_off()
                 if self.heater and self.heater_mode != 0:
@@ -391,7 +424,7 @@ class ThermostatController:
     def _furnace_relay(self, on):
         """Direct furnace relay control"""
         if not config.DRY_RUN:
-            self.relay_furnace.value(0 if on else 1)
+            self.relay_furnace.value(1 if on else 0)
 
     def get_status(self):
         """Get current status as dict"""

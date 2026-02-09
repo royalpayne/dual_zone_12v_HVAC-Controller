@@ -20,9 +20,6 @@ class RemoteThermostatController:
         # Operating mode
         self.mode = config.DEFAULT_MODE
 
-        # Cooling system selection
-        self.cool_system = config.COOL_SYSTEM_ROOFTOP
-
         # Current readings (local ESP32 sensors)
         self.current_temp = None
         self.current_humidity = None
@@ -61,11 +58,6 @@ class RemoteThermostatController:
                                   min(config.MAX_SETPOINT, temp))
         self._sync_to_remote()
 
-    def set_cool_system(self, system):
-        """Set which cooling system to use"""
-        if system in config.COOL_SYSTEM_NAMES:
-            self.cool_system = system
-
     def _can_change_state(self):
         """Check if enough time has passed since last state change"""
         return (time.time() - self.last_state_change) >= config.MIN_CYCLE_TIME
@@ -88,6 +80,11 @@ class RemoteThermostatController:
         """Main control logic - monitors and sends commands to Pico"""
         if self.current_temp is None:
             return
+
+        # Periodic re-sync to Remote (handles Remote reboots, ensures settings stay consistent)
+        now = time.time()
+        if now - self.last_pico_sync >= 60:
+            self._sync_to_remote()
 
         if self.mode == config.MODE_OFF:
             if self.heating_active or self.cooling_active:
@@ -215,8 +212,6 @@ class RemoteThermostatController:
             'cool_setpoint': self.cool_setpoint,
             'heating_active': self.heating_active,
             'cooling_active': self.cooling_active,
-            'cool_system': self.cool_system,
-            'cool_system_name': config.COOL_SYSTEM_NAMES.get(self.cool_system, "?"),
             'env': get_env(),
             'dry_run': config.DRY_RUN,
             'debug': config.DEBUG

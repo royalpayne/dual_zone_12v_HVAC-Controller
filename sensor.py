@@ -101,6 +101,14 @@ class SensorHub:
             if humidity is None:
                 humidity = self._last_humidity
 
+        # Apply calibration offsets
+        if temp_f is not None:
+            temp_f += getattr(config, 'TEMP_OFFSET', 0.0)
+        if humidity is not None:
+            humidity += getattr(config, 'HUMIDITY_OFFSET', 0.0)
+        if pressure is not None:
+            pressure += getattr(config, 'PRESSURE_OFFSET', 0.0)
+
         return temp_f, humidity, pressure
 
     def read_temperature(self):

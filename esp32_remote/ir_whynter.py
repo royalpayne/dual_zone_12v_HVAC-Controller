@@ -154,9 +154,8 @@ class WhynterIR:
         return self._send_command(power=False)
 
     def send_on(self):
-        """Turn on the Whynter (to current mode/temp/fan)"""
-        if self.power_on:
-            return True
+        """Turn on the Whynter (to current mode/temp/fan).
+        Always sends even if state says on — Broadlink may have been asleep."""
         print(f"[IR] Whynter ON ({self.current_mode}, {self.current_temp}F, {self.current_fan})")
         return self._send_command(power=True)
 

@@ -141,6 +141,7 @@ def main():
     # Main loop
     last_sensor_read = 0
     last_status_print = 0
+    last_bl_keepalive = time.time()
 
     print("ESP32 Remote running... Press Ctrl+C to stop")
     print(f"Furnace relay: GPIO {config.RELAY_FURNACE_PIN}")
@@ -173,6 +174,11 @@ def main():
                         thermostat.heating_active,
                         thermostat.cooling_active
                     )
+
+            # Broadlink keepalive (prevents sleep mode)
+            if now - last_bl_keepalive >= 300:
+                bl.ping()
+                last_bl_keepalive = now
 
             # Print status periodically
             if config.DEBUG and (now - last_status_print >= 30):

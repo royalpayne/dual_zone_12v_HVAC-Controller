@@ -36,6 +36,11 @@ MAX_SETPOINT = 90
 # Default operating mode at boot (0=OFF, 1=HEAT, 2=COOL, 3=AUTO)
 DEFAULT_MODE = 3  # AUTO
 
+# Sensor calibration offsets (added to raw readings)
+TEMP_OFFSET = 0.0       # degrees F
+HUMIDITY_OFFSET = 0.0   # percent
+PRESSURE_OFFSET = 0.0   # hPa
+
 # Hysteresis (prevents rapid cycling)
 HYSTERESIS = 1.5
 
@@ -97,14 +102,6 @@ MODE_NAMES = {
     MODE_HEAT: "HEAT",
     MODE_COOL: "COOL",
     MODE_AUTO: "AUTO"
-}
-
-# Cooling system types
-COOL_SYSTEM_ROOFTOP = 0
-COOL_SYSTEM_PORTABLE = 1
-COOL_SYSTEM_NAMES = {
-    COOL_SYSTEM_ROOFTOP: "Rooftop",
-    COOL_SYSTEM_PORTABLE: "Portable"
 }
 
 # ============================================================

@@ -144,24 +144,16 @@ class RemoteAPI:
             38: self.thermostat.relay_furnace,
             39: self.thermostat.relay_compressor,
             40: self.thermostat.relay_fan_low,
-            42: self.thermostat.relay_fan_high,
+            41: self.thermostat.relay_fan_high,
         }
-        # Fan relays (40, 42) use active HIGH, furnace/compressor use active LOW
-        fan_gpios = (40, 42)
+        # All relays are active HIGH: value(1) = ON, value(0) = OFF
         if gpio in pin_map:
             p = pin_map[gpio]
-            if gpio in fan_gpios:
-                p.value(1 if on else 0)  # Active HIGH
-            else:
-                p.value(0 if on else 1)  # Active LOW
+            p.value(1 if on else 0)
             actual = p.value()
-            if gpio in fan_gpios:
-                relay_on = actual == 1  # Active HIGH
-            else:
-                relay_on = actual == 0  # Active LOW
             return self._json_response({
                 'gpio': gpio, 'requested': 'ON' if on else 'OFF',
-                'pin_value': actual, 'relay_state': 'ON' if relay_on else 'OFF'
+                'pin_value': actual, 'relay_state': 'ON' if actual == 1 else 'OFF'
             })
         return self._json_response({'error': f'Invalid GPIO: {gpio}'})
 

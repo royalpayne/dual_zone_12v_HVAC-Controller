@@ -274,17 +274,25 @@ class BroadlinkClient:
         Args:
             ir_data: bytes in Broadlink IR format (from pulses_to_broadlink)
         """
-        self.ensure_connected()
         for attempt in range(self.retries):
             try:
+                self.ensure_connected()
                 self._rm4_send(0x02, ir_data)
                 return True
             except OSError as e:
                 print(f"[BL] Send attempt {attempt + 1} failed: {e}")
+                self.authed = False  # Force re-auth on next attempt
                 if attempt < self.retries - 1:
-                    time.sleep(0.5)
-                    self.authed = False  # Re-auth on next try
+                    time.sleep(1)  # Longer delay for Broadlink to wake
         return False
+
+    def ping(self):
+        """Lightweight keepalive — re-auth to prevent Broadlink sleep."""
+        try:
+            self.auth()
+        except OSError as e:
+            print(f"[BL] Keepalive failed: {e}")
+            self.authed = False
 
     def enter_learning(self):
         """Put the Broadlink into IR learning mode."""

@@ -161,7 +161,7 @@
   <text x="852" y="223" class="pin-label">Fan Low</text>
 
   <rect x="818" y="232" width="24" height="14" rx="2" fill="#4CAF50"/>
-  <text x="830" y="243" text-anchor="middle" class="gpio">G42</text>
+  <text x="830" y="243" text-anchor="middle" class="gpio">G41</text>
   <text x="852" y="243" class="pin-label">Fan High</text>
 
   <!-- USB connector -->
@@ -203,14 +203,14 @@
   <!-- Furnace relay -->
   <rect x="950" y="152" width="110" height="42" rx="3" fill="#FFEBEE" stroke="#d32f2f" stroke-width="1"/>
   <text x="1005" y="168" text-anchor="middle" font-size="8" font-weight="bold" fill="#b71c1c">Furnace (G38)</text>
-  <text x="1005" y="180" text-anchor="middle" font-size="7" fill="#d32f2f">Active LOW | HL-52S</text>
+  <text x="1005" y="180" text-anchor="middle" font-size="7" fill="#d32f2f">Active HIGH | 5V module</text>
   <text x="1005" y="190" text-anchor="middle" font-size="7" fill="#d32f2f">Contact closure</text>
   <line x1="842" y1="179" x2="950" y2="168" stroke="#d32f2f" stroke-width="1.5" class="relay-wire"/>
 
   <!-- Compressor relay -->
   <rect x="950" y="198" width="110" height="42" rx="3" fill="#E3F2FD" stroke="#2196F3" stroke-width="1"/>
   <text x="1005" y="214" text-anchor="middle" font-size="8" font-weight="bold" fill="#0D47A1">Compressor (G39)</text>
-  <text x="1005" y="226" text-anchor="middle" font-size="7" fill="#2196F3">Active LOW | HL-52S</text>
+  <text x="1005" y="226" text-anchor="middle" font-size="7" fill="#2196F3">Active HIGH | 5V module</text>
   <text x="1005" y="236" text-anchor="middle" font-size="7" fill="#2196F3">Brisk II compressor</text>
   <line x1="842" y1="199" x2="950" y2="214" stroke="#2196F3" stroke-width="1.5" class="relay-wire"/>
 
@@ -218,20 +218,20 @@
   <rect x="950" y="244" width="110" height="42" rx="3" fill="#E8F5E9" stroke="#4CAF50" stroke-width="1"/>
   <text x="1005" y="260" text-anchor="middle" font-size="8" font-weight="bold" fill="#1B5E20">Fan Low (G40)</text>
   <text x="1005" y="272" text-anchor="middle" font-size="7" fill="#4CAF50">Active HIGH | 5V mod</text>
-  <text x="1005" y="282" text-anchor="middle" font-size="7" fill="#4CAF50">10K pull-up to 3.3V</text>
+  <text x="1005" y="282" text-anchor="middle" font-size="7" fill="#4CAF50">Brisk II low speed</text>
   <line x1="842" y1="219" x2="950" y2="260" stroke="#4CAF50" stroke-width="1.5" class="relay-wire"/>
 
   <!-- Fan High relay -->
   <rect x="950" y="290" width="110" height="42" rx="3" fill="#E8F5E9" stroke="#4CAF50" stroke-width="1"/>
-  <text x="1005" y="306" text-anchor="middle" font-size="8" font-weight="bold" fill="#1B5E20">Fan High (G42)</text>
+  <text x="1005" y="306" text-anchor="middle" font-size="8" font-weight="bold" fill="#1B5E20">Fan High (G41)</text>
   <text x="1005" y="318" text-anchor="middle" font-size="7" fill="#4CAF50">Active HIGH | 5V mod</text>
-  <text x="1005" y="328" text-anchor="middle" font-size="7" fill="#4CAF50">10K pull-up to 3.3V</text>
+  <text x="1005" y="328" text-anchor="middle" font-size="7" fill="#4CAF50">Brisk II high speed</text>
   <line x1="842" y1="239" x2="950" y2="306" stroke="#4CAF50" stroke-width="1.5" class="relay-wire"/>
 
   <!-- Remote pinout table -->
   <rect x="640" y="415" width="430" height="38" rx="4" fill="#fff" stroke="#2E7D32" stroke-width="1"/>
   <text x="660" y="430" class="pin-label" font-weight="bold" fill="#333">G8:SDA  G9:SCL  G38:Furnace  G39:Comp</text>
-  <text x="660" y="445" class="pin-label" font-weight="bold" fill="#333">G40:Fan_Lo  G42:Fan_Hi  Broadlink: WiFi IR</text>
+  <text x="660" y="445" class="pin-label" font-weight="bold" fill="#333">G40:Fan_Lo  G41:Fan_Hi  Broadlink: WiFi IR</text>
 
   <!-- ================================================================ -->
   <!-- POWER SECTION (Bottom) -->
@@ -332,27 +332,27 @@
 
   <text x="580" y="746" class="pin-label" fill="#d32f2f">38</text>
   <text x="630" y="746" class="pin-label" fill="#d32f2f">Relay: Furnace</text>
-  <text x="800" y="746" class="pin-label">Active LOW (HL-52S module), contact closure</text>
+  <text x="800" y="746" class="pin-label">Active HIGH (5V module), contact closure</text>
   <line x1="565" y1="750" x2="1055" y2="750" stroke="#eee" stroke-width="0.5"/>
 
   <text x="580" y="766" class="pin-label" fill="#2196F3">39</text>
   <text x="630" y="766" class="pin-label" fill="#2196F3">Relay: Compressor</text>
-  <text x="800" y="766" class="pin-label">Active LOW (HL-52S module), Brisk II compressor</text>
+  <text x="800" y="766" class="pin-label">Active HIGH (5V module), Brisk II compressor</text>
   <line x1="565" y1="770" x2="1055" y2="770" stroke="#eee" stroke-width="0.5"/>
 
   <text x="580" y="786" class="pin-label" fill="#4CAF50">40</text>
   <text x="630" y="786" class="pin-label" fill="#4CAF50">Relay: Fan Low</text>
-  <text x="800" y="786" class="pin-label">Active HIGH (5V module), 10K pull-up, Brisk II low</text>
+  <text x="800" y="786" class="pin-label">Active HIGH (5V module), Brisk II low speed</text>
   <line x1="565" y1="790" x2="1055" y2="790" stroke="#eee" stroke-width="0.5"/>
 
-  <text x="580" y="806" class="pin-label" fill="#4CAF50">42</text>
+  <text x="580" y="806" class="pin-label" fill="#4CAF50">41</text>
   <text x="630" y="806" class="pin-label" fill="#4CAF50">Relay: Fan High</text>
-  <text x="800" y="806" class="pin-label">Active HIGH (5V module), 10K pull-up, Brisk II high</text>
+  <text x="800" y="806" class="pin-label">Active HIGH (5V module), Brisk II high speed</text>
   <line x1="565" y1="810" x2="1055" y2="810" stroke="#eee" stroke-width="0.5"/>
 
-  <text x="580" y="826" class="pin-label" fill="#888">41</text>
+  <text x="580" y="826" class="pin-label" fill="#888">42</text>
   <text x="630" y="826" class="pin-label" fill="#888">Unused</text>
-  <text x="800" y="826" class="pin-label" fill="#888">Medium speed removed (5-wire thermostat cable limit)</text>
+  <text x="800" y="826" class="pin-label" fill="#888">Available</text>
   <line x1="565" y1="830" x2="1055" y2="830" stroke="#eee" stroke-width="0.5"/>
 
   <text x="580" y="846" class="pin-label" fill="#0288D1">—</text>

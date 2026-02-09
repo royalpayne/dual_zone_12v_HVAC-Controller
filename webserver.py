@@ -140,8 +140,6 @@ class ThermostatWebServer:
                 self.thermostat.set_heat_setpoint(float(data.get('temp', 68)))
             elif 'POST /api/cool_setpoint' in request:
                 self.thermostat.set_cool_setpoint(float(data.get('temp', 75)))
-            elif 'POST /api/cool_system' in request:
-                self.thermostat.set_cool_system(int(data.get('system', 0)))
         except:
             pass
         return self._api_status()
@@ -239,11 +237,6 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <button class="btn" id="m2" onclick="mode(2)">COOL</button>
 <button class="btn" id="m3" onclick="mode(3)">AUTO</button>
 </div>
-<h3>COOLING</h3>
-<div class="row">
-<button class="btn" id="s0" onclick="sys(0)">Rooftop</button>
-<button class="btn" id="s1" onclick="sys(1)">Portable</button>
-</div>
 <h3>HEAT SETPOINT</h3>
 <div class="setlabel"><span>60°</span><span id="hset">68</span>°<span>85°</span></div>
 <input type="range" min="60" max="85" value="68" class="slider" id="hslider" oninput="setHeat(this.value)">
@@ -323,8 +316,6 @@ var st=document.getElementById('status');
 st.className=d.heating_active?'heating':d.cooling_active?'cooling':'';
 st.textContent=d.heating_active?'HEATING':d.cooling_active?'COOLING':'Idle';
 for(var i=0;i<4;i++)document.getElementById('m'+i).className='btn'+(d.mode==i?' active':'');
-document.getElementById('s0').className='btn'+(d.cool_system==0?' cool':'');
-document.getElementById('s1').className='btn'+(d.cool_system==1?' cool':'');
 if(d.remote){updRemote(d.remote);}else{
 var ps=document.getElementById('pstatus');ps.className='offline';ps.textContent='Offline';}
 }
@@ -358,7 +349,6 @@ function get(){fetch('/api/status').then(r=>r.json()).then(upd).catch(e=>console
 function mode(m){fetch('/api/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(upd);}
 function setHeat(v){adjustingHeat=true;document.getElementById('hset').textContent=v;clearTimeout(heatTimer);heatTimer=setTimeout(function(){fetch('/api/heat_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){setTimeout(function(){adjustingHeat=false;},1000);});},500);}
 function setCool(v){adjustingCool=true;document.getElementById('cset').textContent=v;clearTimeout(coolTimer);coolTimer=setTimeout(function(){fetch('/api/cool_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){setTimeout(function(){adjustingCool=false;},1000);});},500);}
-function sys(s){fetch('/api/cool_system',{method:'POST',body:JSON.stringify({system:s})}).then(r=>r.json()).then(upd);}
 function rmode(m){fetch('/api/remote/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updRemote);}
 function setRHeat(v){adjustingRHeat=true;document.getElementById('phset').textContent=v;clearTimeout(rheatTimer);rheatTimer=setTimeout(function(){fetch('/api/remote/heat_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){setTimeout(function(){adjustingRHeat=false;},1000);});},500);}
 function setRCool(v){adjustingRCool=true;document.getElementById('pcset').textContent=v;clearTimeout(rcoolTimer);rcoolTimer=setTimeout(function(){fetch('/api/remote/cool_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){setTimeout(function(){adjustingRCool=false;},1000);});},500);}

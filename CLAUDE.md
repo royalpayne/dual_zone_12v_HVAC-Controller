@@ -22,11 +22,11 @@
   - GPIO 22-25 don't exist on S3; GPIO 26-37 reserved for flash/PSRAM
   - Controls: Furnace relay, Rooftop AC compressor + fan relays, IR transmitter
   - I2C: SDA=GPIO 8, SCL=GPIO 9
-  - Relay Furnace: GPIO 38 (active LOW, separate module)
-  - Relay Compressor: GPIO 39 (active LOW, separate module)
+  - Relay Furnace: GPIO 38 (active HIGH, 5V module)
+  - Relay Compressor: GPIO 39 (active HIGH, 5V module)
   - Relay Fan Low: GPIO 40 (active HIGH, 5V module)
-  - Relay Fan High: GPIO 42 (active HIGH, 5V module)
-  - GPIO 41 unused (medium speed removed to fit 5-wire thermostat cable)
+  - Relay Fan High: GPIO 41 (active HIGH, 5V module)
+  - GPIO 42 unused
   - IR TX: GPIO 18 (via 2N2222 transistor driver)
   - IR RX: GPIO 17 (VS1838B)
   - Has BME280 sensor and OLED display
@@ -58,12 +58,10 @@
 - API: `/api/heater?power=on|off|toggle`
 
 ## Relay Wiring Notes
-- Furnace/compressor (GPIO 38-39): Active LOW module, 5V VCC, works with 3.3V GPIO
-- Fan speed (GPIO 40, 42): Active HIGH module (jumper on HIGH trigger), 5V VCC
-  - Only Low + High speeds (no Medium) to fit existing 5-wire thermostat cable
-  - Must use HIGH trigger because 3.3V GPIO HIGH vs 5V VCC leaves 1.7V across optocoupler, falsely triggering active LOW relays
-  - 10K pull-up resistors on GPIO 40, 42 to 3.3V (prevents boot-time activation)
-  - boot.py sets fan GPIOs LOW (OFF) immediately on startup
+- All 4 relays (GPIO 38-41): Active HIGH module, 5V VCC, jumper on HIGH trigger
+  - HIGH trigger required because 3.3V GPIO vs 5V VCC leaves 1.7V across optocoupler, falsely triggering active LOW relays
+  - boot.py sets all relay GPIOs LOW (OFF) immediately on startup
+- Only Low + High fan speeds (no Medium) to fit existing 5-wire thermostat cable
 - Furnace is a standalone unit with its own blower (relay is just contact closure)
 - Fan relays are for Dometic Brisk II rooftop AC only
 
@@ -84,6 +82,31 @@
   - Yellow and ground untouched
   - Control box freeze protection remains active for both Dometic and ESP32-initiated cooling
   - See docs/parallel_thermostat_wiring.svg for diagram
+
+## Broadlink RM4 Mini Sleep Workaround
+- Broadlink goes to power-save mode after inactivity, ignoring IR commands
+- `broadlink_client.py` retry logic re-authenticates inside the retry loop (not just before it)
+- 5-minute keepalive ping (`bl.ping()`) in Remote main loop prevents sleep
+- `send_data()` retries 3 times with 1-second delay and re-auth between attempts
+
+## Whynter Boost Logic
+- **Threshold boost**: Auto-enables Whynter if temp >= cool_setpoint + BOOST_THRESHOLD (5°F)
+- **Stall boost**: Auto-enables Whynter if rooftop AC runs for BOOST_STALL_TIME (10 min) with no temp drop
+- **Auto-disable**: Turns off Whynter when temp drops to cool_setpoint + HYSTERESIS (1.5°F)
+- **Auto-disable on cool-off**: Whynter shuts off when rooftop AC cycle ends
+- IR state only updated on successful Broadlink send (prevents phantom "on" state)
+
+## Sensor Calibration
+- BME280 sensors have manufacturing tolerances (~0.7°F between units)
+- Calibration offsets in each device's `config_local.py`: TEMP_OFFSET, HUMIDITY_OFFSET, PRESSURE_OFFSET
+- Applied in `sensor.py` after raw read, before returning values
+- Current offsets: Main +0.38°F, Remote -0.38°F (split-the-difference)
+
+## Auto-Sync (Main → Remote)
+- `thermostat_remote.py` auto-syncs mode, heat/cool setpoints to Remote every 60 seconds
+- Also syncs immediately on any Kitchen setting change (debounced to 1/sec)
+- Handles Remote ESP32 reboots — settings restored within 60 seconds
+- Manual SYNC button in web UI still available for immediate force-sync
 
 ## Deployment
 - Use `mpremote connect /dev/ttyACM0` for Main

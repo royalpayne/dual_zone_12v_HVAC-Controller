@@ -142,10 +142,10 @@
   <text x="410" y="419" text-anchor="middle" class="component" font-weight="bold" fill="#1B5E20">ESP32-S3 Relay Board (4-Channel)</text>
   <text x="410" y="433" text-anchor="middle" class="note" fill="#388E3C">IP: 192.168.71.153 | Relay NO contacts in parallel with control box outputs</text>
 
-  <!-- Relay 1: Compressor (GPIO 39, Active LOW) -->
+  <!-- Relay 1: Compressor (GPIO 39, Active HIGH) -->
   <rect x="130" y="443" width="125" height="90" rx="4" fill="#e3f2fd" stroke="#2196F3" stroke-width="1.5"/>
   <text x="192" y="461" text-anchor="middle" class="pin" fill="#0D47A1">Relay 1: COMP</text>
-  <text x="192" y="475" text-anchor="middle" font-size="9" fill="#2196F3">GPIO 39 (Active LOW)</text>
+  <text x="192" y="475" text-anchor="middle" font-size="9" fill="#2196F3">GPIO 39 (Active HIGH)</text>
   <circle cx="155" cy="512" r="3.5" fill="#888"/>
   <circle cx="230" cy="512" r="3.5" fill="#2196F3"/>
   <line x1="158" y1="512" x2="225" y2="503" stroke="#555" stroke-width="1.5"/>
@@ -162,20 +162,20 @@
   <text x="290" y="525" text-anchor="middle" font-size="7" fill="#888">COM</text>
   <text x="365" y="525" text-anchor="middle" font-size="7" fill="#e53935">NO</text>
 
-  <!-- Relay 3: Fan High (GPIO 42, Active HIGH) -->
+  <!-- Relay 3: Fan High (GPIO 41, Active HIGH) -->
   <rect x="400" y="443" width="125" height="90" rx="4" fill="#f5f5f5" stroke="#333" stroke-width="1.5"/>
   <text x="462" y="461" text-anchor="middle" class="pin" fill="#111">Relay 3: FAN HI</text>
-  <text x="462" y="475" text-anchor="middle" font-size="9" fill="#333">GPIO 42 (Active HIGH)</text>
+  <text x="462" y="475" text-anchor="middle" font-size="9" fill="#333">GPIO 41 (Active HIGH)</text>
   <circle cx="425" cy="512" r="3.5" fill="#888"/>
   <circle cx="500" cy="512" r="3.5" fill="#333"/>
   <line x1="428" y1="512" x2="495" y2="503" stroke="#555" stroke-width="1.5"/>
   <text x="425" y="525" text-anchor="middle" font-size="7" fill="#888">COM</text>
   <text x="500" y="525" text-anchor="middle" font-size="7" fill="#333">NO</text>
 
-  <!-- Relay 4: Furnace (GPIO 38, Active LOW) -->
+  <!-- Relay 4: Furnace (GPIO 38, Active HIGH) -->
   <rect x="535" y="443" width="125" height="90" rx="4" fill="#efebe9" stroke="#795548" stroke-width="1.5"/>
   <text x="597" y="461" text-anchor="middle" class="pin" fill="#4E342E">Relay 4: FURNACE</text>
-  <text x="597" y="475" text-anchor="middle" font-size="9" fill="#795548">GPIO 38 (Active LOW)</text>
+  <text x="597" y="475" text-anchor="middle" font-size="9" fill="#795548">GPIO 38 (Active HIGH)</text>
   <circle cx="560" cy="512" r="3.5" fill="#888"/>
   <circle cx="635" cy="512" r="3.5" fill="#795548"/>
   <line x1="563" y1="512" x2="630" y2="503" stroke="#555" stroke-width="1.5"/>
