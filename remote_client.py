@@ -106,6 +106,10 @@ class RemoteClient:
         """Set fan-only mode (no compressor)"""
         return self._request('/api/fan_only', {'on': 1 if on else 0})
 
+    def set_humidity_setpoint(self, value):
+        """Set humidity setpoint for auto-dehumidification (% RH)"""
+        return self._request('/api/humidity_setpoint', {'value': value})
+
     def is_connected(self):
         """Check if remote is reachable"""
         status = self.get_status()

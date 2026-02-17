@@ -115,6 +115,28 @@ def main():
         if wlan.isconnected():
             ip = wlan.ifconfig()[0]
     
+    # Start WebREPL for over-the-air updates (port 8266)
+    if ip:
+        import webrepl
+        webrepl.start()
+        print(f"WebREPL: ws://{ip}:8266")
+
+    # Sync RTC from NTP server
+    if ip:
+        import ntptime
+        ntptime.host = getattr(config, 'NTP_HOST', 'pool.ntp.org')
+        for _ntp_attempt in range(3):
+            try:
+                ntptime.settime()
+                _lt = time.localtime(time.time() + config.TIMEZONE_OFFSET * 3600)
+                print(f"NTP synced: {_lt[0]}-{_lt[1]:02d}-{_lt[2]:02d} {_lt[3]:02d}:{_lt[4]:02d}:{_lt[5]:02d}")
+                break
+            except Exception as e:
+                print(f"NTP attempt {_ntp_attempt + 1} failed: {e}")
+                time.sleep(1)
+        else:
+            print("NTP sync failed — timestamps will be inaccurate")
+
     # Initialize remote ESP32 client for relay/IR control
     remote = RemoteClient(REMOTE_IP)
     print(f"Remote ESP32 at {REMOTE_IP}")
@@ -144,6 +166,8 @@ def main():
     # Main loop
     last_sensor_read = 0
     last_keepalive = 0
+    last_history_record = 0
+    history_interval = getattr(config, 'HISTORY_INTERVAL', 60)
 
     print("Thermostat running... Press Ctrl+C to stop")
     
@@ -173,6 +197,14 @@ def main():
                 # Run control logic
                 thermostat.run_control_loop()
                 
+                # Record history snapshot for data logging
+                if now - last_history_record >= history_interval:
+                    try:
+                        webserver.record_snapshot()
+                    except Exception as e:
+                        print(f"History record error: {e}")
+                    last_history_record = now
+
                 # Update display
                 if display:
                     display.draw_main_screen(

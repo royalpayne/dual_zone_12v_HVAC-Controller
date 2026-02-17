@@ -17,10 +17,14 @@ class ThermostatController:
         # Operating mode
         self.mode = config.MODE_OFF
 
-        # Current readings
+        # Current readings (BME280)
         self.current_temp = None
         self.current_humidity = None
         self.current_pressure = None
+
+        # Broadlink HTS2 sensor readings
+        self.bl_temp = None
+        self.bl_humidity = None
 
         # State tracking
         self.heating_active = False
@@ -28,6 +32,8 @@ class ThermostatController:
         self.fan_only = False
         self.fan_speed = config.FAN_AUTO
         self.whynter_mode = 0  # 0=off, 1=cool
+        self.dehum_active = False  # True when Whynter running for dehumidification
+        self.humidity_setpoint = config.HUMIDITY_SETPOINT
         self.heater_mode = 0  # 0=off, 1=on (IR heater)
         self.last_heat_change = 0
         self.last_cool_change = 0
@@ -57,10 +63,18 @@ class ThermostatController:
         self.heater = heater_ctrl
 
     def update_readings(self, temp_f, humidity, pressure):
-        """Update sensor readings"""
+        """Update BME280 sensor readings"""
         self.current_temp = temp_f
         self.current_humidity = humidity
         self.current_pressure = pressure
+
+    def update_bl_readings(self, temp_c, humidity):
+        """Update Broadlink HTS2 sensor readings"""
+        if temp_c is not None:
+            self.bl_temp = round(temp_c * 9.0 / 5.0 + 32.0, 1)  # Convert C to F
+        else:
+            self.bl_temp = None
+        self.bl_humidity = round(humidity, 1) if humidity is not None else None
 
     def set_mode(self, mode):
         """Set operating mode"""
@@ -78,6 +92,10 @@ class ThermostatController:
         """Set cooling setpoint"""
         self.cool_setpoint = max(config.MIN_SETPOINT,
                                   min(config.MAX_SETPOINT, temp))
+
+    def set_humidity_setpoint(self, value):
+        """Set humidity setpoint for dehumidification (% RH)"""
+        self.humidity_setpoint = max(30, min(80, value))
 
     def set_fan_speed(self, speed):
         """Set fan speed (0=off, 1=low, 2=med, 3=high, 4=auto)"""
@@ -102,29 +120,34 @@ class ThermostatController:
                 self._fan_off()
             print("Fan-only OFF")
 
+    # Whynter mode mapping: thermostat mode number → IR mode string
+    WHYNTER_MODES = {0: 'off', 1: 'cool', 2: 'dehum', 3: 'fan', 4: 'heat'}
+    WHYNTER_MODE_NAMES = {0: 'Off', 1: 'Cool', 2: 'Dehum', 3: 'Fan', 4: 'Heat'}
+
     def set_whynter_mode(self, mode):
-        """Set Whynter portable AC mode (0=off, 1=on/cool)"""
-        if mode < 0 or mode > 1:
+        """Set Whynter portable AC mode (0=off, 1=cool, 2=dehum, 3=fan, 4=heat)"""
+        if mode not in self.WHYNTER_MODES:
             print(f"Invalid Whynter mode: {mode}")
             return
 
         if mode == self.whynter_mode:
-            print(f"Whynter already in mode {mode}")
+            print(f"Whynter already in mode {mode} ({self.WHYNTER_MODES[mode]})")
             return
 
         if not self.whynter:
             print("No Whynter controller available")
             return
 
+        mode_name = self.WHYNTER_MODES[mode]
         success = config.DRY_RUN  # DRY_RUN always "succeeds"
         if mode == 0:
             print("Setting Whynter to OFF")
             if not config.DRY_RUN:
                 success = self.whynter.send_off()
         else:
-            print("Setting Whynter to COOL mode")
+            print(f"Setting Whynter to {mode_name.upper()} mode")
             if not config.DRY_RUN:
-                success = self.whynter.set_mode('cool')
+                success = self.whynter.set_mode(mode_name)
 
         if success:
             self.whynter_mode = mode
@@ -179,6 +202,15 @@ class ThermostatController:
     def _can_change_whynter(self):
         """Check if enough time has passed since last Whynter change"""
         return (time.time() - self.last_whynter_change) >= config.MIN_CYCLE_TIME
+
+    def _apparent_temp(self):
+        """Humidity-adjusted apparent temperature for cooling decisions.
+        At 50% RH: apparent = actual. Higher humidity feels warmer, lower feels cooler."""
+        if self.current_temp is None:
+            return None
+        if self.current_humidity is None:
+            return self.current_temp
+        return self.current_temp + (self.current_humidity - 50) * config.HUMIDITY_COMFORT_FACTOR
 
     # ---- Fan relay control ----
 
@@ -272,11 +304,59 @@ class ThermostatController:
             if boost_reason and self._can_change_whynter():
                 print(f"Whynter boost: {boost_reason}")
                 self.set_whynter_mode(1)
-        # Auto-disable Whynter when temp comes back within range
-        elif self.cooling_active and self.whynter and self.whynter_mode != 0:
-            if self.current_temp <= (self.cool_setpoint + config.HYSTERESIS):
+        # Auto-disable Whynter boost when apparent temp comes back within range (but not if dehumidifying)
+        elif self.cooling_active and self.whynter and self.whynter_mode != 0 and not self.dehum_active:
+            apparent = self._apparent_temp()
+            if apparent is not None and apparent <= (self.cool_setpoint + config.HYSTERESIS):
                 if self._can_change_whynter():
                     self.set_whynter_mode(0)
+
+        # Dehumidification: run Whynter in dehum mode when humidity is high
+        self._control_dehum()
+
+    def _control_dehum(self):
+        """Dehumidification control — triggers Whynter dehum mode based on humidity.
+        Guards: won't run while heating is active or if temp is near heat setpoint,
+        to prevent dehum cold air from fighting the furnace."""
+        if self.current_humidity is None or not self.whynter:
+            return
+
+        # Never dehumidify while furnace is heating — they fight each other
+        if self.heating_active:
+            if self.dehum_active:
+                if self._can_change_whynter():
+                    print(f"Dehum OFF: heating active, temp {self.current_temp:.1f}F")
+                    self.set_whynter_mode(0)
+                    self.dehum_active = False
+            return
+
+        if not self.dehum_active and self.whynter_mode == 0:
+            # Don't start dehum if temp is near heat setpoint (would trigger furnace)
+            if self.current_temp is not None and self.current_temp <= (self.heat_setpoint + config.HYSTERESIS):
+                return
+            # Enable: humidity exceeds setpoint
+            if self.current_humidity > self.humidity_setpoint:
+                if self._can_change_whynter():
+                    print(f"Dehum ON: humidity {self.current_humidity:.1f}% > {self.humidity_setpoint}%")
+                    self.set_whynter_mode(2)  # 2 = dehum mode
+                    # Only mark dehum active if IR send succeeded
+                    if self.whynter_mode == 2:
+                        self.dehum_active = True
+        elif self.dehum_active:
+            # Stop if temp drops near heat setpoint (prevent triggering furnace)
+            if self.current_temp is not None and self.current_temp <= (self.heat_setpoint + config.HYSTERESIS):
+                if self._can_change_whynter():
+                    print(f"Dehum OFF: temp {self.current_temp:.1f}F near heat setpoint {self.heat_setpoint}F")
+                    self.set_whynter_mode(0)
+                    self.dehum_active = False
+                    return
+            # Disable: humidity dropped below setpoint minus hysteresis
+            target = self.humidity_setpoint - config.HUMIDITY_HYSTERESIS
+            if self.current_humidity < target:
+                if self._can_change_whynter():
+                    print(f"Dehum OFF: humidity {self.current_humidity:.1f}% < {target}%")
+                    self.set_whynter_mode(0)
+                    self.dehum_active = False
 
     def _control_heat(self):
         """Heating control with hysteresis"""
@@ -290,19 +370,22 @@ class ThermostatController:
                     self._heat_on()
 
     def _control_cool(self):
-        """Cooling control with hysteresis"""
+        """Cooling control with hysteresis, using apparent temp for comfort"""
+        apparent = self._apparent_temp()
+        if apparent is None:
+            return
         if self.cooling_active:
-            if self.current_temp <= self.cool_setpoint:
+            if apparent <= self.cool_setpoint:
                 if self._can_change_cool():
                     self._cool_off()
         else:
-            if self.current_temp >= (self.cool_setpoint + config.HYSTERESIS):
+            if apparent >= (self.cool_setpoint + config.HYSTERESIS):
                 if self._can_change_cool() and self._can_start_compressor():
                     self._cool_on()
 
     def _control_auto(self):
         """Auto mode - heat or cool as needed"""
-        # Heating logic (furnace is independent, no delay needed vs A/C)
+        # Heating logic uses actual temp (furnace is independent, no delay needed vs A/C)
         if self.current_temp <= (self.heat_setpoint - config.HYSTERESIS):
             if not self.heating_active and self._can_change_heat():
                 self._cool_off()
@@ -311,12 +394,15 @@ class ThermostatController:
             if self._can_change_heat():
                 self._heat_off()
 
-        # Cooling logic (compressor has its own short-cycle protection)
-        if self.current_temp >= (self.cool_setpoint + config.HYSTERESIS):
+        # Cooling logic uses apparent temp for humidity-aware comfort
+        apparent = self._apparent_temp()
+        if apparent is None:
+            return
+        if apparent >= (self.cool_setpoint + config.HYSTERESIS):
             if not self.cooling_active and self._can_change_cool() and self._can_start_compressor():
                 self._heat_off()
                 self._cool_on()
-        elif self.current_temp <= self.cool_setpoint and self.cooling_active:
+        elif apparent <= self.cool_setpoint and self.cooling_active:
             if self._can_change_cool():
                 self._cool_off()
 
@@ -356,7 +442,9 @@ class ThermostatController:
         temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
         speed = self.fan_speed if self.fan_speed != config.FAN_OFF else config.FAN_HIGH
         speed_name = config.FAN_NAMES.get(speed, '?')
-        print(f"{dry_run}COOL ON (temp: {temp_str}F, setpoint: {self.cool_setpoint}F, fan: {speed_name})")
+        apparent = self._apparent_temp()
+        apparent_str = f", feels: {apparent:.1f}" if apparent is not None and self.current_humidity is not None else ""
+        print(f"{dry_run}COOL ON (temp: {temp_str}F{apparent_str}, setpoint: {self.cool_setpoint}F, fan: {speed_name})")
 
         # Start fan before compressor
         self._set_fan(speed)
@@ -376,7 +464,9 @@ class ThermostatController:
         """Turn off rooftop AC: compressor first, fan continues for post-run"""
         dry_run = "(DRY RUN) " if config.DRY_RUN else ""
         temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
-        print(f"{dry_run}COOL OFF (temp: {temp_str}F, setpoint: {self.cool_setpoint}F)")
+        apparent = self._apparent_temp()
+        apparent_str = f", feels: {apparent:.1f}" if apparent is not None and self.current_humidity is not None else ""
+        print(f"{dry_run}COOL OFF (temp: {temp_str}F{apparent_str}, setpoint: {self.cool_setpoint}F)")
 
         if not config.DRY_RUN:
             self.relay_compressor.value(0)  # Active HIGH = OFF
@@ -384,8 +474,8 @@ class ThermostatController:
         self.cooling_active = False
         self.last_compressor_off = time.time()
         self.last_cool_change = time.time()
-        # Auto-turn off Whynter boost when rooftop AC stops
-        if self.whynter_mode != 0:
+        # Auto-turn off Whynter boost when rooftop AC stops (but not if dehumidifying)
+        if self.whynter_mode != 0 and not self.dehum_active:
             self.set_whynter_mode(0)
 
         # Fan post-run: keep fan going to extract residual cooling
@@ -411,6 +501,7 @@ class ThermostatController:
             self.heating_active = False
             self.cooling_active = False
             self.fan_only = False
+            self.dehum_active = False
             self.fan_post_run_until = 0
             if self.whynter_mode != 0:
                 self.whynter_mode = 0
@@ -428,10 +519,11 @@ class ThermostatController:
 
     def get_status(self):
         """Get current status as dict"""
-        whynter_names = {0: 'Off', 1: 'On'}
         heater_names = {0: 'Off', 1: 'On'}
+        apparent = self._apparent_temp()
         return {
             'temp': self.current_temp,
+            'apparent_temp': round(apparent, 1) if apparent is not None else None,
             'humidity': self.current_humidity,
             'pressure': self.current_pressure,
             'mode': self.mode,
@@ -443,10 +535,14 @@ class ThermostatController:
             'fan_speed': self.fan_speed,
             'fan_speed_name': config.FAN_NAMES.get(self.fan_speed, '?'),
             'fan_only': self.fan_only,
+            'humidity_setpoint': self.humidity_setpoint,
+            'dehum_active': self.dehum_active,
             'whynter_mode': self.whynter_mode,
-            'whynter_mode_name': whynter_names.get(self.whynter_mode, '?'),
+            'whynter_mode_name': self.WHYNTER_MODE_NAMES.get(self.whynter_mode, '?'),
             'heater_mode': self.heater_mode,
             'heater_mode_name': heater_names.get(self.heater_mode, '?'),
+            'bl_temp': self.bl_temp,
+            'bl_humidity': self.bl_humidity,
             'dry_run': config.DRY_RUN,
             'debug': config.DEBUG
         }

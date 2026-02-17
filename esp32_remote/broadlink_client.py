@@ -319,6 +319,32 @@ class BroadlinkClient:
         except OSError:
             return None
 
+    def check_sensors(self):
+        """Read temperature and humidity from HTS2 sensor cable.
+
+        Returns:
+            tuple (temp_celsius, humidity_percent) or None on failure.
+        """
+        for attempt in range(self.retries):
+            try:
+                self.ensure_connected()
+                resp = self._rm4_send(0x24)
+                if resp and len(resp) >= 10:  # 6-byte wrapper + 4 sensor bytes
+                    p_len = struct.unpack_from('<H', resp, 0)[0]
+                    data = resp[0x06:p_len + 2]
+                    if len(data) >= 4:
+                        temp = struct.unpack_from('<bb', data, 0)
+                        temp_c = temp[0] + temp[1] / 100.0
+                        humidity = data[2] + data[3] / 100.0
+                        return (temp_c, humidity)
+                return None
+            except OSError as e:
+                print(f"[BL] Sensor read attempt {attempt + 1} failed: {e}")
+                self.authed = False
+                if attempt < self.retries - 1:
+                    time.sleep(1)
+        return None
+
     def get_status(self):
         """Get Broadlink connection status for API"""
         return {

@@ -1,6 +1,7 @@
 # Thermostat Web Server - With Remote Integration
 import socket
 import json
+import time
 import config
 from remote_client import RemoteClient
 
@@ -12,6 +13,9 @@ class ThermostatWebServer:
         self.remote = remote
         self.pressure_history = []  # Track pressure for trend
         self.max_history = 3
+        # History buffer for data logging
+        self.history = []
+        self.history_max = getattr(config, 'HISTORY_MAX', 1440)
 
     def start(self, port=80):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -37,7 +41,9 @@ class ThermostatWebServer:
             pass
 
     def _handle_request(self, request):
-        if 'GET /api/status' in request:
+        if 'GET /api/history' in request:
+            return self._api_history(request)
+        elif 'GET /api/status' in request:
             return self._api_status()
         elif 'GET /api/schedule' in request:
             return self._api_schedule()
@@ -90,6 +96,63 @@ class ThermostatWebServer:
             return 'falling'
         else:
             return 'steady'
+
+    def record_snapshot(self):
+        """Record a data point from current thermostat + remote status"""
+        ts = time.time()
+        status = self.thermostat.get_status()
+        remote = self.remote.get_status() if self.remote else None
+
+        entry = {
+            'ts': ts,
+            'k_temp': status.get('temp'),
+            'k_hum': status.get('humidity'),
+            'k_pres': status.get('pressure'),
+            'mode': status.get('mode_name'),
+            'heat_sp': status.get('heat_setpoint'),
+            'cool_sp': status.get('cool_setpoint'),
+        }
+
+        if remote:
+            entry.update({
+                'l_temp': remote.get('temp'),
+                'l_hum': remote.get('humidity'),
+                'l_pres': remote.get('pressure'),
+                'l_app': remote.get('apparent_temp'),
+                'bl_temp': remote.get('bl_temp'),
+                'bl_hum': remote.get('bl_humidity'),
+                'heating': 1 if remote.get('heating_active') else 0,
+                'cooling': 1 if remote.get('cooling_active') else 0,
+                'whynter': remote.get('whynter_mode', 0),
+                'heater': remote.get('heater_mode', 0),
+                'dehum': 1 if remote.get('dehum_active') else 0,
+                'fan': remote.get('fan_speed', 0),
+            })
+
+        self.history.append(entry)
+        if len(self.history) > self.history_max:
+            self.history = self.history[-self.history_max:]
+
+    def _api_history(self, request):
+        """Return history buffer, optionally filtered by ?since=<timestamp>"""
+        since = 0
+        if '?since=' in request:
+            try:
+                idx = request.index('?since=') + 7
+                end = idx
+                while end < len(request) and request[end] in '0123456789.':
+                    end += 1
+                since = float(request[idx:end])
+            except (ValueError, IndexError):
+                pass
+
+        if since > 0:
+            data = [e for e in self.history if e['ts'] > since]
+        else:
+            data = self.history
+
+        body = json.dumps({'count': len(data), 'entries': data})
+        return f"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n\r\n{body}"
 
     def _api_schedule(self):
         if self.scheduler:
@@ -164,12 +227,16 @@ class ThermostatWebServer:
                 self.remote.set_fan_speed(int(data.get('speed', 4)))
             elif 'POST /api/remote/fan_only' in request:
                 self.remote.set_fan_only(data.get('on', False))
+            elif 'POST /api/remote/humidity_setpoint' in request:
+                self.thermostat.set_humidity_setpoint(int(data.get('value', 55)))
             elif 'POST /api/remote/sync' in request:
                 # Sync ESP32 setpoints to remote (one call at a time with short delay)
                 import time
                 self.remote.set_heat_setpoint(int(self.thermostat.heat_setpoint))
                 time.sleep(0.2)
                 self.remote.set_cool_setpoint(int(self.thermostat.cool_setpoint))
+                time.sleep(0.2)
+                self.remote.set_humidity_setpoint(int(self.thermostat.humidity_setpoint))
                 time.sleep(0.2)
                 self.remote.set_mode(self.thermostat.mode)
         except Exception as e:
@@ -252,8 +319,9 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 
 <div class="card">
 <div class="zone-title remote-title">Living Room (Remote)</div>
-<div class="temp-small"><span id="ptemp">--</span>&deg;F</div>
+<div class="temp-small"><span id="ptemp">--</span>&deg;F <span id="pfeels" style="font-size:16px;color:#888"></span></div>
 <div class="row">💧 <span id="phum">--%</span> | <span id="pptrend">→</span> <span id="ppres">--</span> inHg</div>
+<div id="blsensor" style="text-align:center;font-size:13px;color:#888;margin-top:4px"></div>
 <div id="pstatus">Offline</div>
 </div>
 <div class="card">
@@ -284,8 +352,13 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <h3>WHYNTER PORTABLE UNIT</h3>
 <div class="row">
 <button class="btn" id="w0" onclick="whynter(0)">OFF</button>
-<button class="btn" id="w1" onclick="whynter(1)">ON</button>
+<button class="btn" id="w1" onclick="whynter(1)">COOL</button>
+<button class="btn" id="w2" onclick="whynter(2)">DEHUM</button>
+<button class="btn" id="w3" onclick="whynter(3)">FAN</button>
 </div>
+<h3>HUMIDITY SETPOINT (AUTO DEHUM)</h3>
+<div class="setlabel"><span>30%</span><span id="humset">55</span>%<span>80%</span></div>
+<input type="range" min="30" max="80" value="55" class="slider cool" id="humslider" oninput="setRHumidity(this.value)">
 <h3>IR HEATER</h3>
 <div class="row">
 <button class="btn" id="h0" onclick="heater(0)">OFF</button>
@@ -295,8 +368,8 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 
 <script>
 var hs=68,cs=75,rhs=68,rcs=75,rwhynter=0,rheater=0;
-var adjustingHeat=false,adjustingCool=false,adjustingRHeat=false,adjustingRCool=false;
-var heatTimer,coolTimer,rheatTimer,rcoolTimer;
+var adjustingHeat=false,adjustingCool=false,adjustingRHeat=false,adjustingRCool=false,adjustingRHum=false;
+var heatTimer,coolTimer,rheatTimer,rcoolTimer,rhumTimer;
 function upd(d){
 document.getElementById('temp').textContent=d.temp?d.temp.toFixed(1):'--';
 document.getElementById('hum').textContent=d.humidity?Math.round(d.humidity)+'%':'--%';
@@ -321,6 +394,8 @@ var ps=document.getElementById('pstatus');ps.className='offline';ps.textContent=
 }
 function updRemote(r){
 document.getElementById('ptemp').textContent=r.temp?r.temp.toFixed(1):'--';
+var fe=document.getElementById('pfeels');
+if(r.apparent_temp&&r.temp&&Math.abs(r.apparent_temp-r.temp)>=0.5){fe.textContent='(feels '+r.apparent_temp.toFixed(0)+'°)';}else{fe.textContent='';}
 document.getElementById('phum').textContent=r.humidity?Math.round(r.humidity)+'%':'--%';
 document.getElementById('ppres').textContent=r.pressure?(r.pressure*0.02953).toFixed(2):'--';
 document.getElementById('pptrend').textContent='→';
@@ -336,14 +411,22 @@ rhs=r.heat_setpoint;rcs=r.cool_setpoint;rwhynter=r.whynter_mode||0;rheater=r.hea
 var ps=document.getElementById('pstatus');
 var whynterActive=r.whynter_mode>0;
 var heaterActive=r.heater_mode>0;
-ps.className=whynterActive?'whynter':heaterActive?'heating':r.heating_active?'heating':r.cooling_active?'cooling':'';
-ps.textContent=whynterActive?'WHYNTER ON':heaterActive?'IR HEATER ON':r.heating_active?'HEATING':r.cooling_active?'COOLING':r.fan_only?'FAN ONLY':'Idle';
+var dehumActive=r.dehum_active||false;
+ps.className=dehumActive?'whynter':whynterActive?'whynter':heaterActive?'heating':r.heating_active?'heating':r.cooling_active?'cooling':'';
+var wnames={1:'WHYNTER COOL',2:'WHYNTER DEHUM',3:'WHYNTER FAN',4:'WHYNTER HEAT'};
+ps.textContent=dehumActive?'DEHUMIDIFYING':whynterActive?(wnames[r.whynter_mode]||'WHYNTER ON'):heaterActive?'IR HEATER ON':r.heating_active?'HEATING':r.cooling_active?'COOLING':r.fan_only?'FAN ONLY':'Idle';
 for(var i=0;i<4;i++)document.getElementById('pm'+i).className='btn'+(r.mode==i?' active':'');
-for(var i=0;i<2;i++)document.getElementById('w'+i).className='btn'+(r.whynter_mode==i?' whynter':'');
+for(var i=0;i<4;i++)document.getElementById('w'+i).className='btn'+(r.whynter_mode==i?' whynter':'');
 for(var i=0;i<2;i++)document.getElementById('h'+i).className='btn'+(r.heater_mode==i?' heater':'');
 for(var i=1;i<=4;i++)document.getElementById('f'+i).className='btn'+(r.fan_speed==i?' fan':'');
 document.getElementById('fo0').className='btn'+(!r.fan_only?' active':'');
 document.getElementById('fo1').className='btn'+(r.fan_only?' fan':'');
+if(!adjustingRHum&&r.humidity_setpoint){
+document.getElementById('humset').textContent=r.humidity_setpoint;
+document.getElementById('humslider').value=r.humidity_setpoint;
+}
+var bls=document.getElementById('blsensor');
+if(r.bl_temp!=null){bls.textContent='HTS2: '+r.bl_temp.toFixed(1)+'°F | '+Math.round(r.bl_humidity)+'% RH';}else{bls.textContent='';}
 }
 function get(){fetch('/api/status').then(r=>r.json()).then(upd).catch(e=>console.log(e));}
 function mode(m){fetch('/api/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(upd);}
@@ -352,6 +435,7 @@ function setCool(v){adjustingCool=true;document.getElementById('cset').textConte
 function rmode(m){fetch('/api/remote/mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updRemote);}
 function setRHeat(v){adjustingRHeat=true;document.getElementById('phset').textContent=v;clearTimeout(rheatTimer);rheatTimer=setTimeout(function(){fetch('/api/remote/heat_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){setTimeout(function(){adjustingRHeat=false;},1000);});},500);}
 function setRCool(v){adjustingRCool=true;document.getElementById('pcset').textContent=v;clearTimeout(rcoolTimer);rcoolTimer=setTimeout(function(){fetch('/api/remote/cool_setpoint',{method:'POST',body:JSON.stringify({temp:parseInt(v)})}).then(r=>r.json()).then(function(d){setTimeout(function(){adjustingRCool=false;},1000);});},500);}
+function setRHumidity(v){adjustingRHum=true;document.getElementById('humset').textContent=v;clearTimeout(rhumTimer);rhumTimer=setTimeout(function(){fetch('/api/remote/humidity_setpoint',{method:'POST',body:JSON.stringify({value:parseInt(v)})}).then(r=>r.json()).then(function(d){setTimeout(function(){adjustingRHum=false;},1000);});},500);}
 function whynter(m){fetch('/api/remote/whynter_mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updRemote);}
 function heater(m){fetch('/api/remote/heater_mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updRemote);}
 function fanSpeed(s){fetch('/api/remote/fan_speed',{method:'POST',body:JSON.stringify({speed:s})}).then(r=>r.json()).then(updRemote);}

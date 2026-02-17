@@ -57,6 +57,8 @@ class RemoteAPI:
             return self._api_fan_speed(request)
         elif 'GET /api/fan_only' in request:
             return self._api_fan_only(request)
+        elif 'GET /api/humidity_setpoint' in request:
+            return self._api_humidity_setpoint(request)
         elif 'GET /api/relay/test' in request:
             return self._api_relay_test(request)
         elif 'GET /api/relay/furnace' in request:
@@ -67,6 +69,8 @@ class RemoteAPI:
             return self._api_heater(request)
         elif 'GET /api/ir/codes' in request:
             return self._api_ir_codes()
+        elif 'GET /api/broadlink/sensors' in request:
+            return self._api_broadlink_sensors()
         elif 'GET /api/broadlink/status' in request:
             return self._api_broadlink_status()
         else:
@@ -133,6 +137,12 @@ class RemoteAPI:
         params = self._parse_query(request)
         if 'on' in params:
             self.thermostat.set_fan_only(params['on'] == '1')
+        return self._api_status()
+
+    def _api_humidity_setpoint(self, request):
+        params = self._parse_query(request)
+        if 'value' in params:
+            self.thermostat.set_humidity_setpoint(float(params['value']))
         return self._api_status()
 
     def _api_relay_test(self, request):
@@ -215,6 +225,19 @@ class RemoteAPI:
         if self.heater:
             codes['heater'] = self.heater.get_codes()
         return self._json_response({'codes': codes})
+
+    def _api_broadlink_sensors(self):
+        """Read Broadlink HTS2 sensor on demand"""
+        if not self.broadlink:
+            return self._json_response({'error': 'Broadlink not configured'})
+        result = self.broadlink.check_sensors()
+        if result:
+            temp_f = round(result[0] * 9.0 / 5.0 + 32.0, 1)
+            return self._json_response({
+                'temp_c': result[0], 'temp_f': temp_f,
+                'humidity': result[1]
+            })
+        return self._json_response({'error': 'Sensor read failed'})
 
     def _api_broadlink_status(self):
         """Get Broadlink connection status"""

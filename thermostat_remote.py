@@ -20,6 +20,9 @@ class RemoteThermostatController:
         # Operating mode
         self.mode = config.DEFAULT_MODE
 
+        # Humidity setpoint (synced to Remote for auto-dehumidification)
+        self.humidity_setpoint = 55
+
         # Current readings (local ESP32 sensors)
         self.current_temp = None
         self.current_humidity = None
@@ -58,6 +61,11 @@ class RemoteThermostatController:
                                   min(config.MAX_SETPOINT, temp))
         self._sync_to_remote()
 
+    def set_humidity_setpoint(self, value):
+        """Set humidity setpoint for auto-dehumidification"""
+        self.humidity_setpoint = max(30, min(80, value))
+        self._sync_to_remote()
+
     def _can_change_state(self):
         """Check if enough time has passed since last state change"""
         return (time.time() - self.last_state_change) >= config.MIN_CYCLE_TIME
@@ -73,6 +81,7 @@ class RemoteThermostatController:
             self.remote.set_mode(self.mode)
             self.remote.set_heat_setpoint(int(self.heat_setpoint))
             self.remote.set_cool_setpoint(int(self.cool_setpoint))
+            self.remote.set_humidity_setpoint(int(self.humidity_setpoint))
         except Exception as e:
             print(f"Remote sync error: {e}")
 

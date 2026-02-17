@@ -33,6 +33,15 @@ HYSTERESIS = 1.5
 BOOST_THRESHOLD = 5  # degrees F
 BOOST_STALL_TIME = 600  # seconds (10 min) - boost if rooftop AC runs this long with no temp drop
 
+# Dehumidification (via Whynter cool mode - evaporates condensate out exhaust)
+HUMIDITY_SETPOINT = 55      # % RH — trigger Whynter when exceeded
+HUMIDITY_HYSTERESIS = 5     # % RH — turn off at setpoint minus this
+
+# Apparent temperature: adjust cooling decisions based on humidity for comfort + efficiency
+# Each 10% RH above 50% feels ~1°F warmer; below 50% feels ~1°F cooler
+# Effect: AC runs sooner when humid (dehumidifies), rests longer when dry (saves energy)
+HUMIDITY_COMFORT_FACTOR = 0.1  # °F per 1% RH deviation from 50%
+
 # Short-cycle protection (minimum seconds between state changes)
 MIN_CYCLE_TIME = 30  # 30 seconds
 

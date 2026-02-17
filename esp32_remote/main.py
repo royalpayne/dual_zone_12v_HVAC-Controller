@@ -111,6 +111,12 @@ def main():
     # Connect to WiFi
     ip = connect_wifi(display)
 
+    # Start WebREPL for over-the-air updates (port 8266)
+    if ip:
+        import webrepl
+        webrepl.start()
+        print(f"WebREPL: ws://{ip}:8266")
+
     # Initialize Broadlink RM4 Mini (WiFi IR blaster)
     bl = BroadlinkClient()
     try:
@@ -142,6 +148,7 @@ def main():
     last_sensor_read = 0
     last_status_print = 0
     last_bl_keepalive = time.time()
+    last_bl_sensor_read = 0
 
     print("ESP32 Remote running... Press Ctrl+C to stop")
     print(f"Furnace relay: GPIO {config.RELAY_FURNACE_PIN}")
@@ -174,6 +181,16 @@ def main():
                         thermostat.heating_active,
                         thermostat.cooling_active
                     )
+
+            # Read Broadlink HTS2 sensor (every 30 seconds)
+            if now - last_bl_sensor_read >= 30:
+                try:
+                    result = bl.check_sensors()
+                    if result:
+                        thermostat.update_bl_readings(result[0], result[1])
+                except Exception as e:
+                    print(f"BL sensor error: {e}")
+                last_bl_sensor_read = now
 
             # Broadlink keepalive (prevents sleep mode)
             if now - last_bl_keepalive >= 300:

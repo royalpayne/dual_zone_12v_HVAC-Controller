@@ -1,0 +1,246 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <style>
+    .title { font: bold 16px sans-serif; }
+    .subtitle { font: 12px sans-serif; fill: #666; }
+    .label { font: 12px sans-serif; }
+    .pin { font: bold 10px monospace; }
+    .component { font: 11px sans-serif; }
+    .wire-i2c { stroke: #2196F3; stroke-width: 2; fill: none; }
+    .wire-power { stroke: #f44336; stroke-width: 2; fill: none; }
+    .wire-gnd { stroke: #333; stroke-width: 2; fill: none; }
+    .wire-signal { stroke: #FF9800; stroke-width: 2; fill: none; }
+    .wire-relay { stroke: #9C27B0; stroke-width: 2; fill: none; }
+    .note { font: italic 10px sans-serif; fill: #888; }
+  </style>
+
+  <!-- Title -->
+  <text x="400" y="25" text-anchor="middle" class="title">ESP32-S3-N16R8 Remote Controller Wiring</text>
+  <text x="400" y="42" text-anchor="middle" class="subtitle">IP: 192.168.71.153 | Serial: 5B41036349 | /dev/esp32_remote</text>
+  <text x="400" y="56" text-anchor="middle" class="note">USB: QinHeng CH343 (1a86:55d3) | 16MB Flash, 8MB PSRAM</text>
+
+  <!-- ==================== ESP32-S3 BOARD ==================== -->
+  <rect x="320" y="80" width="160" height="320" rx="5" fill="#1a1a2e" stroke="#333" stroke-width="2"/>
+  <text x="400" y="105" text-anchor="middle" fill="white" class="component">ESP32-S3</text>
+  <text x="400" y="120" text-anchor="middle" fill="#aaa" font-size="9">N16R8</text>
+
+  <!-- USB Port -->
+  <rect x="370" y="75" width="60" height="15" rx="2" fill="#555"/>
+  <text x="400" y="85" text-anchor="middle" fill="white" font-size="8">USB-C</text>
+
+  <!-- Left side pins -->
+  <text x="330" y="150" fill="#4CAF50" class="pin">3V3</text>
+  <text x="330" y="175" fill="#f44336" class="pin">GND</text>
+  <text x="330" y="200" fill="#2196F3" class="pin">GPIO 8 (SDA)</text>
+  <text x="330" y="225" fill="#2196F3" class="pin">GPIO 9 (SCL)</text>
+  <text x="330" y="260" fill="#FF9800" class="pin">GPIO 17</text>
+  <text x="330" y="295" fill="#FF9800" class="pin">GPIO 18</text>
+
+  <!-- Right side pins -->
+  <text x="420" y="150" fill="#f44336" class="pin">5V/VIN</text>
+  <text x="420" y="200" fill="#9C27B0" class="pin">GPIO 38</text>
+  <text x="420" y="225" fill="#9C27B0" class="pin">GPIO 39</text>
+
+  <!-- Pin dots on left -->
+  <circle cx="318" cy="146" r="4" fill="#4CAF50"/>
+  <circle cx="318" cy="171" r="4" fill="#333"/>
+  <circle cx="318" cy="196" r="4" fill="#2196F3"/>
+  <circle cx="318" cy="221" r="4" fill="#2196F3"/>
+  <circle cx="318" cy="256" r="4" fill="#FF9800"/>
+  <circle cx="318" cy="291" r="4" fill="#FF9800"/>
+
+  <!-- Pin dots on right -->
+  <circle cx="482" cy="146" r="4" fill="#f44336"/>
+  <circle cx="482" cy="196" r="4" fill="#9C27B0"/>
+  <circle cx="482" cy="221" r="4" fill="#9C27B0"/>
+
+  <!-- ==================== LEFT SIDE: I2C DEVICES ==================== -->
+
+  <!-- BME280 Sensor -->
+  <rect x="30" y="130" width="110" height="75" rx="5" fill="#4a4a6a" stroke="#666" stroke-width="2"/>
+  <text x="85" y="155" text-anchor="middle" fill="white" class="component">BME280</text>
+  <text x="85" y="172" text-anchor="middle" fill="#aaa" font-size="10">Temp/Humidity/Press</text>
+  <text x="85" y="197" text-anchor="middle" fill="#ccc" font-size="9">Addr: 0x76</text>
+
+  <!-- BME280 pins -->
+  <circle cx="140" cy="141" r="3" fill="#4CAF50"/>
+  <circle cx="140" cy="161" r="3" fill="#333"/>
+  <circle cx="140" cy="176" r="3" fill="#2196F3"/>
+  <circle cx="140" cy="191" r="3" fill="#2196F3"/>
+  <text x="148" y="145" class="pin" fill="#4CAF50">VCC</text>
+  <text x="148" y="165" class="pin" fill="#333">GND</text>
+  <text x="148" y="180" class="pin" fill="#2196F3">SDA</text>
+  <text x="148" y="195" class="pin" fill="#2196F3">SCL</text>
+
+  <!-- OLED Display -->
+  <rect x="30" y="225" width="110" height="85" rx="5" fill="#1a1a4a" stroke="#666" stroke-width="2"/>
+  <rect x="40" y="233" width="90" height="45" rx="2" fill="#000" stroke="#444"/>
+  <text x="85" y="260" text-anchor="middle" fill="#00ff00" font-size="10">128x64</text>
+  <text x="85" y="295" text-anchor="middle" fill="white" class="component">SSD1306 OLED</text>
+  <text x="85" y="305" text-anchor="middle" fill="#ccc" font-size="9">Addr: 0x3C</text>
+
+  <!-- OLED pins -->
+  <circle cx="140" cy="236" r="3" fill="#4CAF50"/>
+  <circle cx="140" cy="256" r="3" fill="#333"/>
+  <circle cx="140" cy="271" r="3" fill="#2196F3"/>
+  <circle cx="140" cy="286" r="3" fill="#2196F3"/>
+  <text x="148" y="240" class="pin" fill="#4CAF50">VCC</text>
+  <text x="148" y="260" class="pin" fill="#333">GND</text>
+  <text x="148" y="275" class="pin" fill="#2196F3">SDA</text>
+  <text x="148" y="290" class="pin" fill="#2196F3">SCL</text>
+
+  <!-- IR Receiver VS1838B -->
+  <rect x="30" y="330" width="110" height="65" rx="5" fill="#2a4a2a" stroke="#4CAF50" stroke-width="2"/>
+  <text x="85" y="355" text-anchor="middle" fill="white" class="component">VS1838B</text>
+  <text x="85" y="372" text-anchor="middle" fill="#aaa" font-size="10">IR Receiver</text>
+
+  <!-- VS1838B pins -->
+  <circle cx="140" cy="341" r="3" fill="#FF9800"/>
+  <circle cx="140" cy="361" r="3" fill="#333"/>
+  <circle cx="140" cy="381" r="3" fill="#4CAF50"/>
+  <text x="148" y="345" class="pin" fill="#FF9800">OUT</text>
+  <text x="148" y="365" class="pin" fill="#333">GND</text>
+  <text x="148" y="385" class="pin" fill="#4CAF50">VCC</text>
+
+  <!-- ==================== RIGHT SIDE: RELAYS ==================== -->
+
+  <!-- Furnace Relay -->
+  <rect x="570" y="130" width="120" height="75" rx="5" fill="#4a2a4a" stroke="#9C27B0" stroke-width="2"/>
+  <text x="630" y="155" text-anchor="middle" fill="white" class="component">HL-52S Relay</text>
+  <text x="630" y="172" text-anchor="middle" fill="#aaa" font-size="10">Furnace</text>
+  <text x="630" y="192" text-anchor="middle" fill="#E91E63" font-size="9">GPIO 38 (Active LOW)</text>
+
+  <!-- Furnace relay pins -->
+  <circle cx="570" cy="141" r="3" fill="#f44336"/>
+  <circle cx="570" cy="161" r="3" fill="#333"/>
+  <circle cx="570" cy="181" r="3" fill="#9C27B0"/>
+  <text x="555" y="145" text-anchor="end" class="pin" fill="#f44336">VCC</text>
+  <text x="555" y="165" text-anchor="end" class="pin" fill="#333">GND</text>
+  <text x="555" y="185" text-anchor="end" class="pin" fill="#9C27B0">IN</text>
+
+  <!-- Rooftop AC Relay -->
+  <rect x="570" y="225" width="120" height="75" rx="5" fill="#4a2a4a" stroke="#9C27B0" stroke-width="2"/>
+  <text x="630" y="250" text-anchor="middle" fill="white" class="component">HL-52S Relay</text>
+  <text x="630" y="267" text-anchor="middle" fill="#aaa" font-size="10">Rooftop AC</text>
+  <text x="630" y="287" text-anchor="middle" fill="#E91E63" font-size="9">GPIO 39 (Active LOW)</text>
+
+  <!-- Rooftop relay pins -->
+  <circle cx="570" cy="236" r="3" fill="#f44336"/>
+  <circle cx="570" cy="256" r="3" fill="#333"/>
+  <circle cx="570" cy="276" r="3" fill="#9C27B0"/>
+  <text x="555" y="240" text-anchor="end" class="pin" fill="#f44336">VCC</text>
+  <text x="555" y="260" text-anchor="end" class="pin" fill="#333">GND</text>
+  <text x="555" y="280" text-anchor="end" class="pin" fill="#9C27B0">IN</text>
+
+  <!-- ==================== IR TRANSMITTER CIRCUIT ==================== -->
+  <rect x="30" y="420" width="290" height="130" rx="5" fill="#fff3e0" stroke="#FF9800" stroke-width="2"/>
+  <text x="175" y="440" text-anchor="middle" class="component" font-weight="bold">IR Transmitter Circuit (GPIO 18)</text>
+
+  <!-- 2N2222 Transistor -->
+  <circle cx="130" cy="495" r="20" fill="none" stroke="#333" stroke-width="2"/>
+  <text x="130" y="500" text-anchor="middle" class="pin">2N2222</text>
+  <text x="130" y="525" text-anchor="middle" font-size="9" fill="#666">NPN</text>
+
+  <!-- Transistor pins -->
+  <line x1="100" y1="495" x2="110" y2="495" stroke="#333" stroke-width="2"/>
+  <text x="95" y="499" text-anchor="end" class="pin">B</text>
+  <line x1="130" y1="515" x2="130" y2="530" stroke="#333" stroke-width="2"/>
+  <text x="140" y="535" class="pin">E</text>
+  <line x1="130" y1="475" x2="130" y2="460" stroke="#333" stroke-width="2"/>
+  <text x="140" y="465" class="pin">C</text>
+
+  <!-- Base resistor -->
+  <rect x="60" y="490" width="30" height="10" fill="#d4a574" stroke="#333"/>
+  <text x="75" y="513" text-anchor="middle" font-size="9">1K-10K</text>
+
+  <!-- IR LED -->
+  <polygon points="130,450 120,430 140,430" fill="none" stroke="#f44336" stroke-width="2"/>
+  <line x1="120" y1="430" x2="140" y2="430" stroke="#f44336" stroke-width="2"/>
+  <text x="155" y="440" class="pin" fill="#f44336">IR LED</text>
+
+  <!-- 5V connection to LED -->
+  <line x1="130" y1="430" x2="130" y2="415" stroke="#f44336" stroke-width="2"/>
+  <text x="130" y="410" text-anchor="middle" class="pin" fill="#f44336">5V</text>
+
+  <!-- GND connection -->
+  <line x1="130" y1="530" x2="130" y2="545" stroke="#333" stroke-width="2"/>
+  <text x="130" y="555" text-anchor="middle" class="pin">GND</text>
+
+  <!-- GPIO 18 label -->
+  <line x1="48" y1="495" x2="60" y2="495" stroke="#FF9800" stroke-width="2"/>
+  <text x="43" y="499" text-anchor="end" class="pin" fill="#FF9800">GPIO 18</text>
+
+  <!-- Circuit notes -->
+  <text x="210" y="470" class="label" fill="#e65100">Anode (+) to 5V</text>
+  <text x="210" y="485" class="label" fill="#e65100">Cathode (-) to collector</text>
+  <text x="210" y="505" class="label" fill="#c62828">No current limiting resistor</text>
+  <text x="210" y="520" class="label" fill="#c62828">(max brightness, ~1ft range)</text>
+  <text x="210" y="540" class="label" fill="#e65100">RMT hardware @ 38kHz</text>
+
+  <!-- ==================== POWER SUPPLY ==================== -->
+  <rect x="570" y="330" width="200" height="70" rx="5" fill="#fff3e0" stroke="#FF9800" stroke-width="2"/>
+  <text x="670" y="352" text-anchor="middle" class="component" font-weight="bold">Power Supply</text>
+  <text x="670" y="370" text-anchor="middle" class="label">12V DC → Buck Converter → 5V</text>
+  <text x="670" y="388" text-anchor="middle" class="note">Powers ESP32, relays, and IR LED</text>
+
+  <!-- ==================== WIRING ==================== -->
+
+  <!-- 3V3 bus (sensors + IR receiver) -->
+  <path d="M318 146 L270 146 Q260 146 260 141 L260 141 L140 141" class="wire-power" stroke="#4CAF50"/>
+  <path d="M260 146 L260 236 L140 236" class="wire-power" stroke="#4CAF50"/>
+  <path d="M260 236 L260 381 L140 381" class="wire-power" stroke="#4CAF50"/>
+
+  <!-- GND bus -->
+  <path d="M318 171 L250 171 Q240 171 240 161 L240 161 L140 161" class="wire-gnd"/>
+  <path d="M240 171 L240 256 L140 256" class="wire-gnd"/>
+  <path d="M240 256 L240 361 L140 361" class="wire-gnd"/>
+
+  <!-- GPIO 8 (SDA) -->
+  <path d="M318 196 L280 196 Q270 196 270 186 L270 176 L140 176" class="wire-i2c"/>
+  <path d="M270 196 L270 271 L140 271" class="wire-i2c"/>
+
+  <!-- GPIO 9 (SCL) -->
+  <path d="M318 221 L290 221 Q280 221 280 211 L280 191 L140 191" class="wire-i2c"/>
+  <path d="M280 221 L280 286 L140 286" class="wire-i2c"/>
+
+  <!-- GPIO 17 (IR RX) -->
+  <path d="M318 256 L210 256 Q200 256 200 310 L200 341 L140 341" class="wire-signal"/>
+
+  <!-- 5V to relays -->
+  <path d="M482 146 L530 146 Q540 146 540 141 L540 141 L570 141" class="wire-power"/>
+  <path d="M540 146 L540 236 L570 236" class="wire-power"/>
+
+  <!-- GND to relays -->
+  <path d="M240 171 L240 110 L550 110 Q560 110 560 120 L560 161 L570 161" class="wire-gnd"/>
+  <path d="M560 161 L560 256 L570 256" class="wire-gnd"/>
+
+  <!-- GPIO 38 to Furnace -->
+  <path d="M482 196 L530 196 Q540 196 540 186 L540 181 L570 181" class="wire-relay"/>
+
+  <!-- GPIO 39 to Rooftop -->
+  <path d="M482 221 L530 221 Q540 221 540 266 L540 276 L570 276" class="wire-relay"/>
+
+  <!-- ==================== LEGEND ==================== -->
+  <rect x="570" y="420" width="200" height="170" rx="5" fill="#f5f5f5" stroke="#ddd"/>
+  <text x="670" y="442" text-anchor="middle" class="component" font-weight="bold">Pin Assignments</text>
+
+  <line x1="585" y1="460" x2="615" y2="460" stroke="#2196F3" stroke-width="2"/>
+  <text x="625" y="464" class="label">I2C SDA (GPIO 8)</text>
+
+  <line x1="585" y1="478" x2="615" y2="478" stroke="#2196F3" stroke-width="2"/>
+  <text x="625" y="482" class="label">I2C SCL (GPIO 9)</text>
+
+  <line x1="585" y1="496" x2="615" y2="496" stroke="#FF9800" stroke-width="2"/>
+  <text x="625" y="500" class="label">IR RX (GPIO 17)</text>
+
+  <line x1="585" y1="514" x2="615" y2="514" stroke="#FF9800" stroke-width="2"/>
+  <text x="625" y="518" class="label">IR TX (GPIO 18)</text>
+
+  <line x1="585" y1="532" x2="615" y2="532" stroke="#9C27B0" stroke-width="2"/>
+  <text x="625" y="536" class="label">Furnace (GPIO 38)</text>
+
+  <line x1="585" y1="550" x2="615" y2="550" stroke="#9C27B0" stroke-width="2"/>
+  <text x="625" y="554" class="label">Rooftop (GPIO 39)</text>
+
+  <line x1="585" y1="572" x2="615" y2="572" stroke="#4CAF50" stroke-width="2"/>
+  <text x="625" y="576" class="label">3.3V Power</text>
+</svg>

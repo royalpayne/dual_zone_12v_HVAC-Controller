@@ -80,6 +80,14 @@ OLED_ADDR = 0x3C
 DISPLAY_WIDTH = 128
 DISPLAY_HEIGHT = 64
 
+# NTP Time Sync
+NTP_HOST = "pool.ntp.org"
+TIMEZONE_OFFSET = -6  # US Central Standard Time (UTC-6)
+
+# Data logging (history buffer)
+HISTORY_INTERVAL = 60  # seconds between history snapshots
+HISTORY_MAX = 1440     # max entries (24 hours at 60s intervals)
+
 # USB Battery Pack Keep-Alive (prevents auto-shutoff)
 # Note: Most USB packs need 50-100mA to stay awake - use LiPo + TP4056 instead
 KEEPALIVE_ENABLED = False

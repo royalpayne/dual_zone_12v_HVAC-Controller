@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 480">
+  <style>
+    .title { font: bold 16px sans-serif; }
+    .subtitle { font: 12px sans-serif; fill: #666; }
+    .label { font: 12px sans-serif; }
+    .pin { font: bold 10px monospace; }
+    .component { font: 11px sans-serif; }
+    .wire-i2c { stroke: #2196F3; stroke-width: 2; fill: none; }
+    .wire-power { stroke: #f44336; stroke-width: 2; fill: none; }
+    .wire-gnd { stroke: #333; stroke-width: 2; fill: none; }
+    .note { font: italic 10px sans-serif; fill: #888; }
+  </style>
+
+  <!-- Title -->
+  <text x="325" y="25" text-anchor="middle" class="title">ESP32-S3 Main Controller Wiring</text>
+  <text x="325" y="42" text-anchor="middle" class="subtitle">IP: 192.168.71.152 | Serial: 5B41038621 | /dev/esp32_main</text>
+
+  <!-- ==================== POWER SUPPLY ==================== -->
+  <rect x="410" y="60" width="220" height="80" rx="5" fill="#fff3e0" stroke="#FF9800" stroke-width="2"/>
+  <text x="520" y="82" text-anchor="middle" class="component" font-weight="bold">Power Supply</text>
+  <text x="520" y="98" text-anchor="middle" class="label">12V DC → Buck Converter → 5V</text>
+  <text x="520" y="114" text-anchor="middle" class="label">5V → ESP32 VIN pin</text>
+  <text x="520" y="130" text-anchor="middle" class="note">Onboard regulator: 5V → 3.3V</text>
+
+  <!-- ==================== ESP32-S3 BOARD ==================== -->
+  <rect x="230" y="160" width="160" height="240" rx="5" fill="#1a1a2e" stroke="#333" stroke-width="2"/>
+  <text x="310" y="185" text-anchor="middle" fill="white" class="component">ESP32-S3</text>
+  <text x="310" y="200" text-anchor="middle" fill="#aaa" font-size="9">Main Controller</text>
+
+  <!-- USB Port -->
+  <rect x="280" y="155" width="60" height="15" rx="2" fill="#555"/>
+  <text x="310" y="165" text-anchor="middle" fill="white" font-size="8">USB-C</text>
+
+  <!-- Left side pins -->
+  <text x="240" y="225" fill="#4CAF50" class="pin">3V3</text>
+  <text x="240" y="250" fill="#f44336" class="pin">GND</text>
+  <text x="240" y="280" fill="#2196F3" class="pin">GPIO 8</text>
+  <text x="240" y="305" fill="#2196F3" class="pin">GPIO 9</text>
+
+  <!-- Right side pins -->
+  <text x="340" y="225" fill="#f44336" class="pin">5V/VIN</text>
+
+  <!-- Pin dots on left -->
+  <circle cx="228" cy="221" r="4" fill="#4CAF50"/>
+  <circle cx="228" cy="246" r="4" fill="#333"/>
+  <circle cx="228" cy="276" r="4" fill="#2196F3"/>
+  <circle cx="228" cy="301" r="4" fill="#2196F3"/>
+
+  <!-- Pin dot on right -->
+  <circle cx="392" cy="221" r="4" fill="#f44336"/>
+
+  <!-- ==================== BME280 SENSOR ==================== -->
+  <rect x="30" y="200" width="110" height="80" rx="5" fill="#4a4a6a" stroke="#666" stroke-width="2"/>
+  <text x="85" y="225" text-anchor="middle" fill="white" class="component">BME280</text>
+  <text x="85" y="242" text-anchor="middle" fill="#aaa" font-size="10">Temp / Humidity</text>
+  <text x="85" y="257" text-anchor="middle" fill="#aaa" font-size="10">Pressure</text>
+  <text x="85" y="272" text-anchor="middle" fill="#ccc" font-size="9">Addr: 0x76</text>
+
+  <!-- BME280 pins -->
+  <circle cx="140" cy="211" r="3" fill="#4CAF50"/>
+  <circle cx="140" cy="231" r="3" fill="#333"/>
+  <circle cx="140" cy="251" r="3" fill="#2196F3"/>
+  <circle cx="140" cy="271" r="3" fill="#2196F3"/>
+  <text x="148" y="215" class="pin" fill="#4CAF50">VCC</text>
+  <text x="148" y="235" class="pin" fill="#333">GND</text>
+  <text x="148" y="255" class="pin" fill="#2196F3">SDA</text>
+  <text x="148" y="275" class="pin" fill="#2196F3">SCL</text>
+
+  <!-- ==================== OLED DISPLAY ==================== -->
+  <rect x="30" y="310" width="110" height="90" rx="5" fill="#1a1a4a" stroke="#666" stroke-width="2"/>
+  <rect x="40" y="318" width="90" height="45" rx="2" fill="#000" stroke="#444"/>
+  <text x="85" y="345" text-anchor="middle" fill="#00ff00" font-size="10">128x64</text>
+  <text x="85" y="378" text-anchor="middle" fill="white" class="component">SSD1306 OLED</text>
+  <text x="85" y="393" text-anchor="middle" fill="#ccc" font-size="9">Addr: 0x3C</text>
+
+  <!-- OLED pins -->
+  <circle cx="140" cy="321" r="3" fill="#4CAF50"/>
+  <circle cx="140" cy="341" r="3" fill="#333"/>
+  <circle cx="140" cy="361" r="3" fill="#2196F3"/>
+  <circle cx="140" cy="381" r="3" fill="#2196F3"/>
+  <text x="148" y="325" class="pin" fill="#4CAF50">VCC</text>
+  <text x="148" y="345" class="pin" fill="#333">GND</text>
+  <text x="148" y="365" class="pin" fill="#2196F3">SDA</text>
+  <text x="148" y="385" class="pin" fill="#2196F3">SCL</text>
+
+  <!-- ==================== WIRING ==================== -->
+  <!-- 3V3 to BME280 VCC -->
+  <path d="M228 221 L190 221 Q180 221 180 211 L180 211 L140 211" class="wire-power" stroke="#4CAF50"/>
+  <!-- 3V3 to OLED VCC -->
+  <path d="M180 221 L180 321 L140 321" class="wire-power" stroke="#4CAF50"/>
+
+  <!-- GND to BME280 -->
+  <path d="M228 246 L170 246 Q160 246 160 236 L160 231 L140 231" class="wire-gnd"/>
+  <!-- GND to OLED -->
+  <path d="M160 246 L160 341 L140 341" class="wire-gnd"/>
+
+  <!-- GPIO 8 (SDA) to BME280 -->
+  <path d="M228 276 L200 276 Q190 276 190 266 L190 251 L140 251" class="wire-i2c"/>
+  <!-- GPIO 8 (SDA) to OLED -->
+  <path d="M190 276 L190 361 L140 361" class="wire-i2c"/>
+
+  <!-- GPIO 9 (SCL) to BME280 -->
+  <path d="M228 301 L210 301 Q200 301 200 291 L200 271 L140 271" class="wire-i2c"/>
+  <!-- GPIO 9 (SCL) to OLED -->
+  <path d="M200 301 L200 381 L140 381" class="wire-i2c"/>
+
+  <!-- 5V from buck converter -->
+  <path d="M410 120 L400 120 Q392 120 392 140 L392 221" class="wire-power"/>
+
+  <!-- ==================== LEGEND ==================== -->
+  <rect x="410" y="160" width="220" height="130" rx="5" fill="#f5f5f5" stroke="#ddd"/>
+  <text x="520" y="182" text-anchor="middle" class="component" font-weight="bold">Pin Assignments</text>
+
+  <line x1="425" y1="200" x2="455" y2="200" stroke="#2196F3" stroke-width="2"/>
+  <text x="465" y="204" class="label">I2C SDA (GPIO 8)</text>
+
+  <line x1="425" y1="220" x2="455" y2="220" stroke="#2196F3" stroke-width="2"/>
+  <text x="465" y="224" class="label">I2C SCL (GPIO 9)</text>
+
+  <line x1="425" y1="240" x2="455" y2="240" stroke="#4CAF50" stroke-width="2"/>
+  <text x="465" y="244" class="label">3.3V Power</text>
+
+  <line x1="425" y1="260" x2="455" y2="260" stroke="#f44336" stroke-width="2"/>
+  <text x="465" y="264" class="label">5V (Buck Converter)</text>
+
+  <line x1="425" y1="280" x2="455" y2="280" stroke="#333" stroke-width="2"/>
+  <text x="465" y="284" class="label">Ground</text>
+
+  <!-- I2C Addresses -->
+  <rect x="410" y="310" width="220" height="70" rx="5" fill="#e3f2fd" stroke="#2196F3"/>
+  <text x="520" y="332" text-anchor="middle" class="component" font-weight="bold">I2C Addresses</text>
+  <text x="430" y="352" class="label">BME280: 0x76</text>
+  <text x="430" y="372" class="label">SSD1306: 0x3C</text>
+
+  <!-- Notes -->
+  <text x="325" y="430" text-anchor="middle" class="label" fill="#666">Both I2C devices share the same SDA/SCL bus</text>
+  <text x="325" y="448" text-anchor="middle" class="label" fill="#666">Power: 12V DC → Buck Converter (5V) → ESP32 VIN</text>
+  <text x="325" y="466" text-anchor="middle" class="note">udev symlink: /dev/esp32_main (serial 5B41038621)</text>
+</svg>
