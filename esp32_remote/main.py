@@ -133,6 +133,25 @@ def main():
     heater = HeaterController(bl)
     print(f"Heater IR codes: {heater.get_codes()}")
 
+    # Initialize DS18B20 evaporator freeze sensor (GPIO 42)
+    ds_sensor = None
+    ds_rom = None
+    try:
+        import onewire
+        import ds18x20
+        ds_pin = Pin(config.FREEZE_SENSOR_PIN)
+        ds_bus = onewire.OneWire(ds_pin)
+        ds_sensor = ds18x20.DS18X20(ds_bus)
+        roms = ds_sensor.scan()
+        if roms:
+            ds_rom = roms[0]
+            print(f"DS18B20 freeze sensor found: {ds_rom.hex()}")
+        else:
+            print("DS18B20 not found on bus — freeze protection software-only disabled")
+            ds_sensor = None
+    except Exception as e:
+        print(f"DS18B20 init failed: {e} — freeze protection software-only disabled")
+
     # Initialize thermostat controller
     thermostat = ThermostatController()
     thermostat.set_ir_transmitter(whynter)
@@ -149,11 +168,13 @@ def main():
     last_status_print = 0
     last_bl_keepalive = time.time()
     last_bl_sensor_read = 0
+    last_freeze_read = 0
 
     print("ESP32 Remote running... Press Ctrl+C to stop")
     print(f"Furnace relay: GPIO {config.RELAY_FURNACE_PIN}")
     print(f"Compressor relay: GPIO {config.RELAY_COMPRESSOR_PIN}")
     print(f"Fan relays: Low={config.RELAY_FAN_LOW_PIN}, High={config.RELAY_FAN_HIGH_PIN}")
+    print(f"Freeze sensor: GPIO {config.FREEZE_SENSOR_PIN} ({'found' if ds_sensor else 'not found'})")
 
     while True:
         try:
@@ -181,6 +202,18 @@ def main():
                         thermostat.heating_active,
                         thermostat.cooling_active
                     )
+
+            # Read DS18B20 evaporator freeze sensor
+            if ds_sensor and ds_rom and (now - last_freeze_read >= config.FREEZE_CHECK_INTERVAL):
+                try:
+                    ds_sensor.convert_temp()
+                    time.sleep_ms(750)  # DS18B20 conversion time
+                    temp_c = ds_sensor.read_temp(ds_rom)
+                    temp_f = temp_c * 9.0 / 5.0 + 32.0
+                    thermostat.update_evap_temp(temp_f)
+                except Exception as e:
+                    print(f"DS18B20 read error: {e}")
+                last_freeze_read = now
 
             # Read Broadlink HTS2 sensor (every 30 seconds)
             if now - last_bl_sensor_read >= 30:

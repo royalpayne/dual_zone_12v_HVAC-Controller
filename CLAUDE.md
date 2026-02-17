@@ -26,9 +26,8 @@
   - Relay Compressor: GPIO 39 (active HIGH, 5V module)
   - Relay Fan Low: GPIO 40 (active HIGH, 5V module)
   - Relay Fan High: GPIO 41 (active HIGH, 5V module)
-  - GPIO 42 unused
-  - IR TX: GPIO 18 (via 2N2222 transistor driver)
-  - IR RX: GPIO 17 (VS1838B)
+  - DS18B20 Freeze Sensor: GPIO 42 (1-Wire, 4.7K pull-up to 3.3V)
+  - GPIO 17, 18 unused (IR replaced by Broadlink RM4 Mini)
   - Has BME280 sensor and OLED display
 - **Broadlink RM4 Mini**: IP 192.168.71.155, MAC e8:70:72:ab:f9:25
   - Device type: 0x520c (rm4mini)
@@ -65,23 +64,31 @@
 - Furnace is a standalone unit with its own blower (relay is just contact closure)
 - Fan relays are for Dometic Brisk II rooftop AC only
 
-## Dometic Brisk II / Control Box
-- **Control Box**: P/N 3313199.000 (Etratech), analog relay board with K3/K4/K5 relays
-- **Thermostat**: Dometic CT (Comfort Touch) digital, communicates via data cable to control box
-- **6-pin connector** from control box to AC unit (output side):
-  - Pin 1: Blue = Compressor
-  - Pin 2: Black = Fan High
-  - Pin 3: Yellow = Unused (reversing valve, no heat pump)
-  - Pin 4: Red = Fan Low
-  - Pin 5: White = Common (24V return)
-  - Pin 6: Green/Yellow = Chassis ground
-- **Furnace**: Separate screw terminals on control box (not through 6-pin connector)
-- **Freeze sensor**: Connected to control box, provides evaporator freeze protection
-- **Parallel wiring**: ESP32 relay NO contacts T-splice at 6-pin connector output
-  - Only 4 wires need splicing: White (common), Blue (comp), Black (fan hi), Red (fan lo)
-  - Yellow and ground untouched
-  - Control box freeze protection remains active for both Dometic and ESP32-initiated cooling
-  - See docs/parallel_thermostat_wiring.svg for diagram
+## Dometic Brisk II — Direct 120VAC Wiring (No Control Box)
+- **Old Dometic Etratech 3313199.000 control box is REMOVED from circuit**
+  - Board had MCU running "RelayControl V4.hex" — not a simple relay board
+  - Decoded proprietary digital protocol from Dometic CT thermostat via 4-wire data cable
+  - 4-wire connector: +12V from supply, +12V to stat, -12V ground, orange (digital data)
+  - Board relays (HF3FF 012-1ZS1): K1 (freeze safety), K2/K3/K4 (switching), K5 (empty, reversing valve)
+- **ESP32 HL-52S relays + SSR-25DA switch 120VAC** to Brisk II via 6-pin cable
+  - Compressor: GPIO 39 → HL-52S Relay 2 (switches 12VDC) → SSR-25DA DC+ → SSR AC out → bimetal cutout → Pin 1 Blue
+  - SSR-25DA (Twtade): 25A/380VAC solid state relay, 3-32VDC input, needs heatsink (~15W @ 12A)
+  - SSR AC1 = 120VAC LINE (hot), SSR AC2 = compressor load output
+  - HL-52S Relay 2 COM = 12VDC (NOT on 120VAC bus), only triggers SSR at milliamp current
+  - Relay 3-4 COM bus = 120VAC LINE (fans only, ~2-3A each — within HL-52S 10A rating)
+  - GPIO 40 NO → Pin 4 Red (fan low)
+  - GPIO 41 NO → Pin 2 Black (fan high)
+  - GPIO 38 = furnace dry contact (separate unit, NOT on 120VAC bus)
+  - Pin 5 White (neutral) = pass-through, no relay
+  - Pin 6 Green/Yellow (ground) = pass-through, no relay
+  - Pin 3 Yellow (reversing valve) = not connected
+- **6-pin cable carries 120VAC** (NOT 24VAC as originally assumed)
+- **14 AWG minimum** for all 120VAC wiring, in proper junction box
+- **Freeze protection (dual layer)**:
+  - Software: DS18B20 waterproof probe on evaporator coil (GPIO 42, 4.7K pull-up)
+    - Cut compressor at 32°F, allow restart at 45°F
+  - Hardware: Supco SFPC freeze stat (clamp-on, NC, opens 35°F, closes 50°F) on suction line, in series after SSR AC2 output
+- See docs/esp32_remote_relay_splice.svg for wiring diagram
 
 ## Broadlink RM4 Mini Sleep Workaround
 - Broadlink goes to power-save mode after inactivity, ignoring IR commands

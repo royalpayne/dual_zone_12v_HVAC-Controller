@@ -1,7 +1,8 @@
 # ESP32 Remote - Thermostat Controller
 # Handles heating/cooling with fan speed control for Dometic Brisk II rooftop AC
-# Furnace: relay contact closure (blue wire)
-# Rooftop AC: individual relays for compressor + fan low/med/high
+# Furnace: relay contact closure (dry contact)
+# Rooftop AC: HL-52S relays switch 120VAC directly to compressor + fan (no Dometic control box)
+# Freeze protection: DS18B20 on evaporator coil + bimetal thermal cutout (hardware backup)
 
 from machine import Pin
 import time
@@ -44,6 +45,10 @@ class ThermostatController:
         self.cooling_start_time = 0   # When rooftop AC started cooling
         self.cooling_start_temp = None  # Temp when rooftop AC started
 
+        # Evaporator freeze protection (DS18B20 sensor)
+        self.evap_temp = None          # Evaporator coil temperature (°F)
+        self.freeze_lockout = False    # True = compressor locked out due to freeze
+
         # Initialize relay pins — all active HIGH (value=0 = OFF, value=1 = ON)
         self.relay_furnace = Pin(config.RELAY_FURNACE_PIN, Pin.OUT, value=0)
         self.relay_compressor = Pin(config.RELAY_COMPRESSOR_PIN, Pin.OUT, value=0)
@@ -67,6 +72,24 @@ class ThermostatController:
         self.current_temp = temp_f
         self.current_humidity = humidity
         self.current_pressure = pressure
+
+    def update_evap_temp(self, temp_f):
+        """Update evaporator coil temperature from DS18B20 freeze sensor."""
+        self.evap_temp = temp_f
+        if temp_f is None:
+            return
+        # Freeze detected: immediately cut compressor
+        if temp_f <= config.FREEZE_THRESHOLD:
+            if not self.freeze_lockout:
+                self.freeze_lockout = True
+                print(f"FREEZE LOCKOUT: evap {temp_f:.1f}F <= {config.FREEZE_THRESHOLD}F")
+                if self.cooling_active:
+                    self._cool_off()
+        # Recovery: clear lockout when evaporator warms up
+        elif temp_f >= config.FREEZE_RECOVERY:
+            if self.freeze_lockout:
+                self.freeze_lockout = False
+                print(f"Freeze lockout cleared: evap {temp_f:.1f}F >= {config.FREEZE_RECOVERY}F")
 
     def update_bl_readings(self, temp_c, humidity):
         """Update Broadlink HTS2 sensor readings"""
@@ -196,7 +219,9 @@ class ThermostatController:
         return (time.time() - self.last_cool_change) >= config.MIN_CYCLE_TIME
 
     def _can_start_compressor(self):
-        """Check compressor short-cycle protection"""
+        """Check compressor short-cycle protection and freeze lockout"""
+        if self.freeze_lockout:
+            return False
         return (time.time() - self.last_compressor_off) >= config.COMPRESSOR_MIN_OFF_TIME
 
     def _can_change_whynter(self):
@@ -541,6 +566,8 @@ class ThermostatController:
             'whynter_mode_name': self.WHYNTER_MODE_NAMES.get(self.whynter_mode, '?'),
             'heater_mode': self.heater_mode,
             'heater_mode_name': heater_names.get(self.heater_mode, '?'),
+            'evap_temp': self.evap_temp,
+            'freeze_lockout': self.freeze_lockout,
             'bl_temp': self.bl_temp,
             'bl_humidity': self.bl_humidity,
             'dry_run': config.DRY_RUN,

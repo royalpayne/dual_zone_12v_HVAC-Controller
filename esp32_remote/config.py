@@ -67,11 +67,19 @@ I2C_FREQ = 400000
 
 # Relay pins (GPIO 38-42: no strapping conflicts on ESP32-S3-N16R8)
 RELAY_FURNACE_PIN = 38
-RELAY_COMPRESSOR_PIN = 39       # Rooftop AC compressor (was RELAY_ROOFTOP_AC_PIN)
-RELAY_FAN_LOW_PIN = 40          # Rooftop AC fan low speed
-RELAY_FAN_HIGH_PIN = 41         # Rooftop AC fan high speed
+RELAY_COMPRESSOR_PIN = 39       # Rooftop AC compressor — 120VAC via HL-52S relay
+RELAY_FAN_LOW_PIN = 40          # Rooftop AC fan low speed — 120VAC via HL-52S relay
+RELAY_FAN_HIGH_PIN = 41         # Rooftop AC fan high speed — 120VAC via HL-52S relay
 
 # Relay polarity: All relays are active HIGH (value=1 = ON, value=0 = OFF)
+# Relays 2-4 (GPIO 39-41) switch 120VAC directly to Brisk II (no Dometic control box)
+# Relay 1 (GPIO 38) is dry contact closure for furnace (separate circuit)
+
+# DS18B20 evaporator freeze sensor (1-Wire on GPIO 42)
+FREEZE_SENSOR_PIN = 42          # DS18B20 data pin (needs 4.7K pull-up to 3.3V)
+FREEZE_THRESHOLD = 32.0         # °F — cut compressor if evaporator drops below this
+FREEZE_RECOVERY = 45.0          # °F — allow compressor restart above this temp
+FREEZE_CHECK_INTERVAL = 5       # seconds between freeze sensor reads
 
 # Broadlink RM4 Mini (WiFi IR blaster - replaces direct IR hardware)
 BROADLINK_IP = None       # Set after discovery, or static IP in config_local.py
