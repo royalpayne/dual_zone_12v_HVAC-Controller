@@ -174,18 +174,18 @@ def _put_file(ws, local_path, remote_name):
         raise OSError(f"PUT failed: code {code}")
 
 
-def _soft_reset(ip):
-    """Connect via WebREPL, interrupt main.py with Ctrl-C, then soft reset."""
+def _deepsleep_reset(ip):
+    """Connect via WebREPL, interrupt main.py, then deepsleep (full hardware reset)."""
     try:
         s, ws = _connect(ip)
         # Ctrl-C interrupts running main.py (sends KeyboardInterrupt)
         ws.write(b"\r\x03\x03", frame=FRAME_TXT)
         time.sleep(0.5)
-        # Soft reset: resets Python interpreter only, WiFi stays connected
-        ws.write(b"import machine; machine.soft_reset()\r\n", frame=FRAME_TXT)
-        time.sleep(1.0)
+        # Deepsleep: full hardware reset including WiFi (wakes after 500ms)
+        ws.write(b"import machine; machine.deepsleep(500)\r\n", frame=FRAME_TXT)
+        time.sleep(0.5)
         s.close()
-        print("  Soft reset sent (WiFi stays connected).")
+        print("  Deepsleep reset sent (full hardware reset, wakes in 0.5s).")
     except Exception as e:
         print(f"  Reset failed ({e}) — may need power cycle.")
 
@@ -227,7 +227,8 @@ def deploy(target, specific_files=None):
     print(f"\n  {ok} uploaded, {fail} failed")
     if fail == 0 and ok > 0:
         print(f"  ✓ Upload complete.")
-        print(f"  ⚠ Power cycle {target} to load new code (automatic reset not reliable).")
+        print(f"  ⚠ Power cycle {target} to load new code.")
+        print(f"     (Automatic reset via WebREPL not reliable - all methods tested fail)")
     elif fail > 0:
         print(f"  ✗ Retry failed files or check WiFi/WebREPL.")
 

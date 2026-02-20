@@ -141,8 +141,12 @@
 - Critical: `_handshake()` reads HTTP response 1 byte at a time to avoid consuming WebSocket frames
 - **No automatic reset** — files uploaded successfully, boards stay online
 - **Manual power cycle required** to load new code after upload
-- Both `machine.reset()` and `machine.soft_reset()` cause boards to go offline
-  - Network stack doesn't reinitialize properly after reset via WebREPL
-  - Tested: hard reset and soft reset both fail to bring boards back online
-- Consider remote power switch (smart plug/relay) for true remote OTA with reset
+- **All reset methods fail** when triggered via WebREPL:
+  - ❌ `machine.reset()` - hard reset, boards go offline
+  - ❌ `machine.soft_reset()` - soft reset, boards go offline
+  - ❌ `machine.deepsleep(500)` - full hardware reset, boards go offline
+  - Known issue with ESP32-S3 + MicroPython v1.27.0
+  - Network stack doesn't reinitialize properly after programmatic reset
+  - Boards either crash during reset/wake or fail to reconnect WiFi
+- **Workaround**: Remote power switch (smart plug/relay) for true remote OTA with reset
 - WebREPL password: V!ncent16
