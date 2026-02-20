@@ -1,320 +1,515 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 850">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1020">
+  <defs>
+    <!-- Arrowhead marker -->
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#666"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#ff6f00"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#42a5f5"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#ef5350"/>
+    </marker>
+    <marker id="arrow-white" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#ccc"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#66bb6a"/>
+    </marker>
+    <marker id="arrow-brown" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#8d6e63"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#ab47bc"/>
+    </marker>
+    <marker id="arrow-12v" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#00e676"/>
+    </marker>
+  </defs>
+
   <style>
-    .title { font: bold 18px sans-serif; fill: #eee; }
-    .subtitle { font: 13px sans-serif; fill: #888; }
-    .label { font: 12px sans-serif; fill: #ccc; }
-    .pin { font: bold 11px monospace; }
-    .component { font: bold 13px sans-serif; }
-    .note { font: italic 11px sans-serif; fill: #888; }
-    .small { font: 10px sans-serif; fill: #999; }
-    .tbl-header { font: bold 11px sans-serif; fill: #eee; }
-    .tbl-cell { font: 11px monospace; fill: #ccc; }
-    .wire-line { stroke: #ff6f00; stroke-width: 2.5; fill: none; }
-    .wire-neutral { stroke: #fff; stroke-width: 2.5; fill: none; }
-    .wire-comp { stroke: #42a5f5; stroke-width: 2.5; fill: none; }
-    .wire-fanhi { stroke: #333; stroke-width: 2.5; fill: none; }
-    .wire-fanlo { stroke: #ef5350; stroke-width: 2.5; fill: none; }
-    .wire-furnace { stroke: #8d6e63; stroke-width: 2.5; fill: none; }
-    .wire-ground { stroke: #66bb6a; stroke-width: 2; fill: none; stroke-dasharray: 6,3; }
-    .wire-12v { stroke: #00e676; stroke-width: 2; fill: none; }
-    .wire-12vgnd { stroke: #333; stroke-width: 2; fill: none; stroke-dasharray: 4,3; }
-    .wire-sensor { stroke: #ab47bc; stroke-width: 2; fill: none; }
-    .wire-thermal { stroke: #ff7043; stroke-width: 2; fill: none; stroke-dasharray: 8,3; }
-    .term { font: bold 10px monospace; }
+    .title { font: bold 20px 'Segoe UI', sans-serif; fill: #eee; }
+    .subtitle { font: 13px 'Segoe UI', sans-serif; fill: #777; }
+    .label { font: 12px 'Segoe UI', sans-serif; fill: #ccc; }
+    .pin { font: bold 11px 'Courier New', monospace; }
+    .component { font: bold 14px 'Segoe UI', sans-serif; }
+    .comp-sub { font: 11px 'Segoe UI', sans-serif; fill: #999; }
+    .note { font: italic 11px 'Segoe UI', sans-serif; fill: #888; }
+    .small { font: 10px 'Segoe UI', sans-serif; fill: #999; }
+    .wire-label { font: bold 9px 'Courier New', monospace; }
+    .tbl-header { font: bold 11px 'Segoe UI', sans-serif; fill: #eee; }
+    .tbl-cell { font: 11px 'Courier New', monospace; fill: #ccc; }
+    .row-label { font: bold 10px 'Segoe UI', sans-serif; fill: #555; letter-spacing: 1px; }
   </style>
 
   <!-- Background -->
-  <rect width="1080" height="850" fill="#1a1a2e" rx="8"/>
+  <rect width="1280" height="1020" fill="#141422" rx="6"/>
+
+  <!-- Subtle column guides -->
+  <line x1="260" y1="60" x2="260" y2="575" stroke="#1a1a30" stroke-width="1"/>
+  <line x1="540" y1="60" x2="540" y2="575" stroke="#1a1a30" stroke-width="1"/>
+  <line x1="870" y1="60" x2="870" y2="575" stroke="#1a1a30" stroke-width="1"/>
+
+  <!-- Column headers -->
+  <text x="140" y="75" text-anchor="middle" class="row-label" fill="#444">POWER</text>
+  <text x="400" y="75" text-anchor="middle" class="row-label" fill="#444">ESP32 + RELAYS</text>
+  <text x="700" y="75" text-anchor="middle" class="row-label" fill="#444">SWITCHING</text>
+  <text x="1060" y="75" text-anchor="middle" class="row-label" fill="#444">LOADS</text>
 
   <!-- Title -->
-  <text x="540" y="30" text-anchor="middle" class="title">ESP32 Remote — Direct 120VAC Wiring to Dometic Brisk II</text>
-  <text x="540" y="48" text-anchor="middle" class="subtitle">SSR-25DA for compressor | HL-52S for fans + furnace | DS18B20 freeze sensor + bimetal cutout</text>
+  <text x="640" y="28" text-anchor="middle" class="title">ESP32 Remote — Direct 120VAC Wiring to Dometic Brisk II</text>
+  <text x="640" y="46" text-anchor="middle" class="subtitle">SSR-25DA for compressor  |  HL-52S for fans + furnace  |  Supco SFPC freeze stat  |  DS18B20 freeze sensor</text>
 
-  <!-- ==================== POWER SOURCES (Top) ==================== -->
-  <!-- 120VAC Shore Power -->
-  <rect x="30" y="70" width="170" height="70" rx="8" fill="#2a1a00" stroke="#ff6f00" stroke-width="2"/>
-  <text x="115" y="95" text-anchor="middle" class="component" fill="#ff6f00">Shore Power</text>
-  <text x="115" y="112" text-anchor="middle" class="small">120VAC / 15A breaker</text>
-  <text x="115" y="128" text-anchor="middle" class="small">14 AWG minimum</text>
-  <circle cx="200" cy="90" r="5" fill="#ff6f00"/>
-  <text x="210" y="85" class="pin" fill="#ff6f00">LINE</text>
-  <circle cx="200" cy="120" r="5" fill="#fff"/>
-  <text x="210" y="115" class="pin" fill="#fff">NEU</text>
+  <!-- Horizontal row separators -->
+  <line x1="20" y1="82" x2="1260" y2="82" stroke="#222240" stroke-width="1"/>
+  <line x1="20" y1="185" x2="1260" y2="185" stroke="#1a1a30" stroke-width="0.5" stroke-dasharray="4,8"/>
+  <line x1="20" y1="265" x2="1260" y2="265" stroke="#1a1a30" stroke-width="0.5" stroke-dasharray="4,8"/>
+  <line x1="20" y1="335" x2="1260" y2="335" stroke="#1a1a30" stroke-width="0.5" stroke-dasharray="4,8"/>
+  <line x1="20" y1="395" x2="1260" y2="395" stroke="#1a1a30" stroke-width="0.5" stroke-dasharray="4,8"/>
+  <line x1="20" y1="445" x2="1260" y2="445" stroke="#1a1a30" stroke-width="0.5" stroke-dasharray="4,8"/>
+  <line x1="20" y1="510" x2="1260" y2="510" stroke="#1a1a30" stroke-width="0.5" stroke-dasharray="4,8"/>
+  <line x1="20" y1="575" x2="1260" y2="575" stroke="#222240" stroke-width="1"/>
 
-  <!-- 12VDC RV Battery -->
-  <rect x="30" y="530" width="170" height="55" rx="8" fill="#1a0a0a" stroke="#00e676" stroke-width="2"/>
-  <text x="115" y="553" text-anchor="middle" class="component" fill="#00e676">RV 12VDC</text>
-  <text x="115" y="572" text-anchor="middle" class="small">House battery / converter</text>
-  <circle cx="200" cy="545" r="5" fill="#00e676"/>
-  <text x="210" y="541" class="pin" fill="#00e676">+12V</text>
-  <circle cx="200" cy="570" r="5" fill="#666"/>
-  <text x="210" y="566" class="pin" fill="#888">GND</text>
+  <!-- Row labels (left margin) -->
+  <text x="12" y="140" class="row-label" transform="rotate(-90,12,140)">COMPRESSOR</text>
+  <text x="12" y="228" class="row-label" transform="rotate(-90,12,228)">FAN LOW</text>
+  <text x="12" y="300" class="row-label" transform="rotate(-90,12,300)">FAN HIGH</text>
+  <text x="12" y="368" class="row-label" transform="rotate(-90,12,368)">NEUTRAL</text>
+  <text x="12" y="425" class="row-label" transform="rotate(-90,12,425)">GROUND</text>
+  <text x="12" y="478" class="row-label" transform="rotate(-90,12,478)">12VDC TRIGGER</text>
+  <text x="12" y="546" class="row-label" transform="rotate(-90,12,546)">FURNACE</text>
 
-  <!-- ==================== ESP32 + RELAY MODULE (Left) ==================== -->
-  <rect x="30" y="160" width="280" height="350" rx="8" fill="#16213e" stroke="#4cc9f0" stroke-width="2"/>
-  <text x="170" y="183" text-anchor="middle" class="component" fill="#4cc9f0">ESP32-S3 Remote</text>
-  <text x="170" y="199" text-anchor="middle" class="small">192.168.71.153</text>
+  <!-- ================================================================ -->
+  <!-- ROW 1: COMPRESSOR (y=85-182)                                     -->
+  <!-- Shore Power -> Relay 2 (12VDC trigger) -> SSR -> Freeze Stat -> Blue -->
+  <!-- But 120VAC goes to SSR directly, not through relay.              -->
+  <!-- So this row shows: LINE -> SSR AC1 -> SSR AC2 -> SFPC -> Pin 1  -->
+  <!-- ================================================================ -->
 
-  <!-- Relay module sub-box -->
-  <rect x="45" y="210" width="250" height="285" rx="4" fill="#0f1a30" stroke="#2196f3" stroke-width="1"/>
-  <text x="170" y="228" text-anchor="middle" class="label" fill="#64b5f6">HL-52S 4-Channel Relay Module</text>
-  <text x="170" y="242" text-anchor="middle" class="small">Active HIGH | 5V VCC | 10A @ 250VAC contacts</text>
+  <!-- Shore Power box -->
+  <rect x="35" y="92" width="200" height="82" rx="6" fill="#1f1500" stroke="#ff6f00" stroke-width="1.5"/>
+  <text x="135" y="114" text-anchor="middle" class="component" fill="#ff6f00">Shore Power</text>
+  <text x="135" y="130" text-anchor="middle" class="comp-sub">120VAC / 15A breaker</text>
+  <text x="135" y="145" text-anchor="middle" class="comp-sub">14 AWG minimum</text>
+  <!-- LINE output terminal -->
+  <circle cx="235" cy="110" r="5" fill="#ff6f00"/>
+  <text x="225" y="166" text-anchor="middle" class="wire-label" fill="#ff6f00">LINE</text>
+  <!-- NEU output terminal (for row 4) -->
+  <circle cx="235" cy="160" r="5" fill="#fff"/>
+  <text x="199" y="166" text-anchor="end" class="wire-label" fill="#ddd">NEU</text>
 
-  <!-- 120VAC COM bus label (Fans only) -->
-  <text x="80" y="260" class="small" fill="#ff6f00">120VAC LINE bus (Relays 3-4 only)</text>
+  <!-- LINE wire: Shore -> branch point -->
+  <line x1="240" y1="110" x2="280" y2="110" stroke="#ff6f00" stroke-width="2.5"/>
+  <!-- Branch dot -->
+  <circle cx="280" cy="110" r="4" fill="#ff6f00"/>
+  <!-- LINE continues down to fan rows (drawn later) -->
 
-  <!-- Vertical 120VAC bus line (fans only — stops before relay 2) -->
-  <line x1="70" y1="268" x2="70" y2="420" stroke="#ff6f00" stroke-width="2"/>
+  <!-- LINE branch right to SSR AC1 -->
+  <line x1="280" y1="110" x2="575" y2="110" stroke="#ff6f00" stroke-width="2.5"/>
+  <!-- Inline label -->
+  <rect x="390" y="99" width="62" height="14" rx="3" fill="#141422"/>
+  <text x="421" y="110" text-anchor="middle" class="wire-label" fill="#ff6f00">120VAC</text>
 
-  <!-- Relay 2: Compressor SSR trigger (12VDC, NOT on 120VAC bus) -->
-  <rect x="55" y="270" width="230" height="42" rx="3" fill="#1a1a2a" stroke="#42a5f5" stroke-width="1.2"/>
-  <text x="85" y="284" class="pin" fill="#42a5f5">GPIO 39</text>
-  <text x="148" y="284" class="label" fill="#90caf9">Relay 2: SSR TRIGGER</text>
-  <text x="170" y="304" text-anchor="middle" class="small" fill="#00e676">12VDC (not on 120V bus)</text>
-  <circle cx="278" cy="285" r="4" fill="#00e676"/>
-  <text x="268" y="265" text-anchor="middle" class="small">NO</text>
+  <!-- SSR-25DA -->
+  <rect x="575" y="90" width="160" height="86" rx="6" fill="#0a1a0a" stroke="#4caf50" stroke-width="2"/>
+  <text x="655" y="112" text-anchor="middle" class="component" fill="#4caf50">SSR-25DA</text>
+  <text x="655" y="127" text-anchor="middle" class="comp-sub" fill="#81c784">25A / 24-380VAC</text>
+  <text x="655" y="142" text-anchor="middle" class="comp-sub" fill="#81c784">3-32VDC input</text>
+  <text x="655" y="169" text-anchor="middle" class="small" fill="#ffeb3b">Mount on heatsink</text>
+  <!-- AC1 input (left side, top) -->
+  <circle cx="582" cy="110" r="4" fill="#ff6f00" stroke="#e65100" stroke-width="1"/>
+  <text x="590" y="106" class="wire-label" fill="#ff6f00">AC1</text>
+  <!-- AC2 output (right side, top) -->
+  <circle cx="728" cy="110" r="4" fill="#42a5f5" stroke="#1565c0" stroke-width="1"/>
+  <text x="714" y="106" class="wire-label" fill="#42a5f5">AC2</text>
+  <!-- DC+ input (left side, bottom) -->
+  <circle cx="582" cy="155" r="4" fill="#00e676" stroke="#00c853" stroke-width="1"/>
+  <text x="590" y="155" class="wire-label" fill="#00e676">DC+</text>
+  <!-- DC- input (left side, below DC+) -->
+  <circle cx="622" cy="155" r="4" fill="#666" stroke="#444" stroke-width="1"/>
+  <text x="630" y="155" class="wire-label" fill="#888">DC-</text>
 
-  <!-- Relay 3: Fan Low (120VAC) -->
-  <rect x="55" y="320" width="230" height="42" rx="3" fill="#2a1a1a" stroke="#ef5350" stroke-width="1.2"/>
-  <circle cx="70" cy="340" r="4" fill="#ff6f00"/>
-  <text x="85" y="334" class="pin" fill="#ef5350">GPIO 40</text>
-  <text x="150" y="334" class="label" fill="#ef9a9a">Relay 3: FAN LOW</text>
-  <text x="150" y="354" class="small" fill="#ff6f00">120VAC</text>
-  <circle cx="278" cy="335" r="4" fill="#ef5350"/>
-  <text x="268" y="358" text-anchor="middle" class="small">NO</text>
+  <!-- Wire: SSR AC2 -> Supco SFPC -->
+  <line x1="732" y1="110" x2="815" y2="110" stroke="#42a5f5" stroke-width="2.5"/>
 
-  <!-- Relay 4: Fan High (120VAC) -->
-  <rect x="55" y="370" width="230" height="42" rx="3" fill="#1a1a1a" stroke="#555" stroke-width="1.2"/>
-  <circle cx="70" cy="390" r="4" fill="#ff6f00"/>
-  <text x="85" y="384" class="pin" fill="#aaa">GPIO 41</text>
-  <text x="150" y="384" class="label" fill="#bbb">Relay 4: FAN HIGH</text>
-  <text x="150" y="404" class="small" fill="#ff6f00">120VAC</text>
-  <circle cx="278" cy="385" r="4" fill="#555"/>
-  <text x="268" y="408" text-anchor="middle" class="small">NO</text>
+  <!-- Supco SFPC Freeze Stat -->
+  <rect x="815" y="90" width="130" height="55" rx="6" fill="#1a0f0f" stroke="#ff7043" stroke-width="1.5"/>
+  <text x="880" y="112" text-anchor="middle" class="component" fill="#ff7043">Supco SFPC</text>
+  <text x="880" y="127" text-anchor="middle" class="comp-sub" fill="#ffab91">NC, opens 35F</text>
+  <text x="880" y="140" text-anchor="middle" class="comp-sub" fill="#ffab91">Clamp on suction line</text>
 
-  <!-- Relay 1: Furnace (separate dry contact) -->
-  <rect x="55" y="450" width="230" height="35" rx="3" fill="#2a1a1a" stroke="#8d6e63" stroke-width="1.2"/>
-  <text x="65" y="470" class="pin" fill="#8d6e63">GPIO 38</text>
-  <text x="140" y="470" class="label" fill="#bcaaa4">Relay 1: FURNACE</text>
-  <text x="260" y="470" class="small" fill="#8d6e63">Dry Contact</text>
+  <!-- Wire: SFPC -> Pin 1 Blue -->
+  <line x1="945" y1="110" x2="1065" y2="110" stroke="#42a5f5" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+  <!-- Inline label -->
+  <rect x="970" y="99" width="64" height="14" rx="3" fill="#141422"/>
+  <text x="1002" y="110" text-anchor="middle" class="wire-label" fill="#42a5f5">COMP</text>
 
-  <!-- 120VAC LINE wire from shore power splits to: fan relay bus + SSR -->
-  <!-- LINE to fan relay COM bus -->
-  <path d="M200 90 L260 90 L260 268 L70 268" class="wire-line"/>
-  <!-- LINE branch to SSR AC input -->
-  <path d="M260 90 L260 70 L420 70 L420 185" class="wire-line"/>
-  <circle cx="260" cy="90" r="3" fill="#ff6f00"/>
+  <!-- Brisk II Pin 1 -->
+  <rect x="1075" y="95" width="175" height="32" rx="4" fill="#1a1a2e" stroke="#42a5f5" stroke-width="1.2"/>
+  <circle cx="1088" cy="111" r="6" fill="#42a5f5" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="1100" y="115" class="pin" fill="#42a5f5">1</text>
+  <text x="1120" y="115" class="label" fill="#90caf9">Compressor</text>
+  <text x="1237" y="115" class="wire-label" fill="#42a5f5">BLUE</text>
 
-  <!-- 12VDC wire to Relay 2 COM -->
-  <path d="M200 545 L230 545 L230 290 L55 290" class="wire-12v"/>
-  <!-- Label on Relay 2 COM side -->
-  <circle cx="55" cy="290" r="4" fill="#00e676"/>
-  <text x="55" y="310" text-anchor="middle" class="small" fill="#00e676">COM</text>
+  <!-- ================================================================ -->
+  <!-- ROW 2: FAN LOW (y=188-262)                                       -->
+  <!-- LINE -> Relay 3 COM/NO -> Pin 4 Red                             -->
+  <!-- ================================================================ -->
 
-  <!-- 12VDC GND wire to SSR DC- -->
-  <path d="M200 570 L245 570 L245 230 L400 230" class="wire-12vgnd"/>
+  <!-- LINE drops down from branch point to fan row -->
+  <line x1="280" y1="114" x2="280" y2="225" stroke="#ff6f00" stroke-width="2.5"/>
+  <!-- Branch dot for row 2 -->
+  <circle cx="280" cy="225" r="4" fill="#ff6f00"/>
 
-  <!-- ==================== SSR-25DA (Center) ==================== -->
-  <rect x="370" y="155" width="200" height="100" rx="8" fill="#0a1a0a" stroke="#4caf50" stroke-width="2.5"/>
-  <text x="470" y="178" text-anchor="middle" class="component" fill="#4caf50">SSR-25DA</text>
-  <text x="470" y="193" text-anchor="middle" class="small" fill="#81c784">Twtade Solid State Relay</text>
-  <text x="470" y="206" text-anchor="middle" class="small" fill="#81c784">25A / 24-380VAC / 3-32VDC input</text>
+  <!-- LINE goes right to Relay 3 COM -->
+  <line x1="280" y1="225" x2="348" y2="225" stroke="#ff6f00" stroke-width="2.5"/>
 
-  <!-- SSR DC input terminals (left side) -->
-  <circle cx="400" cy="220" r="5" fill="#00e676" stroke="#00c853" stroke-width="1"/>
-  <text x="408" y="240" class="term" fill="#00e676">DC+</text>
-  <circle cx="440" cy="220" r="5" fill="#666" stroke="#444" stroke-width="1"/>
-  <text x="448" y="240" class="term" fill="#888">DC-</text>
+  <!-- Relay 3 box -->
+  <rect x="348" y="200" width="190" height="50" rx="5" fill="#1f0f0f" stroke="#ef5350" stroke-width="1.2"/>
+  <text x="365" y="220" class="pin" fill="#ef5350">GPIO 40</text>
+  <text x="440" y="220" class="label" fill="#ef9a9a">Relay 3: FAN LOW</text>
+  <text x="443" y="240" text-anchor="middle" class="comp-sub" fill="#ff6f00">120VAC on contacts</text>
+  <!-- COM terminal -->
+  <circle cx="355" cy="225" r="3" fill="#ff6f00"/>
+  <text x="352" y="198" text-anchor="middle" class="wire-label" fill="#999">COM</text>
+  <!-- NO terminal -->
+  <circle cx="531" cy="225" r="3" fill="#ef5350"/>
+  <text x="531" y="198" text-anchor="middle" class="wire-label" fill="#999">NO</text>
 
-  <!-- SSR AC output terminals (right side) -->
-  <circle cx="500" cy="220" r="5" fill="#ff6f00" stroke="#e65100" stroke-width="1"/>
-  <text x="492" y="240" class="term" fill="#ff6f00">AC1</text>
-  <circle cx="540" cy="220" r="5" fill="#42a5f5" stroke="#1565c0" stroke-width="1"/>
-  <text x="535" y="240" class="term" fill="#42a5f5">AC2</text>
+  <!-- Wire: Relay 3 NO -> Pin 4 Red -->
+  <line x1="534" y1="225" x2="1065" y2="225" stroke="#ef5350" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+  <!-- Inline label -->
+  <rect x="760" y="214" width="68" height="14" rx="3" fill="#141422"/>
+  <text x="794" y="225" text-anchor="middle" class="wire-label" fill="#ef5350">FAN LO</text>
 
-  <!-- Heatsink note -->
-  <text x="470" y="248" text-anchor="middle" class="small" fill="#ffeb3b">MOUNT ON HEATSINK (~15W @ 12A)</text>
+  <!-- Brisk II Pin 4 -->
+  <rect x="1075" y="210" width="175" height="32" rx="4" fill="#1a1a2e" stroke="#ef5350" stroke-width="1.2"/>
+  <circle cx="1088" cy="226" r="6" fill="#ef5350" stroke="#c62828" stroke-width="1.5"/>
+  <text x="1100" y="230" class="pin" fill="#ef5350">4</text>
+  <text x="1120" y="230" class="label" fill="#ef9a9a">Fan Low</text>
+  <text x="1237" y="230" class="wire-label" fill="#ef5350">RED</text>
 
-  <!-- Wire: Relay 2 NO → SSR DC+ -->
-  <path d="M282 285 L340 285 L340 220 L395 220" class="wire-12v"/>
+  <!-- ================================================================ -->
+  <!-- ROW 3: FAN HIGH (y=268-332)                                      -->
+  <!-- LINE -> Relay 4 COM/NO -> Pin 2 Black                           -->
+  <!-- ================================================================ -->
 
-  <!-- Wire: 12VDC GND → SSR DC- (already drawn above) -->
+  <!-- LINE drops down from row 2 branch to row 3 -->
+  <line x1="280" y1="229" x2="280" y2="295" stroke="#ff6f00" stroke-width="2.5"/>
 
-  <!-- Wire: 120VAC LINE → SSR AC1 -->
-  <path d="M420 185 L420 220 L495 220" class="wire-line"/>
-  <text x="420" y="175" text-anchor="middle" class="small" fill="#ff6f00">LINE in</text>
+  <!-- LINE goes right to Relay 4 COM -->
+  <line x1="280" y1="295" x2="348" y2="295" stroke="#ff6f00" stroke-width="2.5"/>
 
-  <!-- ==================== BIMETAL THERMAL CUTOUT ==================== -->
-  <rect x="610" y="190" width="130" height="55" rx="6" fill="#1a0f0f" stroke="#ff7043" stroke-width="2"/>
-  <text x="675" y="210" text-anchor="middle" class="component" fill="#ff7043">Bimetal Cutout</text>
-  <text x="675" y="226" text-anchor="middle" class="small" fill="#ffab91">NC, opens ~32F</text>
-  <text x="675" y="238" text-anchor="middle" class="small" fill="#ffab91">Hardware backup</text>
+  <!-- Relay 4 box -->
+  <rect x="348" y="270" width="190" height="50" rx="5" fill="#151515" stroke="#777" stroke-width="1.2"/>
+  <text x="365" y="290" class="pin" fill="#aaa">GPIO 41</text>
+  <text x="440" y="290" class="label" fill="#bbb">Relay 4: FAN HIGH</text>
+  <text x="443" y="310" text-anchor="middle" class="comp-sub" fill="#ff6f00">120VAC on contacts</text>
+  <!-- COM terminal -->
+  <circle cx="355" cy="295" r="3" fill="#ff6f00"/>
+  <text x="352" y="268" text-anchor="middle" class="wire-label" fill="#999">COM</text>
+  <!-- NO terminal -->
+  <circle cx="531" cy="295" r="3" fill="#777"/>
+  <text x="531" y="268" text-anchor="middle" class="wire-label" fill="#999">NO</text>
 
-  <!-- Wire: SSR AC2 → Bimetal cutout input -->
-  <path d="M545 220 L610 220" class="wire-comp"/>
-  <text x="577" y="213" text-anchor="middle" class="small" fill="#42a5f5">AC2 out</text>
+  <!-- Wire: Relay 4 NO -> Pin 2 Black -->
+  <line x1="534" y1="295" x2="1065" y2="295" stroke="#777" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <!-- Inline label -->
+  <rect x="760" y="284" width="68" height="14" rx="3" fill="#141422"/>
+  <text x="794" y="295" text-anchor="middle" class="wire-label" fill="#aaa">FAN HI</text>
 
-  <!-- Wire: Bimetal cutout output → Blue wire (6-pin Pin 1) -->
-  <path d="M740 220 L770 220 L770 185 L810 185" class="wire-comp"/>
+  <!-- Brisk II Pin 2 -->
+  <rect x="1075" y="280" width="175" height="32" rx="4" fill="#1a1a2e" stroke="#777" stroke-width="1.2"/>
+  <circle cx="1088" cy="296" r="6" fill="#555" stroke="#333" stroke-width="1.5"/>
+  <text x="1100" y="300" class="pin" fill="#aaa">2</text>
+  <text x="1120" y="300" class="label" fill="#bbb">Fan High</text>
+  <text x="1237" y="300" class="wire-label" fill="#aaa">BLACK</text>
 
-  <!-- Fan Low wire: Relay NO → 6-pin -->
-  <path d="M282 335 L680 335 L680 205 L810 205" class="wire-fanlo"/>
+  <!-- ================================================================ -->
+  <!-- ROW 4: NEUTRAL (y=338-392)                                       -->
+  <!-- Shore NEU -> straight through -> Pin 5 White                    -->
+  <!-- ================================================================ -->
 
-  <!-- Fan High wire: Relay NO → 6-pin -->
-  <path d="M282 385 L660 385 L660 245 L810 245" class="wire-fanhi"/>
+  <!-- Neutral wire: Shore NEU terminal drops down to row 4 then straight across -->
+  <path d="M240 160 L260 160 L260 365 L1065 365" stroke="#ddd" stroke-width="2.5" fill="none" marker-end="url(#arrow-white)"/>
+  <!-- Inline label -->
+  <rect x="620" y="354" width="76" height="14" rx="3" fill="#141422"/>
+  <text x="658" y="365" text-anchor="middle" class="wire-label" fill="#ddd">NEUTRAL</text>
 
-  <!-- Furnace wire to separate furnace unit -->
-  <path d="M285 467 L660 467 L660 490 L810 490" class="wire-furnace"/>
+  <!-- Brisk II Pin 5 -->
+  <rect x="1075" y="350" width="175" height="32" rx="4" fill="#1a1a2e" stroke="#bbb" stroke-width="1.2"/>
+  <circle cx="1088" cy="366" r="6" fill="#fff" stroke="#bbb" stroke-width="1.5"/>
+  <text x="1100" y="370" class="pin" fill="#fff">5</text>
+  <text x="1120" y="370" class="label" fill="#eee">Neutral</text>
+  <text x="1237" y="370" class="wire-label" fill="#ddd">WHITE</text>
 
-  <!-- NEUTRAL pass-through wire -->
-  <path d="M200 120 L290 120 L290 155 L730 155 L730 295 L810 295" class="wire-neutral"/>
+  <!-- ================================================================ -->
+  <!-- ROW 5: GROUND (y=398-442)                                        -->
+  <!-- Pass-through -> Pin 6 Green/Yellow                              -->
+  <!-- ================================================================ -->
 
-  <!-- Ground pass-through -->
-  <path d="M730 295 L730 335 L810 335" class="wire-ground"/>
-  <circle cx="730" cy="295" r="3" fill="#fff"/>
+  <line x1="260" y1="420" x2="1065" y2="420" stroke="#66bb6a" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#arrow-green)"/>
+  <!-- Inline label -->
+  <rect x="620" y="409" width="76" height="14" rx="3" fill="#141422"/>
+  <text x="658" y="420" text-anchor="middle" class="wire-label" fill="#66bb6a">GROUND</text>
+  <!-- Branch dot from neutral vertical -->
+  <circle cx="260" cy="420" r="3" fill="#66bb6a"/>
 
-  <!-- ==================== DS18B20 FREEZE SENSOR ==================== -->
-  <rect x="370" y="300" width="180" height="75" rx="6" fill="#1a0f2a" stroke="#ab47bc" stroke-width="2"/>
-  <text x="460" y="322" text-anchor="middle" class="component" fill="#ab47bc">DS18B20</text>
-  <text x="460" y="339" text-anchor="middle" class="small" fill="#ce93d8">Waterproof probe on evaporator</text>
-  <text x="460" y="354" text-anchor="middle" class="small" fill="#ce93d8">GPIO 42 (4.7K pull-up to 3.3V)</text>
-  <text x="460" y="369" text-anchor="middle" class="small" fill="#ce93d8">Software: &lt;32F cut, &gt;45F recover</text>
+  <!-- Brisk II Pin 6 -->
+  <rect x="1075" y="405" width="175" height="32" rx="4" fill="#1a1a2e" stroke="#66bb6a" stroke-width="1.2"/>
+  <circle cx="1088" cy="421" r="6" fill="#66bb6a" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="1100" y="425" class="pin" fill="#66bb6a">6</text>
+  <text x="1120" y="425" class="label" fill="#81c784">Chassis Gnd</text>
+  <text x="1237" y="425" class="wire-label" fill="#66bb6a">GRN/YLW</text>
 
-  <!-- Sensor wire back to ESP32 -->
-  <path d="M370 340 L330 340 L330 510 L170 510" class="wire-sensor"/>
-  <text x="170" y="525" text-anchor="middle" class="pin" fill="#ab47bc">GPIO 42</text>
+  <!-- Brisk II Pin 3 (Yellow - unused, shown between ground and neutral) -->
+  <!-- Place it as a note next to the Brisk II column -->
+  <rect x="1075" y="440" width="175" height="24" rx="4" fill="#141422" stroke="#444" stroke-width="0.8" stroke-dasharray="3,3"/>
+  <circle cx="1088" cy="452" r="5" fill="#fdd835" stroke="#f9a825" stroke-width="1"/>
+  <text x="1100" y="456" class="pin" fill="#fdd835">3</text>
+  <text x="1120" y="456" class="small" fill="#888">Unused (no HP)</text>
+  <text x="1237" y="456" class="wire-label" fill="#fdd835">YLW N/C</text>
 
-  <!-- ==================== 6-PIN CONNECTOR / BRISK II (Right) ==================== -->
-  <rect x="810" y="140" width="240" height="250" rx="8" fill="#1a1a1a" stroke="#e65100" stroke-width="2"/>
-  <text x="930" y="162" text-anchor="middle" class="component" fill="#ff9800">Dometic Brisk II</text>
-  <text x="930" y="176" text-anchor="middle" class="small">6-Pin Cable (120VAC)</text>
+  <!-- ================================================================ -->
+  <!-- ROW 6: 12VDC SSR TRIGGER (y=448-507)                            -->
+  <!-- RV +12V -> Relay 2 COM/NO -> SSR DC+                            -->
+  <!-- RV GND -> SSR DC-                                                -->
+  <!-- ================================================================ -->
 
-  <!-- Pin 1: Blue - Compressor -->
-  <circle cx="820" cy="195" r="7" fill="#42a5f5" stroke="#1565c0" stroke-width="1.5"/>
-  <text x="835" y="199" class="pin" fill="#42a5f5">1</text>
-  <text x="858" y="199" class="label" fill="#90caf9">Compressor</text>
-  <text x="1030" y="199" class="small" fill="#42a5f5">BLUE</text>
+  <!-- RV 12VDC Battery box -->
+  <rect x="35" y="460" width="200" height="55" rx="6" fill="#061206" stroke="#00e676" stroke-width="1.5"/>
+  <text x="135" y="483" text-anchor="middle" class="component" fill="#00e676">RV 12VDC</text>
+  <text x="135" y="500" text-anchor="middle" class="comp-sub">House battery / converter</text>
+  <!-- +12V output -->
+  <circle cx="235" cy="478" r="5" fill="#00e676"/>
+  <text x="220" y="468" text-anchor="end" class="wire-label" fill="#00e676">+12V</text>
+  <!-- GND output -->
+  <circle cx="235" cy="500" r="5" fill="#666"/>
+  <text x="220" y="507" text-anchor="end" class="wire-label" fill="#888">GND</text>
 
-  <!-- Pin 4: Red - Fan Low -->
-  <circle cx="820" cy="215" r="7" fill="#ef5350" stroke="#c62828" stroke-width="1.5"/>
-  <text x="835" y="219" class="pin" fill="#ef5350">4</text>
-  <text x="858" y="219" class="label" fill="#ef9a9a">Fan Low</text>
-  <text x="1030" y="219" class="small" fill="#ef5350">RED</text>
+  <!-- +12V wire to Relay 2 COM -->
+  <line x1="240" y1="478" x2="348" y2="478" stroke="#00e676" stroke-width="2"/>
 
-  <!-- Pin 2: Black - Fan High -->
-  <circle cx="820" cy="255" r="7" fill="#555" stroke="#333" stroke-width="1.5"/>
-  <text x="835" y="259" class="pin" fill="#aaa">2</text>
-  <text x="858" y="259" class="label" fill="#bbb">Fan High</text>
-  <text x="1030" y="259" class="small" fill="#aaa">BLACK</text>
+  <!-- Relay 2 box (SSR trigger) -->
+  <rect x="348" y="455" width="190" height="50" rx="5" fill="#0a150a" stroke="#42a5f5" stroke-width="1.2"/>
+  <text x="365" y="475" class="pin" fill="#42a5f5">GPIO 39</text>
+  <text x="440" y="475" class="label" fill="#90caf9">Relay 2: SSR TRIGGER</text>
+  <text x="443" y="495" text-anchor="middle" class="comp-sub" fill="#00e676">12VDC only (not 120V)</text>
+  <!-- COM terminal -->
+  <circle cx="355" cy="478" r="3" fill="#00e676"/>
+  <text x="352" y="453" text-anchor="middle" class="wire-label" fill="#999">COM</text>
+  <!-- NO terminal -->
+  <circle cx="531" cy="478" r="3" fill="#00e676"/>
+  <text x="531" y="453" text-anchor="middle" class="wire-label" fill="#999">NO</text>
 
-  <!-- Pin 3: Yellow - Unused -->
-  <circle cx="820" cy="285" r="7" fill="#fdd835" stroke="#f9a825" stroke-width="1.5"/>
-  <text x="835" y="289" class="pin" fill="#fdd835">3</text>
-  <text x="858" y="289" class="label" fill="#999">Unused (no HP)</text>
-  <text x="1030" y="289" class="small" fill="#fdd835">YELLOW</text>
+  <!-- Wire: Relay 2 NO -> SSR DC+ -->
+  <path d="M534 478 L558 478 L558 155 L578 155" stroke="#00e676" stroke-width="2" fill="none" marker-end="url(#arrow-12v)"/>
+  <!-- Inline label on vertical run -->
+  <rect x="545" y="305" width="28" height="38" rx="3" fill="#141422"/>
+  <text x="559" y="316" text-anchor="middle" class="wire-label" fill="#00e676">12V</text>
+  <text x="559" y="330" text-anchor="middle" class="wire-label" fill="#00e676">TO</text>
+  <text x="559" y="344" text-anchor="middle" class="wire-label" fill="#00e676">SSR</text>
 
-  <!-- Pin 5: White - Neutral -->
-  <circle cx="820" cy="315" r="7" fill="#fff" stroke="#bbb" stroke-width="1.5"/>
-  <text x="835" y="319" class="pin" fill="#fff">5</text>
-  <text x="858" y="319" class="label" fill="#eee">Neutral</text>
-  <text x="1030" y="319" class="small" fill="#fff">WHITE</text>
+  <!-- GND wire to SSR DC- -->
+  <path d="M240 500 L300 500 L300 520 L570 520 L570 155 L618 155" stroke="#555" stroke-width="2" fill="none" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+  <!-- Inline label -->
+  <rect x="557" y="385" width="28" height="26" rx="3" fill="#141422"/>
+  <text x="571" y="396" text-anchor="middle" class="wire-label" fill="#888">DC</text>
+  <text x="571" y="408" text-anchor="middle" class="wire-label" fill="#888">GND</text>
 
-  <!-- Pin 6: Green/Yellow - Ground -->
-  <circle cx="820" cy="345" r="7" fill="#66bb6a" stroke="#2e7d32" stroke-width="1.5"/>
-  <text x="835" y="349" class="pin" fill="#66bb6a">6</text>
-  <text x="858" y="349" class="label" fill="#81c784">Chassis Gnd</text>
-  <text x="1030" y="349" class="small" fill="#66bb6a">GRN/YLW</text>
+  <!-- ================================================================ -->
+  <!-- ROW 7: FURNACE (y=513-572)                                       -->
+  <!-- Relay 1 COM/NO -> Furnace (dry contact)                         -->
+  <!-- ================================================================ -->
 
-  <!-- No-connect markers -->
-  <text x="800" y="289" text-anchor="end" class="small" fill="#fdd835">N/C</text>
-  <text x="800" y="349" text-anchor="end" class="small" fill="#66bb6a">PASS-THRU</text>
+  <!-- Relay 1 box -->
+  <rect x="348" y="525" width="190" height="42" rx="5" fill="#1a0f0a" stroke="#8d6e63" stroke-width="1.2"/>
+  <text x="365" y="545" class="pin" fill="#8d6e63">GPIO 38</text>
+  <text x="440" y="545" class="label" fill="#bcaaa4">Relay 1: FURNACE</text>
+  <text x="443" y="560" text-anchor="middle" class="comp-sub" fill="#8d6e63">Dry contact only</text>
+  <!-- NO terminal -->
+  <circle cx="531" cy="545" r="3" fill="#8d6e63"/>
+  <text x="531" y="523" text-anchor="middle" class="wire-label" fill="#999">NO</text>
 
-  <!-- Furnace unit box -->
-  <rect x="810" y="470" width="240" height="50" rx="6" fill="#1a1a1a" stroke="#8d6e63" stroke-width="2"/>
-  <text x="930" y="492" text-anchor="middle" class="component" fill="#bcaaa4">Furnace</text>
-  <text x="930" y="508" text-anchor="middle" class="small">Dry contact closure (separate unit)</text>
+  <!-- Wire: Relay 1 NO -> Furnace -->
+  <line x1="534" y1="545" x2="1065" y2="545" stroke="#8d6e63" stroke-width="2.5" marker-end="url(#arrow-brown)"/>
+  <!-- Inline label -->
+  <rect x="760" y="534" width="70" height="14" rx="3" fill="#141422"/>
+  <text x="795" y="545" text-anchor="middle" class="wire-label" fill="#8d6e63">DRY CONT</text>
 
-  <!-- ==================== COMPRESSOR SIGNAL PATH (highlighted) ==================== -->
-  <rect x="30" y="595" width="1020" height="70" rx="8" fill="#0a1a0a" stroke="#4caf50" stroke-width="1.5"/>
-  <text x="540" y="615" text-anchor="middle" class="component" fill="#4caf50">Compressor Signal Path</text>
-  <text x="540" y="635" text-anchor="middle" class="label" fill="#81c784">ESP32 GPIO 39 HIGH -> HL-52S Relay 2 closes -> 12VDC reaches SSR DC+ -> SSR turns ON -> 120VAC LINE flows through SSR -> Bimetal cutout (NC) -> Blue wire -> Compressor</text>
-  <text x="540" y="653" text-anchor="middle" class="small" fill="#ce93d8">SSR handles 120VAC/25A (no contact welding) | HL-52S only switches 12VDC at milliamps | Bimetal cutout is independent hardware backup</text>
+  <!-- Furnace box -->
+  <rect x="1075" y="525" width="175" height="42" rx="4" fill="#1a1a1a" stroke="#8d6e63" stroke-width="1.5"/>
+  <text x="1162" y="546" text-anchor="middle" class="component" fill="#bcaaa4">Furnace</text>
+  <text x="1162" y="560" text-anchor="middle" class="comp-sub">Separate unit, contact closure</text>
 
-  <!-- ==================== WIRING REFERENCE TABLE ==================== -->
-  <rect x="30" y="680" width="530" height="160" rx="8" fill="#0f1a30" stroke="#2196f3" stroke-width="1.5"/>
-  <text x="295" y="700" text-anchor="middle" class="component" fill="#64b5f6">Wiring Reference</text>
+  <!-- ================================================================ -->
+  <!-- DS18B20 SENSOR (shown as note in the freeze stat area)          -->
+  <!-- ================================================================ -->
+  <rect x="815" y="150" width="130" height="32" rx="4" fill="#1a0f2a" stroke="#ab47bc" stroke-width="1.5"/>
+  <text x="880" y="171" text-anchor="middle" class="label" fill="#ce93d8">DS18B20 GPIO 42</text>
+  <!-- Wire representation -->
+  <line x1="815" y1="166" x2="780" y2="166" stroke="#ab47bc" stroke-width="2" marker-end="url(#arrow-purple)"/>
+  <text x="770" y="160" text-anchor="end" class="wire-label" fill="#ab47bc">1-WIRE</text>
+  <!-- Note text -->
+  <text x="950" y="162" class="small" fill="#ce93d8">Probe on evaporator coil</text>
+  <text x="950" y="175" class="small" fill="#ce93d8">&lt;32F cut, &gt;45F recover</text>
+
+  <!-- ================================================================ -->
+  <!-- ESP32 label box (spans relay rows)                               -->
+  <!-- ================================================================ -->
+  <rect x="335" y="188" width="216" height="396" rx="8" fill="none" stroke="#4cc9f0" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="443" y="206" text-anchor="middle" class="component" fill="#4cc9f0">ESP32-S3 Remote</text>
+  <text x="443" y="220" text-anchor="middle" class="comp-sub" fill="#4cc9f0">192.168.71.153</text>
+  <text x="443" y="234" text-anchor="middle" class="comp-sub">HL-52S 4-Ch Relay Module</text>
+  <text x="443" y="248" text-anchor="middle" class="comp-sub">Active HIGH | 5V VCC</text>
+
+  <!-- Brisk II enclosure label -->
+  <rect x="1065" y="85" width="195" height="361" rx="6" fill="none" stroke="#e65100" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="1162" y="80" text-anchor="middle" class="component" fill="#ff9800">Dometic Brisk II</text>
+  <text x="1162" y="464" text-anchor="middle" class="comp-sub" fill="#ff9800">6-Pin Cable (120VAC)</text>
+
+  <!-- ================================================================ -->
+  <!-- SIGNAL PATH SUMMARY (y=580-640)                                  -->
+  <!-- ================================================================ -->
+  <rect x="20" y="585" width="1240" height="58" rx="6" fill="#0a1a0a" stroke="#4caf50" stroke-width="1.2"/>
+  <text x="640" y="605" text-anchor="middle" class="component" fill="#4caf50">Compressor Signal Path</text>
+  <text x="640" y="622" text-anchor="middle" class="label" fill="#81c784">
+    GPIO 39 HIGH  &#x2192;  Relay 2 closes  &#x2192;  12VDC reaches SSR DC+  &#x2192;  SSR ON  &#x2192;  120VAC through SSR  &#x2192;  Supco SFPC (NC)  &#x2192;  Blue wire  &#x2192;  Compressor
+  </text>
+  <text x="640" y="637" text-anchor="middle" class="small" fill="#ce93d8">SSR handles full 120VAC/25A  |  HL-52S only switches 12VDC at milliamps  |  Supco SFPC is independent hardware freeze backup</text>
+
+  <!-- ================================================================ -->
+  <!-- WIRING REFERENCE TABLE (y=650-810)                               -->
+  <!-- ================================================================ -->
+  <rect x="20" y="650" width="600" height="175" rx="6" fill="#0f1a30" stroke="#2196f3" stroke-width="1.2"/>
+  <text x="320" y="672" text-anchor="middle" class="component" fill="#64b5f6">Wiring Reference</text>
 
   <!-- Table headers -->
-  <text x="45" y="720" class="tbl-header">ESP32</text>
-  <text x="110" y="720" class="tbl-header">Relay</text>
-  <text x="195" y="720" class="tbl-header">Switches</text>
-  <text x="280" y="720" class="tbl-header">Load Path</text>
-  <text x="445" y="720" class="tbl-header">6-Pin</text>
-  <line x1="40" y1="725" x2="550" y2="725" stroke="#2196f3" stroke-width="0.5"/>
+  <text x="40" y="694" class="tbl-header">GPIO</text>
+  <text x="105" y="694" class="tbl-header">Relay</text>
+  <text x="195" y="694" class="tbl-header">Switches</text>
+  <text x="290" y="694" class="tbl-header">Load Path</text>
+  <text x="500" y="694" class="tbl-header">6-Pin</text>
+  <line x1="35" y1="700" x2="610" y2="700" stroke="#2196f3" stroke-width="0.5"/>
 
-  <text x="45" y="740" class="tbl-cell" fill="#42a5f5">GPIO 39</text>
-  <text x="110" y="740" class="tbl-cell">Relay 2</text>
-  <text x="195" y="740" class="tbl-cell" fill="#00e676">12VDC</text>
-  <text x="280" y="740" class="tbl-cell">-> SSR DC+ -> SSR AC -> Cutout</text>
-  <text x="445" y="740" class="tbl-cell" fill="#42a5f5">Pin 1 Blue</text>
+  <!-- Row: Compressor -->
+  <text x="40" y="718" class="tbl-cell" fill="#42a5f5">GPIO 39</text>
+  <text x="105" y="718" class="tbl-cell">Relay 2</text>
+  <text x="195" y="718" class="tbl-cell" fill="#00e676">12VDC</text>
+  <text x="290" y="718" class="tbl-cell">&#x2192; SSR DC+ &#x2192; SSR AC &#x2192; SFPC</text>
+  <text x="500" y="718" class="tbl-cell" fill="#42a5f5">Pin 1 Blue</text>
 
-  <text x="45" y="758" class="tbl-cell" fill="#ef5350">GPIO 40</text>
-  <text x="110" y="758" class="tbl-cell">Relay 3</text>
-  <text x="195" y="758" class="tbl-cell" fill="#ff6f00">120VAC</text>
-  <text x="280" y="758" class="tbl-cell">-> Direct to fan low</text>
-  <text x="445" y="758" class="tbl-cell" fill="#ef5350">Pin 4 Red</text>
+  <!-- Row: Fan Low -->
+  <text x="40" y="736" class="tbl-cell" fill="#ef5350">GPIO 40</text>
+  <text x="105" y="736" class="tbl-cell">Relay 3</text>
+  <text x="195" y="736" class="tbl-cell" fill="#ff6f00">120VAC</text>
+  <text x="290" y="736" class="tbl-cell">&#x2192; Direct to fan low</text>
+  <text x="500" y="736" class="tbl-cell" fill="#ef5350">Pin 4 Red</text>
 
-  <text x="45" y="776" class="tbl-cell" fill="#aaa">GPIO 41</text>
-  <text x="110" y="776" class="tbl-cell">Relay 4</text>
-  <text x="195" y="776" class="tbl-cell" fill="#ff6f00">120VAC</text>
-  <text x="280" y="776" class="tbl-cell">-> Direct to fan high</text>
-  <text x="445" y="776" class="tbl-cell" fill="#aaa">Pin 2 Black</text>
+  <!-- Row: Fan High -->
+  <text x="40" y="754" class="tbl-cell" fill="#aaa">GPIO 41</text>
+  <text x="105" y="754" class="tbl-cell">Relay 4</text>
+  <text x="195" y="754" class="tbl-cell" fill="#ff6f00">120VAC</text>
+  <text x="290" y="754" class="tbl-cell">&#x2192; Direct to fan high</text>
+  <text x="500" y="754" class="tbl-cell" fill="#aaa">Pin 2 Black</text>
 
-  <text x="45" y="794" class="tbl-cell" fill="#8d6e63">GPIO 38</text>
-  <text x="110" y="794" class="tbl-cell">Relay 1</text>
-  <text x="195" y="794" class="tbl-cell" fill="#81c784">Dry</text>
-  <text x="280" y="794" class="tbl-cell">-> Contact closure</text>
-  <text x="445" y="794" class="tbl-cell" fill="#8d6e63">Furnace</text>
+  <!-- Row: Furnace -->
+  <text x="40" y="772" class="tbl-cell" fill="#8d6e63">GPIO 38</text>
+  <text x="105" y="772" class="tbl-cell">Relay 1</text>
+  <text x="195" y="772" class="tbl-cell" fill="#81c784">Dry</text>
+  <text x="290" y="772" class="tbl-cell">&#x2192; Contact closure</text>
+  <text x="500" y="772" class="tbl-cell" fill="#8d6e63">Furnace</text>
 
-  <line x1="40" y1="803" x2="550" y2="803" stroke="#2196f3" stroke-width="0.5"/>
-  <text x="45" y="818" class="tbl-cell" fill="#ab47bc">GPIO 42</text>
-  <text x="110" y="818" class="tbl-cell">DS18B20</text>
-  <text x="195" y="818" class="tbl-cell" fill="#ab47bc">1-Wire</text>
-  <text x="280" y="818" class="tbl-cell">Freeze sensor on evaporator coil</text>
-  <text x="445" y="818" class="tbl-cell" fill="#ab47bc">4.7K pull-up</text>
+  <line x1="35" y1="780" x2="610" y2="780" stroke="#2196f3" stroke-width="0.5"/>
 
-  <!-- ==================== NOTES BOX ==================== -->
-  <rect x="580" y="680" width="470" height="160" rx="8" fill="#0f1a30" stroke="#ff9800" stroke-width="1.5"/>
-  <text x="815" y="700" text-anchor="middle" class="component" fill="#ff9800">Safety Notes</text>
+  <!-- Row: DS18B20 -->
+  <text x="40" y="798" class="tbl-cell" fill="#ab47bc">GPIO 42</text>
+  <text x="105" y="798" class="tbl-cell">DS18B20</text>
+  <text x="195" y="798" class="tbl-cell" fill="#ab47bc">1-Wire</text>
+  <text x="290" y="798" class="tbl-cell">Freeze sensor on evaporator coil</text>
+  <text x="500" y="798" class="tbl-cell" fill="#ab47bc">4.7K pull-up</text>
 
-  <text x="595" y="720" class="label" fill="#ff6f00">120VAC on SSR output + Relay 3/4 contacts — junction box required</text>
-  <text x="595" y="738" class="label" fill="#ccc">14 AWG minimum for all 120VAC wiring (15A circuit)</text>
-  <text x="595" y="756" class="label" fill="#ccc">SSR-25DA needs heatsink (~15W dissipation at 12A load)</text>
-  <text x="595" y="774" class="label" fill="#ccc">Relay 2 switches 12VDC only (SSR trigger, milliamp current)</text>
+  <!-- Row: I2C -->
+  <text x="40" y="816" class="tbl-cell" fill="#888">GPIO 8/9</text>
+  <text x="105" y="816" class="tbl-cell">I2C</text>
+  <text x="195" y="816" class="tbl-cell" fill="#888">SDA/SCL</text>
+  <text x="290" y="816" class="tbl-cell">BME280 sensor + OLED display</text>
 
-  <line x1="590" y1="785" x2="1040" y2="785" stroke="#ff9800" stroke-width="0.5"/>
+  <!-- ================================================================ -->
+  <!-- SAFETY NOTES (y=650-810)                                         -->
+  <!-- ================================================================ -->
+  <rect x="640" y="650" width="620" height="175" rx="6" fill="#0f1a30" stroke="#ff9800" stroke-width="1.2"/>
+  <text x="950" y="672" text-anchor="middle" class="component" fill="#ff9800">Safety Notes</text>
 
-  <text x="595" y="802" class="label" fill="#66bb6a">FAILSAFE: SSR + relays all Normally Open</text>
-  <text x="595" y="818" class="label" fill="#81c784">ESP32 power loss = all HVAC OFF</text>
-  <text x="595" y="834" class="label" fill="#ef5350">No backup thermostat — no Dometic control box</text>
+  <text x="660" y="694" class="label" fill="#ff6f00">120VAC on SSR output + Relay 3/4 contacts &#x2014; junction box required</text>
+  <text x="660" y="714" class="label" fill="#ccc">14 AWG minimum for all 120VAC wiring (15A circuit)</text>
+  <text x="660" y="734" class="label" fill="#ccc">SSR-25DA needs aluminum heatsink (~15W dissipation at 12A)</text>
+  <text x="660" y="754" class="label" fill="#ccc">Relay 2 switches 12VDC only (SSR trigger, milliamp current)</text>
+  <text x="660" y="774" class="label" fill="#ccc">Relay 1 (furnace) is dry contact &#x2014; no voltage on terminals</text>
 
-  <!-- ==================== LEGEND ==================== -->
-  <line x1="370" y1="430" x2="400" y2="430" stroke="#ff6f00" stroke-width="2.5"/>
-  <text x="405" y="434" class="small" fill="#ff6f00">120VAC LINE</text>
-  <line x1="490" y1="430" x2="520" y2="430" stroke="#00e676" stroke-width="2"/>
-  <text x="525" y="434" class="small" fill="#00e676">12VDC</text>
-  <line x1="570" y1="430" x2="600" y2="430" stroke="#fff" stroke-width="2.5"/>
-  <text x="605" y="434" class="small" fill="#fff">Neutral</text>
-  <line x1="660" y1="430" x2="690" y2="430" stroke="#ab47bc" stroke-width="2"/>
-  <text x="695" y="434" class="small" fill="#ab47bc">DS18B20</text>
-  <line x1="760" y1="430" x2="790" y2="430" stroke="#42a5f5" stroke-width="2.5"/>
-  <text x="795" y="434" class="small" fill="#42a5f5">Compressor</text>
+  <line x1="650" y1="785" x2="1250" y2="785" stroke="#ff9800" stroke-width="0.5"/>
 
-  <!-- SSR Terminal callout box -->
-  <rect x="370" y="443" width="440" height="65" rx="6" fill="#0a1a0a" stroke="#4caf50" stroke-width="1"/>
-  <text x="590" y="462" text-anchor="middle" class="label" fill="#4caf50">SSR-25DA Terminal Reference</text>
-  <text x="385" y="480" class="small" fill="#00e676">DC+ (pin 3): From HL-52S Relay 2 NO</text>
-  <text x="385" y="496" class="small" fill="#888">DC- (pin 4): To 12VDC GND</text>
-  <text x="600" y="480" class="small" fill="#ff6f00">AC1 (pin 1): From 120VAC LINE</text>
-  <text x="600" y="496" class="small" fill="#42a5f5">AC2 (pin 2): To bimetal cutout -> Blue wire</text>
+  <text x="660" y="802" class="label" fill="#66bb6a">FAILSAFE: SSR + all relays are Normally Open</text>
+  <text x="660" y="818" class="label" fill="#81c784">ESP32 power loss = all HVAC OFF (safe state)</text>
+
+  <!-- ================================================================ -->
+  <!-- LEGEND (y=835-870)                                               -->
+  <!-- ================================================================ -->
+  <rect x="20" y="835" width="1240" height="36" rx="6" fill="#0f0f1a" stroke="#333" stroke-width="1"/>
+
+  <line x1="40" y1="855" x2="70" y2="855" stroke="#ff6f00" stroke-width="2.5"/>
+  <text x="78" y="859" class="small" fill="#ff6f00">120VAC LINE</text>
+
+  <line x1="172" y1="855" x2="202" y2="855" stroke="#42a5f5" stroke-width="2.5"/>
+  <text x="210" y="859" class="small" fill="#42a5f5">Compressor</text>
+
+  <line x1="300" y1="855" x2="330" y2="855" stroke="#ef5350" stroke-width="2.5"/>
+  <text x="338" y="859" class="small" fill="#ef5350">Fan Low</text>
+
+  <line x1="405" y1="855" x2="435" y2="855" stroke="#777" stroke-width="2.5"/>
+  <text x="443" y="859" class="small" fill="#aaa">Fan High</text>
+
+  <line x1="520" y1="855" x2="550" y2="855" stroke="#ddd" stroke-width="2.5"/>
+  <text x="558" y="859" class="small" fill="#ddd">Neutral</text>
+
+  <line x1="622" y1="855" x2="652" y2="855" stroke="#66bb6a" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="660" y="859" class="small" fill="#66bb6a">Ground</text>
+
+  <line x1="722" y1="855" x2="752" y2="855" stroke="#00e676" stroke-width="2"/>
+  <text x="760" y="859" class="small" fill="#00e676">12VDC</text>
+
+  <line x1="810" y1="855" x2="840" y2="855" stroke="#555" stroke-width="2" stroke-dasharray="4,3"/>
+  <text x="848" y="859" class="small" fill="#888">12V GND</text>
+
+  <line x1="918" y1="855" x2="948" y2="855" stroke="#ab47bc" stroke-width="2"/>
+  <text x="956" y="859" class="small" fill="#ab47bc">DS18B20</text>
+
+  <line x1="1030" y1="855" x2="1060" y2="855" stroke="#8d6e63" stroke-width="2.5"/>
+  <text x="1068" y="859" class="small" fill="#8d6e63">Furnace</text>
+
+  <!-- ================================================================ -->
+  <!-- SSR TERMINAL REFERENCE (y=880-950)                               -->
+  <!-- ================================================================ -->
+  <rect x="20" y="880" width="600" height="60" rx="6" fill="#0a1a0a" stroke="#4caf50" stroke-width="1"/>
+  <text x="320" y="900" text-anchor="middle" class="component" fill="#4caf50">SSR-25DA Terminal Reference</text>
+  <text x="40" y="920" class="label" fill="#00e676">DC+ (pin 3): 12VDC from Relay 2 NO</text>
+  <text x="40" y="934" class="label" fill="#888">DC- (pin 4): 12VDC GND (battery negative)</text>
+  <text x="335" y="920" class="label" fill="#ff6f00">AC1 (pin 1): 120VAC LINE (hot) input</text>
+  <text x="335" y="934" class="label" fill="#42a5f5">AC2 (pin 2): Output to SFPC &#x2192; Blue wire</text>
+
+  <!-- Freeze Protection Reference -->
+  <rect x="640" y="880" width="620" height="60" rx="6" fill="#1a0f2a" stroke="#ab47bc" stroke-width="1"/>
+  <text x="950" y="900" text-anchor="middle" class="component" fill="#ab47bc">Freeze Protection (Dual Layer)</text>
+  <text x="660" y="920" class="label" fill="#ce93d8">Software: DS18B20 on GPIO 42 &#x2014; cut at 32&#xb0;F, recover at 45&#xb0;F (5s interval)</text>
+  <text x="660" y="934" class="label" fill="#ffab91">Hardware: Supco SFPC on suction line &#x2014; opens at 35&#xb0;F, closes at 50&#xb0;F (passive NC)</text>
+
+  <!-- No backup thermostat warning -->
+  <rect x="20" y="950" width="1240" height="26" rx="4" fill="#1a0a0a" stroke="#ef5350" stroke-width="1"/>
+  <text x="640" y="967" text-anchor="middle" class="label" fill="#ef5350">NO BACKUP THERMOSTAT &#x2014; ESP32 power loss = all HVAC OFF &#x2014; System is fail-safe but not fail-operational</text>
+
+  <!-- Version -->
+  <text x="640" y="1005" text-anchor="middle" class="small" fill="#333">ESP32 RV Thermostat &#x2014; SSR-25DA + HL-52S Architecture &#x2014; v2.0</text>
 </svg>

@@ -4,7 +4,7 @@
 
 set -e
 
-DEVICE=${1:-/dev/ttyUSB1}
+DEVICE=${1:-/dev/ttyACM1}
 
 echo "========================================="
 echo "Deploying ESP32 Remote Code"
@@ -30,17 +30,22 @@ fi
 echo ""
 echo "Step 2: Uploading core files..."
 
-# Core Python files for ESP32 Remote (boot.py not needed - ESP32 runs main.py directly)
+# Core Python files for ESP32 Remote
+# boot.py sets relay GPIOs LOW on power-up and launches main.py — deploy LAST
 FILES=(
     "main.py"
     "config.py"
+    "broadlink_client.py"
     "ir_whynter.py"
+    "ir_heater.py"
     "webserver.py"
     "thermostat.py"
     "sensor.py"
     "display.py"
+    "bme280.py"
     "bmp280.py"
     "ssd1306.py"
+    "webrepl_cfg.py"
 )
 
 for file in "${FILES[@]}"; do
@@ -63,11 +68,20 @@ else
 fi
 
 echo ""
-echo "Step 4: Listing uploaded files..."
+echo "Step 4: Uploading boot.py (LAST — starts main.py on power-up)..."
+if [ -f "boot.py" ]; then
+    mpremote connect $DEVICE cp boot.py :
+    echo "  ✓ boot.py uploaded"
+else
+    echo "  ERROR: boot.py not found — relay GPIOs won't initialize safely!"
+fi
+
+echo ""
+echo "Step 5: Listing uploaded files..."
 mpremote connect $DEVICE ls
 
 echo ""
-echo "Step 5: Resetting ESP32..."
+echo "Step 6: Resetting ESP32..."
 mpremote connect $DEVICE reset
 
 echo ""

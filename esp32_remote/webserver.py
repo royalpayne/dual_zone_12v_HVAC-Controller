@@ -201,7 +201,7 @@ class RemoteAPI:
         if not self.heater:
             return self._json_response({'error': 'Heater not available'})
         params = self._parse_query(request)
-        # /api/heater?power=on|off|toggle
+        # /api/heater?power=on|off|toggle|force_off
         # /api/heater?learn=<name>  (learn new button from remote)
         # /api/heater (no params = get status)
         if 'power' in params:
@@ -209,6 +209,9 @@ class RemoteAPI:
                 self.heater.send_on()
             elif params['power'] == 'off':
                 self.heater.send_off()
+            elif params['power'] == 'force_off':
+                self.heater.send_force_off()
+                self.thermostat.set_heater_mode(0)  # Sync thermostat state
             else:
                 self.heater.send_power()
         elif 'learn' in params:

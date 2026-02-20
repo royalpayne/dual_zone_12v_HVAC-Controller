@@ -10,15 +10,15 @@
 - NOTE: Currently running without current limiting resistor for max brightness; may shorten LED lifespan
 
 ## ESP32 Devices
-- **Main ESP32-S3** (N16R8, 40-pin): /dev/ttyACM0, IP 192.168.71.152
+- **Main ESP32-S3** (N16R8, 44-pin): /dev/ttyACM0, IP 192.168.71.152
   - 16MB Flash, 8MB PSRAM
   - I2C: SDA=GPIO 8, SCL=GPIO 9
   - Has BME280 sensor and OLED display
   - Runs web UI, thermostat brain, scheduler
-- **Remote ESP32-S3** (N16R8, 40-pin): /dev/ttyACM1, IP 192.168.71.153
+- **Remote ESP32-S3** (N16R8, 44-pin): /dev/ttyACM1, IP 192.168.71.153
   - 16MB Flash, 8MB PSRAM
   - USB: QinHeng CH340 — shows as /dev/ttyACM*
-  - Serial: 5B41036349, MAC: 1c:db:d4:ad:d2:64
+  - Serial: 5B3E033335, MAC: 1c:db:d4:ae:a2:1c
   - GPIO 22-25 don't exist on S3; GPIO 26-37 reserved for flash/PSRAM
   - Controls: Furnace relay, Rooftop AC compressor + fan relays, IR transmitter
   - I2C: SDA=GPIO 8, SCL=GPIO 9
@@ -54,7 +54,9 @@
 ## Dr. Infrared Heater IR (non-humidifier model)
 - **Raw captured** — proprietary protocol (not NEC), codes captured from physical remote
 - Power code hardcoded in ir_heater.py, additional buttons can be learned via `/api/heater?learn=<name>`
-- API: `/api/heater?power=on|off|toggle`
+- API: `/api/heater?power=on|off|toggle|force_off`
+- **Dual state tracking**: HeaterController.power_on (IR device state) vs ThermostatController.heater_mode (UI state)
+- **Force-off**: `/api/heater?power=force_off` sends IR regardless of tracked state, syncs both states to OFF (fixes out-of-sync IR)
 
 ## Relay Wiring Notes
 - All 4 relays (GPIO 38-41): Active HIGH module, 5V VCC, jumper on HIGH trigger
@@ -123,3 +125,11 @@
 - If main.py is running, interrupt via serial (Ctrl+C) then use `mpremote resume fs cp`
 - MicroPython firmware: v1.27.0 SPIRAM-OCT variant for ESP32-S3
 - udev rules in `99-esp32-thermostat.rules` create persistent symlinks by USB serial number
+
+### OTA Deployment via WebREPL
+- `python3 deploy_ota.py remote|main|both` deploys files over WiFi
+- Uses raw WebSocket protocol to ESP32 WebREPL (port 8266)
+- Custom implementation (mpremote ws: doesn't support special chars in password)
+- Critical: `_handshake()` reads HTTP response 1 byte at a time to avoid consuming WebSocket frames
+- Soft reset (`machine.reset()`) after deploy often leaves boards offline — power cycle recommended
+- WebREPL password: V!ncent16

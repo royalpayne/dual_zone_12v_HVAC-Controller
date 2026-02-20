@@ -6,4 +6,4 @@
 SUBSYSTEM=="tty", ATTRS{serial}=="5B41038621", SYMLINK+="esp32_main"
 
 # Remote ESP32-S3 N16R8 (relays, IR, BMP280 + OLED)
-SUBSYSTEM=="tty", ATTRS{serial}=="5B41036349", SYMLINK+="esp32_remote"
+SUBSYSTEM=="tty", ATTRS{serial}=="5B3E033335", SYMLINK+="esp32_remote"

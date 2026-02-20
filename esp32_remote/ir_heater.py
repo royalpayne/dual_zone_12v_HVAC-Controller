@@ -144,6 +144,15 @@ class HeaterController:
             return self.send_power()
         return True
 
+    def send_force_off(self):
+        """Force heater off (sends IR regardless of tracked state)"""
+        print("[Heater] Force OFF")
+        if self._send_raw('power'):
+            self.power_on = False  # Sync state to off
+            self.save_state()
+            return True
+        return False
+
     def has_code(self, code_name):
         """Check if a command is available"""
         return code_name in _RAW_CODES or code_name in self.extra_codes

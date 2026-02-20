@@ -113,9 +113,12 @@ def main():
 
     # Start WebREPL for over-the-air updates (port 8266)
     if ip:
-        import webrepl
-        webrepl.start()
-        print(f"WebREPL: ws://{ip}:8266")
+        try:
+            import webrepl
+            webrepl.start()
+            print(f"WebREPL: ws://{ip}:8266")
+        except Exception as e:
+            print(f"WebREPL start failed: {e} (run 'import webrepl_setup' to configure)")
 
     # Initialize Broadlink RM4 Mini (WiFi IR blaster)
     bl = BroadlinkClient()

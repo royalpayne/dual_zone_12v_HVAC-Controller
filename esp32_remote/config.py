@@ -50,7 +50,7 @@ SENSOR_READ_INTERVAL = 5  # seconds between readings
 
 # Debug and dry-run modes
 DEBUG = False
-DRY_RUN = True  # Enabled to prevent relay activation during testing
+DRY_RUN = False
 
 # ============================================================
 # HARDWARE CONFIGURATION (ESP32-S3-N16R8 Pin Assignments)

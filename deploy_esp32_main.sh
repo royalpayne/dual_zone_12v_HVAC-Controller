@@ -4,7 +4,7 @@
 
 set -e
 
-DEVICE=${1:-/dev/ttyUSB0}
+DEVICE=${1:-/dev/ttyACM0}
 
 echo "========================================="
 echo "Deploying ESP32 Main Code"
