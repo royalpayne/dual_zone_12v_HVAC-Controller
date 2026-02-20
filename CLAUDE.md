@@ -139,5 +139,6 @@
 - Uses raw WebSocket protocol to ESP32 WebREPL (port 8266)
 - Custom implementation (mpremote ws: doesn't support special chars in password)
 - Critical: `_handshake()` reads HTTP response 1 byte at a time to avoid consuming WebSocket frames
-- Soft reset (`machine.reset()`) after deploy often leaves boards offline — power cycle recommended
+- **No automatic reset** — manually power cycle boards after upload to load new code
+- Automatic reset disabled because `machine.reset()` leaves boards offline (WiFi/network stack doesn't reinitialize properly)
 - WebREPL password: V!ncent16
