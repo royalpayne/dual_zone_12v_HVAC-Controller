@@ -226,8 +226,8 @@ def deploy(target, specific_files=None):
 
     print(f"\n  {ok} uploaded, {fail} failed")
     if fail == 0 and ok > 0:
-        print(f"  Soft resetting {target}...")
-        _soft_reset(ip)
+        print(f"  ✓ Upload complete.")
+        print(f"  ⚠ Power cycle {target} to load new code (automatic reset not reliable).")
     elif fail > 0:
         print(f"  ✗ Retry failed files or check WiFi/WebREPL.")
 

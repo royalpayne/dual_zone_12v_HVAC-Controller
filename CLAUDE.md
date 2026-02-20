@@ -139,8 +139,10 @@
 - Uses raw WebSocket protocol to ESP32 WebREPL (port 8266)
 - Custom implementation (mpremote ws: doesn't support special chars in password)
 - Critical: `_handshake()` reads HTTP response 1 byte at a time to avoid consuming WebSocket frames
-- **Automatic soft reset** after upload (`machine.soft_reset()`)
-  - Resets Python interpreter only, WiFi stays connected
-  - Boards should come back online within 5-10 seconds
-  - If soft reset fails, manual power cycle required
+- **No automatic reset** — files uploaded successfully, boards stay online
+- **Manual power cycle required** to load new code after upload
+- Both `machine.reset()` and `machine.soft_reset()` cause boards to go offline
+  - Network stack doesn't reinitialize properly after reset via WebREPL
+  - Tested: hard reset and soft reset both fail to bring boards back online
+- Consider remote power switch (smart plug/relay) for true remote OTA with reset
 - WebREPL password: V!ncent16
