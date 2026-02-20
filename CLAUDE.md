@@ -58,6 +58,14 @@
 - **Dual state tracking**: HeaterController.power_on (IR device state) vs ThermostatController.heater_mode (UI state)
 - **Force-off**: `/api/heater?power=force_off` sends IR regardless of tracked state, syncs both states to OFF (fixes out-of-sync IR)
 
+## Emergency Shutdown
+- **Force All Off**: `/api/force_all_off` unconditionally shuts down all systems
+  - Turns off all relays (furnace, compressor, fans)
+  - Force-sends IR off to Whynter and heater (ignores tracked state)
+  - Resets all state variables to OFF
+  - Accessible via red "FORCE ALL OFF" button in web UI
+  - Fixes out-of-sync IR devices when mode changes fail to turn off equipment
+
 ## Relay Wiring Notes
 - All 4 relays (GPIO 38-41): Active HIGH module, 5V VCC, jumper on HIGH trigger
   - HIGH trigger required because 3.3V GPIO vs 5V VCC leaves 1.7V across optocoupler, falsely triggering active LOW relays

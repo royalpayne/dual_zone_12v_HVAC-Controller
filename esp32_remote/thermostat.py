@@ -537,6 +537,36 @@ class ThermostatController:
             self.last_heat_change = time.time()
             self.last_cool_change = time.time()
 
+    def force_all_off(self):
+        """Force all systems off - sends IR regardless of tracked state"""
+        print("FORCE ALL OFF - unconditional shutdown")
+        if not config.DRY_RUN:
+            # Turn off all relays
+            self.relay_furnace.value(0)
+            self.relay_compressor.value(0)
+            self.relay_fan_low.value(0)
+            self.relay_fan_high.value(0)
+            # Force IR off - send regardless of tracked state
+            if self.whynter:
+                self.whynter.send_off()
+            if self.heater:
+                self.heater.send_force_off()
+
+        # Reset all state
+        if self.cooling_active:
+            self.last_compressor_off = time.time()
+        self.heating_active = False
+        self.cooling_active = False
+        self.fan_only = False
+        self.dehum_active = False
+        self.fan_post_run_until = 0
+        self.whynter_mode = 0
+        self.heater_mode = 0
+        self.last_whynter_change = time.time()
+        self.last_heater_change = time.time()
+        self.last_heat_change = time.time()
+        self.last_cool_change = time.time()
+
     def _furnace_relay(self, on):
         """Direct furnace relay control"""
         if not config.DRY_RUN:

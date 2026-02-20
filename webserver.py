@@ -223,8 +223,8 @@ class ThermostatWebServer:
                 self.remote.set_whynter_mode(int(data.get('mode', 0)))
             elif 'POST /api/remote/heater_mode' in request:
                 self.remote.set_heater_mode(int(data.get('mode', 0)))
-            elif 'POST /api/remote/heater_force_off' in request:
-                self.remote.force_heater_off()
+            elif 'POST /api/remote/force_all_off' in request:
+                self.remote.force_all_off()
             elif 'POST /api/remote/fan_speed' in request:
                 self.remote.set_fan_speed(int(data.get('speed', 4)))
             elif 'POST /api/remote/fan_only' in request:
@@ -366,8 +366,9 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <button class="btn" id="h0" onclick="heater(0)">OFF</button>
 <button class="btn" id="h1" onclick="heater(1)">ON</button>
 </div>
+<h3 style="margin-top:20px;color:#ff4444;">EMERGENCY SHUTDOWN</h3>
 <div class="row">
-<button class="btn heater" onclick="heaterForceOff()">FORCE OFF</button>
+<button class="btn heater" onclick="forceAllOff()" style="background:#ff4444;font-weight:bold;">FORCE ALL OFF</button>
 </div>
 </div>
 
@@ -443,7 +444,12 @@ function setRCool(v){adjustingRCool=true;document.getElementById('pcset').textCo
 function setRHumidity(v){adjustingRHum=true;document.getElementById('humset').textContent=v;clearTimeout(rhumTimer);rhumTimer=setTimeout(function(){fetch('/api/remote/humidity_setpoint',{method:'POST',body:JSON.stringify({value:parseInt(v)})}).then(r=>r.json()).then(function(d){setTimeout(function(){adjustingRHum=false;},1000);});},500);}
 function whynter(m){fetch('/api/remote/whynter_mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updRemote);}
 function heater(m){fetch('/api/remote/heater_mode',{method:'POST',body:JSON.stringify({mode:m})}).then(r=>r.json()).then(updRemote);}
-function heaterForceOff(){document.getElementById('h0').className='btn heater';document.getElementById('h1').className='btn';fetch('/api/remote/heater_force_off',{method:'POST',body:'{}'}).then(r=>r.json()).then(updRemote);}
+function forceAllOff(){
+for(var i=0;i<4;i++)document.getElementById('pm'+i).className='btn'+(i==0?' active':'');
+for(var i=0;i<4;i++)document.getElementById('w'+i).className='btn'+(i==0?' whynter':'');
+for(var i=0;i<2;i++)document.getElementById('h'+i).className='btn'+(i==0?' heater':'');
+fetch('/api/remote/force_all_off',{method:'POST',body:'{}'}).then(r=>r.json()).then(updRemote);
+}
 function fanSpeed(s){fetch('/api/remote/fan_speed',{method:'POST',body:JSON.stringify({speed:s})}).then(r=>r.json()).then(updRemote);}
 function fanOnly(on){fetch('/api/remote/fan_only',{method:'POST',body:JSON.stringify({on:on})}).then(r=>r.json()).then(updRemote);}
 function syncZones(){

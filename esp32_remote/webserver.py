@@ -73,6 +73,8 @@ class RemoteAPI:
             return self._api_broadlink_sensors()
         elif 'GET /api/broadlink/status' in request:
             return self._api_broadlink_status()
+        elif 'GET /api/force_all_off' in request:
+            return self._api_force_all_off()
         else:
             return "HTTP/1.1 404 Not Found\r\n\r\n"
 
@@ -247,3 +249,8 @@ class RemoteAPI:
         if self.broadlink:
             return self._json_response(self.broadlink.get_status())
         return self._json_response({'error': 'Broadlink not configured'})
+
+    def _api_force_all_off(self):
+        """Force all systems off - relays + IR devices"""
+        self.thermostat.force_all_off()
+        return self._api_status()

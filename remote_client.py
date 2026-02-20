@@ -98,6 +98,10 @@ class RemoteClient:
         """Force heater off via IR (ignores tracked state)"""
         return self._request('/api/heater', {'power': 'force_off'})
 
+    def force_all_off(self):
+        """Force all systems off - relays + IR devices (ignores tracked state)"""
+        return self._request('/api/force_all_off')
+
     def set_furnace(self, on):
         """Direct furnace relay control"""
         return self._request('/api/relay/furnace', {'on': 1 if on else 0})
