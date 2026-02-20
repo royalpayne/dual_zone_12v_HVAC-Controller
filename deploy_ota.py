@@ -175,19 +175,19 @@ def _put_file(ws, local_path, remote_name):
 
 
 def _soft_reset(ip):
-    """Connect via WebREPL, interrupt main.py with Ctrl-C, then machine.reset()."""
+    """Connect via WebREPL, interrupt main.py with Ctrl-C, then soft reset."""
     try:
         s, ws = _connect(ip)
         # Ctrl-C interrupts running main.py (sends KeyboardInterrupt)
         ws.write(b"\r\x03\x03", frame=FRAME_TXT)
         time.sleep(0.5)
-        # Send machine.reset() in the REPL
-        ws.write(b"import machine; machine.reset()\r\n", frame=FRAME_TXT)
-        time.sleep(0.5)
+        # Soft reset: resets Python interpreter only, WiFi stays connected
+        ws.write(b"import machine; machine.soft_reset()\r\n", frame=FRAME_TXT)
+        time.sleep(1.0)
         s.close()
-        print("  Reset sent.")
+        print("  Soft reset sent (WiFi stays connected).")
     except Exception as e:
-        print(f"  Reset failed ({e}) — power cycle or reset manually.")
+        print(f"  Reset failed ({e}) — may need power cycle.")
 
 
 def deploy(target, specific_files=None):
@@ -226,7 +226,8 @@ def deploy(target, specific_files=None):
 
     print(f"\n  {ok} uploaded, {fail} failed")
     if fail == 0 and ok > 0:
-        print(f"  ✓ Upload complete. Power cycle {target} to load new code.")
+        print(f"  Soft resetting {target}...")
+        _soft_reset(ip)
     elif fail > 0:
         print(f"  ✗ Retry failed files or check WiFi/WebREPL.")
 
