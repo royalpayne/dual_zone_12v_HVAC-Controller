@@ -1,0 +1,334 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" font-family="Arial, Helvetica, sans-serif" font-size="11">
+  <rect width="900" height="700" fill="#f5f5f5"/>
+  <defs>
+    <!-- Screw terminal symbol -->
+    <g id="screw-term">
+      <rect width="14" height="16" rx="1" fill="#b0b0b0" stroke="#666" stroke-width="0.8"/>
+      <circle cx="7" cy="8" r="3.5" fill="none" stroke="#444" stroke-width="0.8"/>
+      <line x1="4.5" y1="5.5" x2="9.5" y2="10.5" stroke="#444" stroke-width="0.8"/>
+    </g>
+    <!-- Mounting hole -->
+    <g id="mount-hole">
+      <circle r="5" fill="none" stroke="#999" stroke-width="1"/>
+      <circle r="2" fill="#999"/>
+    </g>
+    <!-- Resistor symbol -->
+    <g id="resistor">
+      <rect x="-12" y="-4" width="24" height="8" rx="1" fill="#d4c5a0" stroke="#8a7d5a" stroke-width="0.8"/>
+      <line x1="-16" y1="0" x2="-12" y2="0" stroke="#555" stroke-width="1"/>
+      <line x1="12" y1="0" x2="16" y2="0" stroke="#555" stroke-width="1"/>
+    </g>
+  </defs>
+
+  <!-- ==================== -->
+  <!-- TITLE BLOCK -->
+  <!-- ==================== -->
+  <rect x="20" y="12" width="860" height="48" rx="4" fill="white" stroke="#333" stroke-width="1.5"/>
+  <text x="450" y="33" text-anchor="middle" font-size="16" font-weight="bold" fill="#1a1a1a" font-family="Arial">ESP32 Remote Controller — Board Layout</text>
+  <text x="450" y="50" text-anchor="middle" font-size="10" fill="#777">6.0" x 4.0" project board  |  Rev 2  |  RV Thermostat Project</text>
+
+  <!-- ==================== -->
+  <!-- PCB BOARD -->
+  <!-- ==================== -->
+  <!-- Board shadow -->
+  <rect x="54" y="79" width="690" height="462" rx="8" fill="#ccc" opacity="0.3"/>
+  <!-- Board body -->
+  <rect x="50" y="75" width="690" height="462" rx="8" fill="#2d5016" stroke="#1a3a0a" stroke-width="2"/>
+  <!-- Board inner area (lighter) -->
+  <rect x="58" y="83" width="674" height="446" rx="5" fill="#3a6b1e" stroke="none"/>
+
+  <!-- Zone divider line -->
+  <line x1="390" y1="90" x2="390" y2="522" stroke="#2d5016" stroke-width="1.5" stroke-dasharray="8,4"/>
+  <text x="200" y="104" text-anchor="middle" font-size="9" fill="#8bc34a" font-weight="bold" letter-spacing="2">LOW VOLTAGE</text>
+  <text x="560" y="104" text-anchor="middle" font-size="9" fill="#ffb74d" font-weight="bold" letter-spacing="2">POWER / RELAY</text>
+
+  <!-- Mounting holes -->
+  <use href="#mount-hole" x="74" y="99"/>
+  <use href="#mount-hole" x="716" y="99"/>
+  <use href="#mount-hole" x="74" y="513"/>
+  <use href="#mount-hole" x="716" y="513"/>
+
+  <!-- ==================== -->
+  <!-- ESP32-S3 MODULE -->
+  <!-- ==================== -->
+  <rect x="80" y="130" width="290" height="110" rx="4" fill="#1a1a2e" stroke="#555" stroke-width="1.5"/>
+  <!-- Pin header rows -->
+  <rect x="84" y="134" width="282" height="6" rx="1" fill="#333"/>
+  <rect x="84" y="230" width="282" height="6" rx="1" fill="#333"/>
+  <!-- Pin dots top -->
+  <g fill="#c8a415">
+    <circle cx="100" cy="137" r="2"/><circle cx="115" cy="137" r="2"/>
+    <circle cx="130" cy="137" r="2"/><circle cx="145" cy="137" r="2"/>
+    <circle cx="160" cy="137" r="2"/><circle cx="175" cy="137" r="2"/>
+    <circle cx="190" cy="137" r="2"/><circle cx="205" cy="137" r="2"/>
+    <circle cx="220" cy="137" r="2"/><circle cx="235" cy="137" r="2"/>
+    <circle cx="250" cy="137" r="2"/><circle cx="265" cy="137" r="2"/>
+    <circle cx="280" cy="137" r="2"/><circle cx="295" cy="137" r="2"/>
+    <circle cx="310" cy="137" r="2"/><circle cx="325" cy="137" r="2"/>
+    <circle cx="340" cy="137" r="2"/><circle cx="355" cy="137" r="2"/>
+  </g>
+  <!-- Pin dots bottom -->
+  <g fill="#c8a415">
+    <circle cx="100" cy="233" r="2"/><circle cx="115" cy="233" r="2"/>
+    <circle cx="130" cy="233" r="2"/><circle cx="145" cy="233" r="2"/>
+    <circle cx="160" cy="233" r="2"/><circle cx="175" cy="233" r="2"/>
+    <circle cx="190" cy="233" r="2"/><circle cx="205" cy="233" r="2"/>
+    <circle cx="220" cy="233" r="2"/><circle cx="235" cy="233" r="2"/>
+    <circle cx="250" cy="233" r="2"/><circle cx="265" cy="233" r="2"/>
+    <circle cx="280" cy="233" r="2"/><circle cx="295" cy="233" r="2"/>
+    <circle cx="310" cy="233" r="2"/><circle cx="325" cy="233" r="2"/>
+    <circle cx="340" cy="233" r="2"/><circle cx="355" cy="233" r="2"/>
+  </g>
+  <!-- ESP32 chip -->
+  <rect x="160" y="155" width="130" height="60" rx="2" fill="#222" stroke="#444" stroke-width="1"/>
+  <text x="225" y="178" text-anchor="middle" font-size="11" fill="white" font-weight="bold">ESP32-S3</text>
+  <text x="225" y="192" text-anchor="middle" font-size="8" fill="#aaa">N16R8</text>
+  <text x="225" y="207" text-anchor="middle" font-size="7" fill="#666">16MB / 8MB PSRAM</text>
+  <!-- USB-C connector -->
+  <rect x="64" y="170" width="22" height="32" rx="4" fill="#888" stroke="#555" stroke-width="1"/>
+  <rect x="68" y="178" width="14" height="16" rx="2" fill="#555"/>
+  <text x="75" y="220" text-anchor="middle" font-size="7" fill="#8bc34a">USB-C</text>
+  <!-- Antenna area -->
+  <rect x="340" y="148" width="24" height="72" rx="1" fill="none" stroke="#666" stroke-width="0.5" stroke-dasharray="3,2"/>
+  <text x="352" y="188" text-anchor="middle" font-size="6" fill="#666" transform="rotate(90, 352, 188)">ANTENNA</text>
+
+  <!-- Key pin labels (top row) -->
+  <text x="98" y="128" font-size="7" fill="#8bc34a" text-anchor="middle">3V3</text>
+  <text x="130" y="128" font-size="7" fill="#8bc34a" text-anchor="middle">8</text>
+  <text x="145" y="128" font-size="7" fill="#8bc34a" text-anchor="middle">9</text>
+  <text x="130" y="120" font-size="6" fill="#aaa" text-anchor="middle">SDA</text>
+  <text x="145" y="120" font-size="6" fill="#aaa" text-anchor="middle">SCL</text>
+
+  <!-- Key pin labels (bottom row) -->
+  <text x="250" y="248" font-size="7" fill="#ffb74d" text-anchor="middle">38</text>
+  <text x="265" y="248" font-size="7" fill="#ffb74d" text-anchor="middle">39</text>
+  <text x="280" y="248" font-size="7" fill="#ffb74d" text-anchor="middle">40</text>
+  <text x="295" y="248" font-size="7" fill="#ffb74d" text-anchor="middle">41</text>
+  <text x="310" y="248" font-size="7" fill="#4dd0e1" text-anchor="middle">42</text>
+  <text x="115" y="248" font-size="7" fill="#8bc34a" text-anchor="middle">GND</text>
+
+  <!-- ==================== -->
+  <!-- HL-52S RELAY MODULE -->
+  <!-- ==================== -->
+  <rect x="410" y="115" width="310" height="205" rx="4" fill="#0a3d0a" stroke="#1b5e20" stroke-width="2"/>
+  <!-- Module label -->
+  <text x="565" y="135" text-anchor="middle" font-size="11" font-weight="bold" fill="white">HL-52S  4-Channel Relay Module</text>
+  <text x="565" y="148" text-anchor="middle" font-size="8" fill="#81c784">Active HIGH  |  5V VCC  |  Jumper: HIGH trigger</text>
+
+  <!-- Relay coils -->
+  <g transform="translate(425, 160)">
+    <rect width="60" height="65" rx="3" fill="#003d99" stroke="#1565c0" stroke-width="1.2"/>
+    <text x="30" y="18" text-anchor="middle" font-size="10" fill="white" font-weight="bold">K1</text>
+    <text x="30" y="32" text-anchor="middle" font-size="8" fill="#90caf9">FURNACE</text>
+    <text x="30" y="45" text-anchor="middle" font-size="7" fill="#ffd54f">GPIO 38</text>
+    <text x="30" y="58" text-anchor="middle" font-size="6" fill="#aaa">dry contact</text>
+  </g>
+  <g transform="translate(495, 160)">
+    <rect width="60" height="65" rx="3" fill="#8b0000" stroke="#c62828" stroke-width="1.2"/>
+    <text x="30" y="18" text-anchor="middle" font-size="10" fill="white" font-weight="bold">K2</text>
+    <text x="30" y="32" text-anchor="middle" font-size="8" fill="#ef9a9a">COMPR</text>
+    <text x="30" y="45" text-anchor="middle" font-size="7" fill="#ffd54f">GPIO 39</text>
+    <text x="30" y="58" text-anchor="middle" font-size="6" fill="#ffcdd2">12V→SSR</text>
+  </g>
+  <g transform="translate(565, 160)">
+    <rect width="60" height="65" rx="3" fill="#bf360c" stroke="#e65100" stroke-width="1.2"/>
+    <text x="30" y="18" text-anchor="middle" font-size="10" fill="white" font-weight="bold">K3</text>
+    <text x="30" y="32" text-anchor="middle" font-size="8" fill="#ffcc80">FAN LO</text>
+    <text x="30" y="45" text-anchor="middle" font-size="7" fill="#ffd54f">GPIO 40</text>
+    <text x="30" y="58" text-anchor="middle" font-size="6" fill="#ffcc80">120VAC</text>
+  </g>
+  <g transform="translate(635, 160)">
+    <rect width="60" height="65" rx="3" fill="#bf360c" stroke="#e65100" stroke-width="1.2"/>
+    <text x="30" y="18" text-anchor="middle" font-size="10" fill="white" font-weight="bold">K4</text>
+    <text x="30" y="32" text-anchor="middle" font-size="8" fill="#ffcc80">FAN HI</text>
+    <text x="30" y="45" text-anchor="middle" font-size="7" fill="#ffd54f">GPIO 41</text>
+    <text x="30" y="58" text-anchor="middle" font-size="6" fill="#ffcc80">120VAC</text>
+  </g>
+
+  <!-- Relay input header -->
+  <rect x="425" y="235" width="270" height="14" rx="2" fill="#1b3a1b" stroke="#2e7d32" stroke-width="0.8"/>
+  <text x="435" y="245" font-size="7" fill="#a5d6a7">IN1   IN2   IN3   IN4       VCC  GND</text>
+
+  <!-- Screw terminals on relay module -->
+  <g transform="translate(425, 260)">
+    <use href="#screw-term" x="0" y="0"/><use href="#screw-term" x="18" y="0"/><use href="#screw-term" x="36" y="0"/>
+    <use href="#screw-term" x="68" y="0"/><use href="#screw-term" x="86" y="0"/><use href="#screw-term" x="104" y="0"/>
+    <use href="#screw-term" x="136" y="0"/><use href="#screw-term" x="154" y="0"/><use href="#screw-term" x="172" y="0"/>
+    <use href="#screw-term" x="204" y="0"/><use href="#screw-term" x="222" y="0"/><use href="#screw-term" x="240" y="0"/>
+  </g>
+  <text x="440" y="292" font-size="6" fill="#81c784">NC NO COM</text>
+  <text x="508" y="292" font-size="6" fill="#81c784">NC NO COM</text>
+  <text x="576" y="292" font-size="6" fill="#81c784">NC NO COM</text>
+  <text x="644" y="292" font-size="6" fill="#81c784">NC NO COM</text>
+  <text x="440" y="302" font-size="6" fill="#999">K1 (furn)</text>
+  <text x="508" y="302" font-size="6" fill="#999">K2 (SSR)</text>
+  <text x="576" y="302" font-size="6" fill="#999">K3 (fan lo)</text>
+  <text x="644" y="302" font-size="6" fill="#999">K4 (fan hi)</text>
+
+  <!-- ==================== -->
+  <!-- BUCK CONVERTER -->
+  <!-- ==================== -->
+  <rect x="420" y="340" width="180" height="80" rx="4" fill="#3e2723" stroke="#5d4037" stroke-width="1.5"/>
+  <!-- Inductor coil symbol -->
+  <circle cx="510" cy="365" r="10" fill="none" stroke="#8d6e63" stroke-width="1.5"/>
+  <text x="510" y="368" text-anchor="middle" font-size="7" fill="#8d6e63">L</text>
+  <text x="510" y="355" text-anchor="middle" font-size="10" font-weight="bold" fill="white">Buck Converter</text>
+  <text x="510" y="392" text-anchor="middle" font-size="9" fill="#bcaaa4">12V DC → 5V DC</text>
+  <text x="510" y="408" text-anchor="middle" font-size="7" fill="#8d6e63">IN+  IN-     OUT+  OUT-</text>
+  <!-- Input/output labels -->
+  <text x="435" y="338" font-size="7" fill="#ef5350">12V IN ↓</text>
+  <text x="565" y="338" font-size="7" fill="#e53935">5V OUT ↑</text>
+
+  <!-- ==================== -->
+  <!-- 4.7K PULL-UP RESISTOR -->
+  <!-- ==================== -->
+  <use href="#resistor" x="310" y="300"/>
+  <text x="310" y="313" text-anchor="middle" font-size="8" fill="#8bc34a" font-weight="bold">4.7K</text>
+  <text x="310" y="323" text-anchor="middle" font-size="6" fill="#999">DS18B20 pull-up</text>
+
+  <!-- ==================== -->
+  <!-- WIRE ROUTING -->
+  <!-- ==================== -->
+
+  <!-- GPIO 38-41 → Relay IN1-IN4 (amber) -->
+  <path d="M 265 236 L 265 255 L 400 255 L 400 242 L 425 242" fill="none" stroke="#ffc107" stroke-width="1.8"/>
+  <circle cx="265" cy="236" r="2.5" fill="#ffc107"/>
+  <text x="330" y="264" font-size="7" fill="#ffa000" font-weight="bold">GPIO 38-41</text>
+
+  <!-- I2C lines exit left (blue) -->
+  <path d="M 130 134 L 130 112 L 68 112" fill="none" stroke="#42a5f5" stroke-width="1.8"/>
+  <path d="M 145 134 L 145 112" fill="none" stroke="#66bb6a" stroke-width="1.8"/>
+  <circle cx="130" cy="134" r="2.5" fill="#42a5f5"/>
+  <circle cx="145" cy="134" r="2.5" fill="#66bb6a"/>
+
+  <!-- 3.3V to pull-up resistor (red thin) -->
+  <path d="M 98 134 L 98 300 L 294 300" fill="none" stroke="#e53935" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <circle cx="98" cy="134" r="2.5" fill="#e53935"/>
+
+  <!-- GPIO 42 to pull-up resistor (cyan) -->
+  <path d="M 310 236 L 310 296" fill="none" stroke="#26c6da" stroke-width="1.8"/>
+  <circle cx="310" cy="236" r="2.5" fill="#26c6da"/>
+
+  <!-- 5V from buck to relay VCC -->
+  <line x1="580" y1="340" x2="580" y2="250" stroke="#e53935" stroke-width="1.8"/>
+
+  <!-- 12V in from terminal to buck -->
+  <line x1="450" y1="420" x2="450" y2="470" stroke="#e53935" stroke-width="1.5" stroke-dasharray="4,2"/>
+
+  <!-- GND bus (black dashed) -->
+  <path d="M 115 236 L 115 260 L 400 260 L 400 410" fill="none" stroke="#555" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <circle cx="115" cy="236" r="2" fill="#555"/>
+
+  <!-- ==================== -->
+  <!-- TERMINAL STRIP (bottom) -->
+  <!-- ==================== -->
+  <rect x="68" y="445" width="654" height="72" rx="4" fill="#2a4a12" stroke="#1a3a0a" stroke-width="1.5"/>
+  <text x="395" y="460" text-anchor="middle" font-size="9" font-weight="bold" fill="#c5e1a5" letter-spacing="1">SCREW TERMINAL STRIP — ALL EXTERNAL CONNECTIONS</text>
+
+  <!-- USB Access -->
+  <g transform="translate(78, 470)">
+    <rect width="60" height="38" rx="3" fill="#37474f" stroke="#607d8b" stroke-width="1"/>
+    <text x="30" y="15" text-anchor="middle" font-size="8" fill="white" font-weight="bold">USB</text>
+    <text x="30" y="26" text-anchor="middle" font-size="7" fill="#b0bec5">access</text>
+    <text x="30" y="35" text-anchor="middle" font-size="6" fill="#78909c">cutout</text>
+  </g>
+
+  <!-- I2C connector (to separate OLED/BME280 board) -->
+  <g transform="translate(148, 470)">
+    <rect width="75" height="38" rx="3" fill="#1565c0" stroke="#1976d2" stroke-width="1"/>
+    <text x="37" y="13" text-anchor="middle" font-size="8" fill="white" font-weight="bold">I2C OUT</text>
+    <text x="37" y="24" text-anchor="middle" font-size="6" fill="#bbdefb">SDA SCL 3V3 GND</text>
+    <text x="37" y="35" text-anchor="middle" font-size="6" fill="#90caf9">→ OLED + BME280</text>
+  </g>
+
+  <!-- DS18B20 -->
+  <g transform="translate(233, 470)">
+    <rect width="70" height="38" rx="3" fill="#006064" stroke="#00838f" stroke-width="1"/>
+    <text x="35" y="13" text-anchor="middle" font-size="8" fill="white" font-weight="bold">DS18B20</text>
+    <text x="35" y="24" text-anchor="middle" font-size="6" fill="#b2ebf2">3V3  DATA  GND</text>
+    <text x="35" y="35" text-anchor="middle" font-size="6" fill="#80deea">GPIO 42</text>
+  </g>
+
+  <!-- 12V DC IN -->
+  <g transform="translate(313, 470)">
+    <rect width="65" height="38" rx="3" fill="#b71c1c" stroke="#c62828" stroke-width="1"/>
+    <text x="32" y="13" text-anchor="middle" font-size="8" fill="white" font-weight="bold">12V IN</text>
+    <text x="32" y="24" text-anchor="middle" font-size="6" fill="#ffcdd2">V+    GND</text>
+    <text x="32" y="35" text-anchor="middle" font-size="6" fill="#ef9a9a">RV battery</text>
+  </g>
+
+  <!-- Furnace dry contact -->
+  <g transform="translate(388, 470)">
+    <rect width="72" height="38" rx="3" fill="#0d47a1" stroke="#1565c0" stroke-width="1"/>
+    <text x="36" y="13" text-anchor="middle" font-size="8" fill="white" font-weight="bold">FURNACE</text>
+    <text x="36" y="24" text-anchor="middle" font-size="6" fill="#bbdefb">NO     COM</text>
+    <text x="36" y="35" text-anchor="middle" font-size="6" fill="#90caf9">K1 dry contact</text>
+  </g>
+
+  <!-- SSR Trigger (12VDC) -->
+  <g transform="translate(470, 470)">
+    <rect width="80" height="38" rx="3" fill="#880e4f" stroke="#ad1457" stroke-width="1"/>
+    <text x="40" y="13" text-anchor="middle" font-size="8" fill="white" font-weight="bold">SSR TRIG</text>
+    <text x="40" y="24" text-anchor="middle" font-size="6" fill="#f8bbd0">12V+    12V-</text>
+    <text x="40" y="35" text-anchor="middle" font-size="6" fill="#f48fb1">K2 → SSR-25DA</text>
+  </g>
+
+  <!-- Junction Box (fans + neutral + ground) -->
+  <g transform="translate(560, 470)">
+    <rect width="150" height="38" rx="3" fill="#e65100" stroke="#ef6c00" stroke-width="1"/>
+    <text x="75" y="13" text-anchor="middle" font-size="8" fill="white" font-weight="bold">TO JUNCTION BOX</text>
+    <text x="75" y="24" text-anchor="middle" font-size="6" fill="#ffe0b2">FAN LO  |  FAN HI  |  NEUT  |  GND</text>
+    <text x="75" y="35" text-anchor="middle" font-size="6" fill="#ffcc80">K3 NO     K4 NO     pass-thru</text>
+  </g>
+
+  <!-- ==================== -->
+  <!-- OFF-BOARD CALLOUTS -->
+  <!-- ==================== -->
+
+  <!-- Arrow to OLED/BME280 board -->
+  <rect x="20" y="545" width="180" height="55" rx="5" fill="white" stroke="#1565c0" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="110" y="562" text-anchor="middle" font-size="9" fill="#0d47a1" font-weight="bold">SEPARATE BOARD</text>
+  <text x="110" y="575" text-anchor="middle" font-size="8" fill="#1565c0">SSD1306 OLED (0x3C)</text>
+  <text x="110" y="588" text-anchor="middle" font-size="8" fill="#1565c0">BME280 Sensor (0x76)</text>
+  <line x1="110" y1="545" x2="185" y2="510" stroke="#1565c0" stroke-width="1" stroke-dasharray="4,2"/>
+
+  <!-- Arrow to junction box -->
+  <rect x="540" y="545" width="200" height="70" rx="5" fill="white" stroke="#e65100" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="640" y="562" text-anchor="middle" font-size="9" fill="#bf360c" font-weight="bold">JUNCTION BOX (120VAC)</text>
+  <text x="640" y="575" text-anchor="middle" font-size="8" fill="#e65100">SSR-25DA + heatsink</text>
+  <text x="640" y="588" text-anchor="middle" font-size="8" fill="#e65100">Supco SFPC freeze stat</text>
+  <text x="640" y="601" text-anchor="middle" font-size="8" fill="#e65100">Dometic Brisk II 6-pin cable</text>
+  <line x1="635" y1="545" x2="635" y2="510" stroke="#e65100" stroke-width="1" stroke-dasharray="4,2"/>
+
+  <!-- Arrow to DS18B20 probe -->
+  <rect x="225" y="545" width="160" height="40" rx="5" fill="white" stroke="#00838f" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="305" y="562" text-anchor="middle" font-size="9" fill="#006064" font-weight="bold">EVAPORATOR COIL</text>
+  <text x="305" y="575" text-anchor="middle" font-size="8" fill="#00838f">DS18B20 waterproof probe</text>
+  <line x1="268" y1="545" x2="268" y2="510" stroke="#00838f" stroke-width="1" stroke-dasharray="4,2"/>
+
+  <!-- ==================== -->
+  <!-- LEGEND -->
+  <!-- ==================== -->
+  <rect x="20" y="632" width="860" height="55" rx="4" fill="white" stroke="#ccc" stroke-width="1"/>
+  <text x="35" y="650" font-size="10" font-weight="bold" fill="#333">Wire Legend:</text>
+
+  <line x1="35" y1="665" x2="55" y2="665" stroke="#ffc107" stroke-width="2.5"/>
+  <text x="60" y="669" font-size="8" fill="#555">GPIO → Relay</text>
+
+  <line x1="155" y1="665" x2="175" y2="665" stroke="#42a5f5" stroke-width="2.5"/>
+  <text x="180" y="669" font-size="8" fill="#555">I2C SDA</text>
+
+  <line x1="240" y1="665" x2="260" y2="665" stroke="#66bb6a" stroke-width="2.5"/>
+  <text x="265" y="669" font-size="8" fill="#555">I2C SCL</text>
+
+  <line x1="325" y1="665" x2="345" y2="665" stroke="#26c6da" stroke-width="2.5"/>
+  <text x="350" y="669" font-size="8" fill="#555">1-Wire (DS18B20)</text>
+
+  <line x1="465" y1="665" x2="485" y2="665" stroke="#e53935" stroke-width="2.5"/>
+  <text x="490" y="669" font-size="8" fill="#555">Power (3.3V / 5V / 12V)</text>
+
+  <line x1="620" y1="665" x2="640" y2="665" stroke="#555" stroke-width="2" stroke-dasharray="3,2"/>
+  <text x="645" y="669" font-size="8" fill="#555">GND bus</text>
+
+  <text x="35" y="680" font-size="8" fill="#999">GPIO: SDA=8, SCL=9, Relay=38/39/40/41, Freeze=42  |  I2C: OLED=0x3C, BME280=0x76  |  All 120VAC in junction box only</text>
+</svg>

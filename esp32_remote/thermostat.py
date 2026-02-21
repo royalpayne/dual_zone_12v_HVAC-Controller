@@ -7,6 +7,8 @@
 from machine import Pin
 import time
 import config
+from rgb_led import RGBStatusLED
+from buzzer import Buzzer
 
 
 class ThermostatController:
@@ -59,6 +61,21 @@ class ThermostatController:
         self.whynter = None  # Whynter portable AC (via Broadlink)
         self.heater = None   # Dr. Heater (via Broadlink)
 
+        # Phase 1 enhancements: RGB LED and Buzzer
+        try:
+            self.rgb_led = RGBStatusLED()
+            print("RGB LED initialized")
+        except Exception as e:
+            print(f"RGB LED init failed: {e}")
+            self.rgb_led = None
+
+        try:
+            self.buzzer = Buzzer()
+            print("Buzzer initialized")
+        except Exception as e:
+            print(f"Buzzer init failed: {e}")
+            self.buzzer = None
+
     def set_ir_transmitter(self, whynter_ir):
         """Attach Whynter IR controller"""
         self.whynter = whynter_ir
@@ -83,6 +100,9 @@ class ThermostatController:
             if not self.freeze_lockout:
                 self.freeze_lockout = True
                 print(f"FREEZE LOCKOUT: evap {temp_f:.1f}F <= {config.FREEZE_THRESHOLD}F")
+                # Sound freeze alert
+                if self.buzzer:
+                    self.buzzer.freeze_alert()
                 if self.cooling_active:
                     self._cool_off()
         # Recovery: clear lockout when evaporator warms up
@@ -338,6 +358,29 @@ class ThermostatController:
 
         # Dehumidification: run Whynter in dehum mode when humidity is high
         self._control_dehum()
+
+        # Update RGB LED status
+        if self.rgb_led:
+            self._update_led_status()
+
+    def _update_led_status(self):
+        """Update RGB LED based on current thermostat state"""
+        if not self.rgb_led:
+            return
+
+        status = {
+            'mode': self.mode,
+            'heating_active': self.heating_active,
+            'cooling_active': self.cooling_active,
+            'fan_only': self.fan_only,
+            'dehum_active': self.dehum_active
+        }
+
+        # Check for freeze warning or communication errors
+        freeze_warning = self.freeze_lockout
+        comm_error = False  # Could be set based on Broadlink connection status
+
+        self.rgb_led.update_status(status, freeze_warning, comm_error)
 
     def _control_dehum(self):
         """Dehumidification control — triggers Whynter dehum mode based on humidity.
@@ -601,5 +644,26 @@ class ThermostatController:
             'bl_temp': self.bl_temp,
             'bl_humidity': self.bl_humidity,
             'dry_run': config.DRY_RUN,
-            'debug': config.DEBUG
+            'debug': config.DEBUG,
+            'buzzer_enabled': self.buzzer.is_enabled() if self.buzzer else None
         }
+
+    def set_buzzer_enabled(self, enabled):
+        """Enable or disable buzzer alerts"""
+        if self.buzzer:
+            if enabled:
+                self.buzzer.enable()
+                print("Buzzer enabled")
+            else:
+                self.buzzer.disable()
+                print("Buzzer disabled")
+
+    def test_buzzer(self):
+        """Test buzzer with a confirmation beep"""
+        if self.buzzer:
+            self.buzzer.confirmation_beep()
+
+    def set_led_color(self, color_name):
+        """Manually set LED color (for testing)"""
+        if self.rgb_led:
+            self.rgb_led.set_color(color_name)

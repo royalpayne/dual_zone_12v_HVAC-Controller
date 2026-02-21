@@ -75,6 +75,10 @@ class RemoteAPI:
             return self._api_broadlink_status()
         elif 'GET /api/force_all_off' in request:
             return self._api_force_all_off()
+        elif 'GET /api/buzzer' in request:
+            return self._api_buzzer(request)
+        elif 'GET /api/led' in request:
+            return self._api_led(request)
         else:
             return "HTTP/1.1 404 Not Found\r\n\r\n"
 
@@ -254,3 +258,26 @@ class RemoteAPI:
         """Force all systems off - relays + IR devices"""
         self.thermostat.force_all_off()
         return self._api_status()
+
+    def _api_buzzer(self, request):
+        """Control buzzer - enable/disable/test"""
+        params = self._parse_query(request)
+        # /api/buzzer?enable=1|0  (enable or disable buzzer)
+        # /api/buzzer?test=1      (test buzzer with confirmation beep)
+        # /api/buzzer             (get status)
+        if 'enable' in params:
+            enabled = params['enable'] == '1'
+            self.thermostat.set_buzzer_enabled(enabled)
+        elif 'test' in params:
+            self.thermostat.test_buzzer()
+        return self._api_status()
+
+    def _api_led(self, request):
+        """Control RGB LED - set color or get status"""
+        params = self._parse_query(request)
+        # /api/led?color=red|blue|green|yellow|white|purple|orange|cyan|off
+        # /api/led  (get status - LED color is set automatically by thermostat)
+        if 'color' in params:
+            self.thermostat.set_led_color(params['color'])
+            return self._json_response({'color': params['color'], 'status': 'ok'})
+        return self._json_response({'status': 'LED controlled by thermostat state'})

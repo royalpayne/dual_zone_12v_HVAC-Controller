@@ -7,8 +7,10 @@ from machine import Pin
 print("ESP32 boot.py starting...")
 
 # Set relay GPIOs to OFF immediately to prevent activation during boot
-# All relays are active HIGH: LOW = OFF
-for gpio in (38, 39, 40, 41):
+# Waveshare ESP32-S3-Relay-6CH: All relays are active HIGH (LOW = OFF)
+# CH1 (GPIO 1) = Furnace, CH2 (GPIO 2) = Compressor
+# CH3 (GPIO 41) = Fan Low, CH4 (GPIO 42) = Fan High
+for gpio in (1, 2, 41, 42):
     Pin(gpio, Pin.OUT, value=0)
 
 time.sleep(1)  # Give hardware time to initialize

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="700" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font: bold 20px monospace; fill: #000; }
+      .heading { font: bold 14px monospace; fill: #000; }
+      .label { font: 12px monospace; fill: #000; }
+      .note { font: 11px monospace; fill: #0066cc; }
+      .warning { font: bold 12px monospace; fill: #ff6600; }
+      .wire-3v3 { stroke: #ff0000; stroke-width: 2; fill: none; }
+      .wire-gnd { stroke: #000000; stroke-width: 2; fill: none; }
+      .wire-sda { stroke: #00cc00; stroke-width: 2; fill: none; }
+      .wire-scl { stroke: #0066ff; stroke-width: 2; fill: none; }
+      .component { fill: #f0f0f0; stroke: #000; stroke-width: 2; }
+      .cable { fill: none; stroke: #666; stroke-width: 4; stroke-dasharray: 10,5; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="400" y="30" class="title" text-anchor="middle">OLED &amp; BME280 I2C WIRING DIAGRAM</text>
+  <text x="400" y="50" class="label" text-anchor="middle">3-Meter Run: ESP32 Remote Box → Thermostat Location</text>
+
+  <!-- ESP32 Remote Box (Left Side) -->
+  <rect x="50" y="100" width="200" height="400" fill="#e6f3ff" stroke="#0066cc" stroke-width="3"/>
+  <text x="150" y="130" class="heading" text-anchor="middle">ESP32 REMOTE BOX</text>
+  <text x="150" y="145" class="label" text-anchor="middle">(Controller Location)</text>
+
+  <!-- ESP32 Module -->
+  <rect x="80" y="170" width="140" height="180" class="component"/>
+  <text x="150" y="190" class="heading" text-anchor="middle">ESP32-S3</text>
+  <text x="150" y="205" class="label" text-anchor="middle">N16R8 40-pin</text>
+
+  <!-- ESP32 Pins -->
+  <circle cx="200" cy="230" r="3" fill="#ff0000"/>
+  <text x="210" y="235" class="label">3.3V</text>
+  <circle cx="200" cy="260" r="3" fill="#000000"/>
+  <text x="210" y="265" class="label">GND</text>
+  <circle cx="200" cy="290" r="3" fill="#00cc00"/>
+  <text x="210" y="295" class="label">GPIO 8 (SDA)</text>
+  <circle cx="200" cy="320" r="3" fill="#0066ff"/>
+  <text x="210" y="325" class="label">GPIO 9 (SCL)</text>
+
+  <!-- Power Supply in Box -->
+  <rect x="80" y="380" width="140" height="100" class="component"/>
+  <text x="150" y="400" class="heading" text-anchor="middle">12V Power In</text>
+  <circle cx="120" cy="430" r="3" fill="#cc0000"/>
+  <text x="130" y="435" class="label">12V+</text>
+  <circle cx="120" cy="460" r="3" fill="#000000"/>
+  <text x="130" y="465" class="label">GND</text>
+  <text x="150" y="475" class="note" text-anchor="middle" font-size="10">(3.3V regulator onboard)</text>
+
+  <!-- 3-Meter Cable Run -->
+  <path d="M 270,230 L 500,230" class="cable"/>
+  <text x="385" y="220" class="heading" text-anchor="middle">3-METER CABLE RUN</text>
+  <text x="385" y="250" class="label" text-anchor="middle">18 AWG Thermostat Wire (4 conductors)</text>
+
+  <!-- Cable Wires -->
+  <path d="M 200,230 L 500,230" class="wire-3v3"/>
+  <text x="350" y="225" class="label" fill="#ff0000">3.3V (red)</text>
+
+  <path d="M 200,260 L 500,260" class="wire-gnd"/>
+  <text x="350" y="255" class="label">GND (black)</text>
+
+  <path d="M 200,290 L 500,290" class="wire-sda"/>
+  <text x="350" y="285" class="label" fill="#00cc00">SDA (green)</text>
+
+  <path d="M 200,320 L 500,320" class="wire-scl"/>
+  <text x="350" y="315" class="label" fill="#0066ff">SCL (blue)</text>
+
+  <!-- Thermostat Location (Right Side) -->
+  <rect x="500" y="100" width="250" height="500" fill="#fff5e6" stroke="#ff6600" stroke-width="3"/>
+  <text x="625" y="130" class="heading" text-anchor="middle">THERMOSTAT LOCATION</text>
+  <text x="625" y="145" class="label" text-anchor="middle">(Former Dometic Stat Position)</text>
+
+  <!-- 12V Power at Thermostat Location -->
+  <rect x="520" y="170" width="120" height="80" class="component"/>
+  <text x="580" y="190" class="heading" text-anchor="middle">12V Supply</text>
+  <text x="580" y="205" class="label" text-anchor="middle">(Available Here)</text>
+  <circle cx="560" cy="230" r="3" fill="#cc0000"/>
+  <text x="570" y="235" class="label">12V+</text>
+  <circle cx="560" cy="245" r="3" fill="#000000"/>
+  <text x="570" y="250" class="label">GND</text>
+
+  <!-- Ground Connection Point -->
+  <circle cx="500" cy="260" r="5" fill="#000000"/>
+  <circle cx="560" cy="245" r="5" fill="#000000"/>
+  <path d="M 500,260 L 560,245" class="wire-gnd" stroke-width="3"/>
+  <text x="520" y="270" class="note">← Common Ground OK</text>
+
+  <!-- OLED Display -->
+  <rect x="520" y="320" width="100" height="120" class="component"/>
+  <text x="570" y="340" class="heading" text-anchor="middle">OLED</text>
+  <text x="570" y="355" class="label" text-anchor="middle">SSD1306</text>
+  <text x="570" y="370" class="label" text-anchor="middle">128x64</text>
+  <text x="570" y="385" class="note" text-anchor="middle">I2C: 0x3C</text>
+  <circle cx="540" cy="405" r="3" fill="#ff0000"/>
+  <text x="550" y="410" class="label">VCC</text>
+  <circle cx="540" cy="420" r="3" fill="#000000"/>
+  <text x="550" y="425" class="label">GND</text>
+  <circle cx="600" cy="405" r="3" fill="#00cc00"/>
+  <text x="565" y="410" class="label" text-anchor="end">SDA</text>
+  <circle cx="600" cy="420" r="3" fill="#0066ff"/>
+  <text x="565" y="425" class="label" text-anchor="end">SCL</text>
+
+  <!-- BME280 Sensor -->
+  <rect x="630" y="320" width="100" height="120" class="component"/>
+  <text x="680" y="340" class="heading" text-anchor="middle">BME280</text>
+  <text x="680" y="355" class="label" text-anchor="middle">Temp/Hum/</text>
+  <text x="680" y="370" class="label" text-anchor="middle">Pressure</text>
+  <text x="680" y="385" class="note" text-anchor="middle">I2C: 0x76</text>
+  <circle cx="650" cy="405" r="3" fill="#ff0000"/>
+  <text x="660" y="410" class="label">VCC</text>
+  <circle cx="650" cy="420" r="3" fill="#000000"/>
+  <text x="660" y="425" class="label">GND</text>
+  <circle cx="710" cy="405" r="3" fill="#00cc00"/>
+  <text x="675" y="410" class="label" text-anchor="end">SDA</text>
+  <circle cx="710" cy="420" r="3" fill="#0066ff"/>
+  <text x="675" y="425" class="label" text-anchor="end">SCL</text>
+
+  <!-- Wiring Connections at Thermostat Location -->
+  <!-- 3.3V Bus -->
+  <path d="M 500,230 L 540,405" class="wire-3v3"/>
+  <path d="M 500,230 L 650,405" class="wire-3v3"/>
+  <circle cx="500" cy="230" r="4" fill="#ff0000"/>
+
+  <!-- GND Bus -->
+  <path d="M 500,260 L 540,420" class="wire-gnd"/>
+  <path d="M 500,260 L 650,420" class="wire-gnd"/>
+
+  <!-- SDA Bus -->
+  <path d="M 500,290 L 600,405" class="wire-sda"/>
+  <path d="M 500,290 L 710,405" class="wire-sda"/>
+  <circle cx="500" cy="290" r="4" fill="#00cc00"/>
+
+  <!-- SCL Bus -->
+  <path d="M 500,320 L 600,420" class="wire-scl"/>
+  <path d="M 500,320 L 710,420" class="wire-scl"/>
+  <circle cx="500" cy="320" r="4" fill="#0066ff"/>
+
+  <!-- Connection Points Legend -->
+  <rect x="520" y="470" width="210" height="110" fill="none" stroke="#666" stroke-width="1"/>
+  <text x="625" y="490" class="heading" text-anchor="middle">I2C BUS SPECS</text>
+  <text x="530" y="510" class="label">• Frequency: 400 kHz (testing)</text>
+  <text x="530" y="530" class="label">• Can reduce to 100 kHz if needed</text>
+  <text x="530" y="550" class="label">• Pull-ups: Internal (ESP32)</text>
+  <text x="530" y="570" class="label">• Cable: 18 AWG, 3 meters</text>
+
+  <!-- Technical Notes -->
+  <rect x="50" y="520" width="380" height="160" fill="none" stroke="#0066cc" stroke-width="2"/>
+  <text x="240" y="545" class="heading" text-anchor="middle">TECHNICAL NOTES</text>
+
+  <text x="60" y="570" class="label">GROUNDING:</text>
+  <text x="60" y="590" class="label">✓ Safe to tie OLED/BME280 GND to 12VDC ground</text>
+  <text x="60" y="610" class="label">✓ All grounds are common reference (0V)</text>
+  <text x="60" y="630" class="label">✓ ESP32 is powered by 12VDC (regulated to 3.3V)</text>
+  <text x="60" y="650" class="label">✓ I2C requires shared ground for proper signaling</text>
+  <text x="60" y="670" class="label">✓ No voltage conflict (power rail ≠ ground rail)</text>
+
+  <!-- Warning Box -->
+  <rect x="50" y="620" width="380" height="40" fill="#fff9e6" stroke="#ff6600" stroke-width="2" rx="5"/>
+  <text x="240" y="645" class="warning" text-anchor="middle">⚠ Do NOT connect OLED/BME280 VCC to 12V - Only 3.3V!</text>
+</svg>

@@ -42,6 +42,19 @@ HUMIDITY_HYSTERESIS = 5     # % RH — turn off at setpoint minus this
 # Effect: AC runs sooner when humid (dehumidifies), rests longer when dry (saves energy)
 HUMIDITY_COMFORT_FACTOR = 0.1  # °F per 1% RH deviation from 50%
 
+# Phase 1 Expansion Features
+# CH5/CH6 relay expansion (currently disabled - no hardware)
+DEHUMIDIFIER_ENABLE = False     # No standalone dehumidifier (Whynter is IR-controlled)
+DEHUMIDIFIER_HUMIDITY_SETPOINT = 60  # % RH — activate dehumidifier above this
+DEHUMIDIFIER_HYSTERESIS = 5     # % RH — turn off at setpoint minus this
+DEHUMIDIFIER_MIN_CYCLE = 300    # seconds — minimum run/off time (5 min)
+
+# Powered vent fan control (CH6) - MaxxFan, Fantastic Fan, etc
+VENT_FAN_ENABLE = False         # No powered vent fan hardware
+VENT_FAN_TEMP_DIFFERENTIAL = 5  # °F — run fan when outdoor temp is this much cooler than indoor
+VENT_FAN_MAX_OUTDOOR_TEMP = 78  # °F — don't run vent fan if outdoor temp exceeds this
+VENT_FAN_MIN_CYCLE = 180        # seconds — minimum run/off time (3 min)
+
 # Short-cycle protection (minimum seconds between state changes)
 MIN_CYCLE_TIME = 30  # 30 seconds
 
@@ -53,33 +66,42 @@ DEBUG = False
 DRY_RUN = False
 
 # ============================================================
-# HARDWARE CONFIGURATION (ESP32-S3-N16R8 Pin Assignments)
+# HARDWARE CONFIGURATION - Waveshare ESP32-S3-Relay-6CH
 # ============================================================
 # GPIO 22-25 don't exist on ESP32-S3
-# GPIO 26-32 reserved for SPI flash
-# GPIO 33-37 reserved for Octal PSRAM
+# GPIO 26-37 reserved for Flash/PSRAM
 # GPIO 19/20 reserved for native USB
 
-# I2C for BMP280 and OLED
+# I2C for BME280 and OLED (3-meter cable run to thermostat location)
 I2C_SDA_PIN = 8
 I2C_SCL_PIN = 9
 I2C_FREQ = 400000
 
-# Relay pins (GPIO 38-42: no strapping conflicts on ESP32-S3-N16R8)
-RELAY_FURNACE_PIN = 38
-RELAY_COMPRESSOR_PIN = 39       # Rooftop AC compressor — 120VAC via HL-52S relay
-RELAY_FAN_LOW_PIN = 40          # Rooftop AC fan low speed — 120VAC via HL-52S relay
-RELAY_FAN_HIGH_PIN = 41         # Rooftop AC fan high speed — 120VAC via HL-52S relay
+# Waveshare Relay Channels (10A @ 250VAC/30VDC per channel)
+# CH1-4: HVAC control, CH5-6: Expansion features
+RELAY_FURNACE_PIN = 1           # CH1 (GPIO 1) - Furnace dry contact closure
+RELAY_COMPRESSOR_PIN = 2        # CH2 (GPIO 2) - Compressor triggers SSR-25DA
+RELAY_FAN_LOW_PIN = 41          # CH3 (GPIO 41) - Rooftop AC fan low speed
+RELAY_FAN_HIGH_PIN = 42         # CH4 (GPIO 42) - Rooftop AC fan high speed
+RELAY_DEHUMIDIFIER_PIN = 45     # CH5 (GPIO 45) - Dehumidifier (Phase 1 expansion)
+RELAY_VENT_FAN_PIN = 46         # CH6 (GPIO 46) - Powered vent fan (Phase 1 expansion)
 
 # Relay polarity: All relays are active HIGH (value=1 = ON, value=0 = OFF)
-# Relays 2-4 (GPIO 39-41) switch 120VAC directly to Brisk II (no Dometic control box)
-# Relay 1 (GPIO 38) is dry contact closure for furnace (separate circuit)
+# CH2 switches 12VDC to SSR-25DA (milliamp trigger), SSR switches 120VAC to compressor
+# CH1/3/4/5/6 switch 120VAC directly (2-3A loads, 10A relay rating)
 
-# DS18B20 evaporator freeze sensor (1-Wire on GPIO 42)
-FREEZE_SENSOR_PIN = 42          # DS18B20 data pin (needs 4.7K pull-up to 3.3V)
+# DS18B20 evaporator freeze sensor (1-Wire)
+# NOTE: Moved from GPIO 42 (now used by Fan High relay) to GPIO 10
+FREEZE_SENSOR_PIN = 10          # DS18B20 data pin (needs 4.7K pull-up to 3.3V)
 FREEZE_THRESHOLD = 32.0         # °F — cut compressor if evaporator drops below this
 FREEZE_RECOVERY = 45.0          # °F — allow compressor restart above this temp
 FREEZE_CHECK_INTERVAL = 5       # seconds between freeze sensor reads
+
+# Waveshare Onboard Features (Phase 1 enhancements)
+RGB_LED_PIN = 38                # WS2812 RGB LED for status indication
+BUZZER_PIN = 21                 # Passive buzzer for audio alerts
+RS485_TX_PIN = 17               # RS485 interface (future use)
+RS485_RX_PIN = 18               # RS485 interface (future use)
 
 # Broadlink RM4 Mini (WiFi IR blaster - replaces direct IR hardware)
 BROADLINK_IP = None       # Set after discovery, or static IP in config_local.py
