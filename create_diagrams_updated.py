@@ -1,808 +1,795 @@
 #!/usr/bin/env python3
 """
-Create all wiring diagrams with updated components:
+Create all wiring diagrams for RV thermostat project.
 - Waveshare ESP32-S3-Relay-6CH
-- IP65 waterproof enclosure (6.3"x4.33"x3.54")
-- Correct GPIO assignments
-- Wire labels positioned BELOW lines
+- Page size: 11.5 x 8 inches (landscape)
+- Orthogonal wire routing only (no diagonals)
+- Wire labels BELOW the wire lines with clear spacing
+- All wires terminate at their pin/terminal dots
 """
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Rectangle
 
-def create_ssr_diagram():
-    """SSR-25DA Compressor Wiring - Updated"""
-    fig, ax = plt.subplots(figsize=(14, 10))
-    ax.set_xlim(0, 14)
-    ax.set_ylim(0, 10)
+
+# Page size for all diagrams
+PAGE_W = 11.5
+PAGE_H = 8
+
+
+def pin(ax, x, y, color='black', size=8):
+    """Draw a connection pin dot"""
+    ax.plot(x, y, 'o', color=color, markersize=size, zorder=5)
+
+
+def wire(ax, *points, color='black', lw=2.5):
+    """Draw wire through a series of (x,y) waypoints — all segments orthogonal."""
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    ax.plot(xs, ys, color=color, linewidth=lw, solid_capstyle='round', zorder=3)
+
+
+def label(ax, x, y, text, color='black', fontsize=8, ha='center', va='top', **kw):
+    """Place a label. Default va='top' so text sits below the y coordinate."""
+    ax.text(x, y, text, ha=ha, va=va, fontsize=fontsize, color=color, zorder=6, **kw)
+
+
+def box(ax, x, y, w, h, edge='#333', face='#f0f0f0', lw=2.5):
+    """Draw a rounded box and return it."""
+    b = FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.08",
+                       edgecolor=edge, facecolor=face, linewidth=lw, zorder=2)
+    ax.add_patch(b)
+    return b
+
+
+def new_page(coord_w, coord_h):
+    """Create a new figure at 11.5x8 with given coordinate range."""
+    fig, ax = plt.subplots(figsize=(PAGE_W, PAGE_H))
+    ax.set_xlim(0, coord_w)
+    ax.set_ylim(0, coord_h)
     ax.axis('off')
+    return fig, ax
+
+
+# =============================================================================
+# DIAGRAM 1: SSR-25DA COMPRESSOR WIRING
+# =============================================================================
+def create_ssr_diagram():
+    fig, ax = new_page(23, 16)
 
     # Title
-    ax.text(7, 9.5, 'SSR-25DA COMPRESSOR WIRING DIAGRAM',
-            ha='center', fontsize=18, weight='bold')
-    ax.text(7, 9.1, 'Waveshare ESP32-S3-Relay-6CH → SSR-25DA → Compressor',
-            ha='center', fontsize=12)
+    label(ax, 11.5, 15.5, 'SSR-25DA COMPRESSOR WIRING DIAGRAM',
+          fontsize=16, weight='bold', va='center')
+    label(ax, 11.5, 14.9, 'Waveshare CH2 Relay  →  SSR-25DA  →  120VAC  →  Compressor',
+          fontsize=10, color='#666', va='center')
 
-    # Waveshare Module Box
-    ws_box = FancyBboxPatch((0.2, 5), 2.8, 3, boxstyle="round,pad=0.1",
-                            edgecolor='#0066cc', facecolor='#e6f3ff', linewidth=2.5)
-    ax.add_patch(ws_box)
-    ax.text(1.6, 7.7, 'Waveshare', ha='center', fontsize=11, weight='bold')
-    ax.text(1.6, 7.45, 'ESP32-S3-Relay-6CH', ha='center', fontsize=10)
+    # --- Row layout: components at y~9 band, left to right ---
 
-    # Module pins
-    ax.plot(3.0, 7.2, 'o', color='#ff6600', markersize=8)
-    ax.text(3.2, 7.2, 'CH2 (GPIO 2)', va='center', fontsize=9)
+    # 1. Waveshare Module  (left)
+    box(ax, 0.5, 7, 3.5, 4.5, '#0066cc', '#e6f3ff')
+    label(ax, 2.25, 11.2, 'Waveshare', fontsize=12, weight='bold', va='center')
+    label(ax, 2.25, 10.7, 'ESP32-S3-Relay-6CH', fontsize=9, va='center')
 
-    ax.plot(3.0, 6.5, 'o', color='black', markersize=8)
-    ax.text(3.2, 6.5, 'GND', va='center', fontsize=9)
+    # Pins on right edge
+    pin(ax, 4.0, 10.0, '#ff6600')
+    label(ax, 4.2, 10.0, 'CH2 (GPIO 2)', fontsize=8, ha='left', va='center')
+    pin(ax, 4.0, 9.0, '#cc0000')
+    label(ax, 4.2, 9.0, '12V+', fontsize=8, ha='left', va='center')
+    pin(ax, 4.0, 8.0, 'black')
+    label(ax, 4.2, 8.0, 'GND', fontsize=8, ha='left', va='center')
 
-    ax.plot(3.0, 5.8, 'o', color='#cc0000', markersize=8)
-    ax.text(3.2, 5.8, '12V+', va='center', fontsize=9)
+    # 2. Relay CH2 block
+    box(ax, 6.5, 7, 3.5, 4.5, '#ff6600', '#fff3e0')
+    label(ax, 8.25, 11.2, 'Relay CH2 Output', fontsize=11, weight='bold', va='center')
+    label(ax, 8.25, 10.7, '(Onboard to Waveshare)', fontsize=8, va='center', color='#666')
 
-    # Relay output terminals
-    relay_box = FancyBboxPatch((4, 5), 3, 3, boxstyle="round,pad=0.1",
-                               edgecolor='#ff6600', facecolor='#fff3e0', linewidth=2.5)
-    ax.add_patch(relay_box)
-    ax.text(5.5, 7.7, 'Relay CH2 Output', ha='center', fontsize=11, weight='bold')
-    ax.text(5.5, 7.4, '(Compressor Control)', ha='center', fontsize=9, style='italic')
+    # Relay pins
+    pin(ax, 6.5, 10.0, '#ff6600')  # IN (left side)
+    label(ax, 6.3, 10.0, 'IN', fontsize=8, ha='right', va='center')
+    pin(ax, 10.0, 10.0, '#cc0000')  # COM (right side)
+    label(ax, 10.2, 10.0, 'COM', fontsize=8, ha='left', va='center')
+    pin(ax, 10.0, 9.0, '#cc0000')  # NO
+    label(ax, 10.2, 9.0, 'NO', fontsize=8, ha='left', va='center')
+    pin(ax, 10.0, 8.0, 'gray')  # NC
+    label(ax, 10.2, 8.0, 'NC (unused)', fontsize=8, ha='left', va='center', color='gray')
 
-    # Relay terminals
-    ax.plot(4.0, 7, 'o', color='#ff6600', markersize=8)
-    ax.text(3.8, 7, 'IN', ha='right', va='center', fontsize=9)
+    # 3. SSR-25DA
+    box(ax, 12.5, 7, 3.5, 4.5, '#cc0000', '#fff5f5')
+    label(ax, 14.25, 11.2, 'SSR-25DA', fontsize=12, weight='bold', va='center', color='#cc0000')
+    label(ax, 14.25, 10.7, 'Solid State Relay', fontsize=9, va='center')
+    label(ax, 14.25, 10.2, '3-32VDC → 25A/380VAC', fontsize=8, va='center', color='#666')
 
-    ax.plot(7.0, 7, 'o', color='#cc0000', markersize=8)
-    ax.text(7.2, 7, 'COM (12V)', va='center', fontsize=9)
+    pin(ax, 12.5, 9.5, '#cc0000')  # DC+
+    label(ax, 12.3, 9.5, 'DC+', fontsize=8, ha='right', va='center')
+    pin(ax, 12.5, 8.5, 'black')  # DC-
+    label(ax, 12.3, 8.5, 'DC-', fontsize=8, ha='right', va='center')
+    pin(ax, 16.0, 9.5, '#ff0000')  # AC1
+    label(ax, 16.2, 9.5, 'AC1 (in)', fontsize=8, ha='left', va='center')
+    pin(ax, 16.0, 8.5, '#ff0000')  # AC2
+    label(ax, 16.2, 8.5, 'AC2 (out)', fontsize=8, ha='left', va='center')
 
-    ax.plot(7.0, 6.3, 'o', color='#cc0000', markersize=8)
-    ax.text(7.2, 6.3, 'NO', va='center', fontsize=9)
+    # 4. 120VAC Source (top right)
+    box(ax, 18.0, 10.0, 4.0, 2.5, '#ff0000', '#ffeeee')
+    label(ax, 20.0, 12.2, '120VAC SOURCE', fontsize=12, weight='bold', va='center', color='#ff0000')
+    pin(ax, 18.2, 11.0, '#ff0000')
+    label(ax, 18.0, 11.0, 'HOT', fontsize=9, ha='right', va='center')
+    pin(ax, 21.8, 11.0, '#0066ff')
+    label(ax, 22.0, 11.0, 'NEUTRAL', fontsize=9, ha='left', va='center')
 
-    ax.plot(7.0, 5.6, 'o', color='gray', markersize=8)
-    ax.text(7.2, 5.6, 'NC (unused)', va='center', fontsize=9, color='gray')
+    # 5. Load Chain (below 120VAC source)
+    box(ax, 18.0, 5.5, 4.0, 3.5, 'black', '#f0f0f0', 2)
+    label(ax, 20.0, 8.7, 'LOAD CHAIN', fontsize=11, weight='bold', va='center')
+    pin(ax, 20.0, 7.8, '#ff0000')
+    label(ax, 20.0, 7.5, 'Supco SFPC', fontsize=8, va='center')
+    label(ax, 20.0, 7.1, '(freeze stat: opens 35F)', fontsize=7, va='center', color='#666')
+    pin(ax, 20.0, 6.5, '#ff0000')
+    label(ax, 20.0, 6.2, 'Bimetal Cutout', fontsize=8, va='center')
 
-    # Wires: Waveshare to Relay input
-    ax.plot([3.0, 4.0], [7.2, 7], color='#ff6600', linewidth=2.5)
-    ax.text(3.5, 6.9, 'Control', fontsize=8, color='#ff6600')  # BELOW line
+    # 6. Compressor (bottom right)
+    box(ax, 18.0, 3.0, 4.0, 1.8, 'black', '#f0f0f0')
+    label(ax, 20.0, 4.5, 'COMPRESSOR', fontsize=11, weight='bold', va='center')
+    label(ax, 20.0, 3.8, 'Pin 1 Blue', fontsize=9, va='center', color='#0000ff')
 
-    # 12V to COM
-    ax.plot([3.0, 7.0], [5.8, 7], color='#cc0000', linewidth=2.5)
-    ax.text(5, 6.2, '12VDC', fontsize=8, color='#cc0000')  # BELOW line
+    # ---- WIRES ----
 
-    # SSR-25DA
-    ssr_box = FancyBboxPatch((8, 5), 2.5, 3, boxstyle="round,pad=0.1",
-                             edgecolor='#cc0000', facecolor='#fff5f5', linewidth=2.5)
-    ax.add_patch(ssr_box)
-    ax.text(9.25, 7.7, 'SSR-25DA', ha='center', fontsize=11, weight='bold')
-    ax.text(9.25, 7.4, 'Solid State Relay', ha='center', fontsize=9)
-    ax.text(9.25, 7.1, '3-32VDC → 25A/380VAC', ha='center', fontsize=8, style='italic')
+    # CH2 → Relay IN (straight horizontal at y=10)
+    wire(ax, (4.0, 10.0), (6.5, 10.0), color='#ff6600', lw=2.5)
+    label(ax, 5.25, 9.1, 'Control Signal', fontsize=8, color='#ff6600')
 
-    # SSR DC pins (left)
-    ax.plot(8, 6.6, 'o', color='#cc0000', markersize=8)
-    ax.text(7.8, 6.6, 'DC+', ha='right', va='center', fontsize=9)
+    # 12V+ → Relay COM: horizontal at y=9, then up to y=10 at relay COM
+    wire(ax, (4.0, 9.0), (10.0, 9.0), color='#cc0000', lw=2.5)
+    wire(ax, (10.0, 9.0), (10.0, 10.0), color='#cc0000', lw=2.5)
+    label(ax, 7.0, 8.1, '12VDC Supply', fontsize=8, color='#cc0000')
 
-    ax.plot(8, 5.9, 'o', color='black', markersize=8)
-    ax.text(7.8, 5.9, 'DC-', ha='right', va='center', fontsize=9)
+    # Relay NO → SSR DC+: horizontal at y=9, then up to 9.5 at SSR
+    wire(ax, (10.0, 9.0), (11.5, 9.0), color='#cc0000', lw=2.5)
+    wire(ax, (11.5, 9.0), (11.5, 9.5), color='#cc0000', lw=2.5)
+    wire(ax, (11.5, 9.5), (12.5, 9.5), color='#cc0000', lw=2.5)
+    label(ax, 11.0, 8.1, '12V Trigger', fontsize=8, color='#cc0000')
 
-    # SSR AC pins (right)
-    ax.plot(10.5, 6.6, 'o', color='#ff0000', markersize=8)
-    ax.text(10.7, 6.6, 'AC1 (in)', va='center', fontsize=9)
+    # GND → SSR DC-: down to y=6, across, up to SSR DC-
+    wire(ax, (4.0, 8.0), (4.0, 6.0), color='black', lw=2.5)
+    wire(ax, (4.0, 6.0), (12.0, 6.0), color='black', lw=2.5)
+    wire(ax, (12.0, 6.0), (12.0, 8.5), color='black', lw=2.5)
+    wire(ax, (12.0, 8.5), (12.5, 8.5), color='black', lw=2.5)
+    label(ax, 8.0, 5.1, 'GND', fontsize=8)
 
-    ax.plot(10.5, 5.9, 'o', color='#ff0000', markersize=8)
-    ax.text(10.7, 5.9, 'AC2 (out)', va='center', fontsize=9)
+    # 120VAC HOT → SSR AC1: straight horizontal at y=11, down to AC1
+    wire(ax, (18.2, 11.0), (17.0, 11.0), color='#ff0000', lw=3.5)
+    wire(ax, (17.0, 11.0), (17.0, 9.5), color='#ff0000', lw=3.5)
+    wire(ax, (17.0, 9.5), (16.0, 9.5), color='#ff0000', lw=3.5)
+    label(ax, 17.6, 10.5, '120VAC HOT', fontsize=9, color='#ff0000', weight='bold', ha='left')
 
-    # Wires: Relay to SSR
-    ax.plot([7.0, 8], [6.3, 6.6], color='#cc0000', linewidth=2.5)
-    ax.text(7.5, 6.2, '12V Trigger', fontsize=8, color='#cc0000')  # BELOW line
+    # SSR AC2 → Load Chain: horizontal to x=20, down to load chain
+    wire(ax, (16.0, 8.5), (17.5, 8.5), color='#ff0000', lw=3.5)
+    wire(ax, (17.5, 8.5), (17.5, 7.8), color='#ff0000', lw=3.5)
+    wire(ax, (17.5, 7.8), (20.0, 7.8), color='#ff0000', lw=3.5)
+    label(ax, 18.5, 7.0, '120VAC Switched', fontsize=8, color='#ff0000', weight='bold')
 
-    # Ground wire (route below)
-    ax.plot([3.0, 3.0, 8, 8], [6.5, 4.5, 4.5, 5.9], color='black', linewidth=2.5)
-    ax.text(5.5, 4.2, 'GND', ha='center', fontsize=8)  # BELOW line
+    # Through load chain
+    wire(ax, (20.0, 7.8), (20.0, 6.5), color='#ff0000', lw=3.5)
 
-    # 120VAC Source
-    vac_box = FancyBboxPatch((11.5, 6.5), 2, 1.5, boxstyle="round,pad=0.1",
-                             edgecolor='#ff0000', facecolor='#ffeeee', linewidth=2.5)
-    ax.add_patch(vac_box)
-    ax.text(12.5, 7.8, '120VAC SOURCE', ha='center', fontsize=11, weight='bold', color='#ff0000')
+    # Load chain → Compressor
+    wire(ax, (20.0, 6.5), (20.0, 4.8), color='#ff0000', lw=3.5)
 
-    ax.plot(11.7, 7.5, 'o', color='#ff0000', markersize=8)
-    ax.text(11.5, 7.5, 'HOT', ha='right', va='center', fontsize=9)
+    # Neutral return: compressor → right edge → up → 120VAC NEU
+    wire(ax, (20.0, 3.0), (20.0, 2.5), color='#0066ff', lw=3.5)
+    wire(ax, (20.0, 2.5), (22.5, 2.5), color='#0066ff', lw=3.5)
+    wire(ax, (22.5, 2.5), (22.5, 11.0), color='#0066ff', lw=3.5)
+    wire(ax, (22.5, 11.0), (21.8, 11.0), color='#0066ff', lw=3.5)
+    label(ax, 22.7, 7.0, 'NEUTRAL RETURN', fontsize=8, color='#0066ff',
+          rotation=90, ha='left', va='center')
 
-    ax.plot(11.7, 7, 'o', color='#0000ff', markersize=8)
-    ax.text(11.5, 7, 'NEUTRAL', ha='right', va='center', fontsize=9)
-
-    # Wire: 120VAC HOT to SSR AC1
-    ax.plot([11.7, 11, 11, 10.5], [7.5, 7.5, 6.6, 6.6], color='#ff0000', linewidth=3)
-    ax.text(10.9, 7.1, '⚠ 120VAC\nHOT', ha='center', fontsize=8, color='#ff0000', weight='bold')
-
-    # Load Chain
-    load_box = FancyBboxPatch((11.5, 2.5), 2, 2.5, boxstyle="round,pad=0.1",
-                              edgecolor='black', facecolor='#f0f0f0', linewidth=2)
-    ax.add_patch(load_box)
-    ax.text(12.5, 4.8, 'LOAD CHAIN', ha='center', fontsize=10, weight='bold')
-
-    ax.plot(12.5, 4.2, 'o', color='#ff0000', markersize=8)
-    ax.text(12.5, 4.4, 'Supco SFPC', ha='center', fontsize=8)
-    ax.text(12.5, 4, '(freeze stat)', ha='center', fontsize=7, style='italic')
-
-    ax.plot(12.5, 3.2, 'o', color='#ff0000', markersize=8)
-    ax.text(12.5, 3, 'Bimetal\nCutout', ha='center', fontsize=8)
-
-    # Wire: SSR AC2 to Load Chain
-    ax.plot([10.5, 11, 11, 12.5], [5.9, 5.9, 4.2, 4.2], color='#ff0000', linewidth=3)
-    ax.text(10.9, 5, '⚠ 120VAC\nSWITCHED', ha='center', fontsize=8, color='#ff0000', weight='bold')
-
-    # Wire through load chain
-    ax.plot([12.5, 12.5], [4.2, 3.2], color='#ff0000', linewidth=3)
-
-    # Compressor
-    comp_box = FancyBboxPatch((11.5, 0.8), 2, 1.2, boxstyle="round,pad=0.1",
-                              edgecolor='black', facecolor='#f0f0f0', linewidth=2.5)
-    ax.add_patch(comp_box)
-    ax.text(12.5, 1.8, 'COMPRESSOR', ha='center', fontsize=10, weight='bold')
-    ax.plot(12.5, 1.2, 'o', color='#ff0000', markersize=8)
-    ax.text(12.5, 1, 'Pin 1 Blue', ha='center', fontsize=8)
-
-    # Wire: Load chain to compressor
-    ax.plot([12.5, 12.5], [3.2, 1.2], color='#ff0000', linewidth=3)
-
-    # Wire: Compressor to NEUTRAL (return)
-    ax.plot([12.5, 12.5, 13.5, 13.5, 11.7], [1.2, 0.5, 0.5, 7, 7], color='#0000ff', linewidth=3)
-    ax.text(13.7, 3.5, 'NEUTRAL\nRETURN', ha='left', fontsize=8, color='#0000ff', rotation=90, va='center')
-
-    # Safety notes box
-    notes_box = FancyBboxPatch((0.2, 0.3), 7, 3.8, boxstyle="round,pad=0.1",
-                               edgecolor='#ff0000', facecolor='#fff5f5', linewidth=2.5, linestyle='--')
-    ax.add_patch(notes_box)
-    ax.text(3.7, 3.9, '⚠ SAFETY CRITICAL WIRING ⚠', ha='center', fontsize=11, weight='bold', color='#ff0000')
-
+    # ---- Safety Notes ----
+    box(ax, 0.5, 0.5, 11.0, 5.0, '#ff0000', '#fff5f5', 2)
+    label(ax, 6.0, 5.2, 'SAFETY NOTES', fontsize=12, weight='bold', color='#ff0000', va='center')
     notes = [
         "KEY POINTS:",
-        "• Waveshare CH2 relay NO terminal switches 12VDC to SSR DC+",
-        "• Relay switches milliamp trigger current to SSR",
-        "• SSR switches high-current 120VAC to compressor",
-        "• SSR needs heatsink (~15W @ 12A compressor load)",
-        "• Supco SFPC: NC contact, opens 35°F, closes 50°F",
-        "• Bimetal cutout: thermal overload protection",
-        "• All 120VAC wiring must be 14 AWG minimum",
-        "• Install in proper junction box per NEC",
-        "• Other relays (CH1/3/4) switch 120VAC directly",
-        "  (~2-3A fan loads, 10A relay rating)"
+        "  CH2 relay NO terminal switches 12VDC milliamp trigger to SSR DC+",
+        "  SSR-25DA switches high-current 120VAC to compressor load",
+        "  SSR needs heatsink (~15W dissipation @ 12A compressor load)",
+        "  Supco SFPC: normally closed, opens at 35F, recloses at 50F",
+        "  Bimetal cutout: thermal overload protection, in series",
+        "  All 120VAC wiring: 14 AWG minimum, in junction box per NEC",
+        "  CH1/CH3/CH4 switch 120VAC directly (2-3A fan loads, 10A relay rating)",
     ]
-
-    y_pos = 3.5
-    for note in notes:
-        if note.startswith("KEY"):
-            ax.text(0.4, y_pos, note, fontsize=9, weight='bold')
-        else:
-            ax.text(0.4, y_pos, note, fontsize=8)
-        y_pos -= 0.3
+    y = 4.7
+    for n in notes:
+        w = 'bold' if n.startswith("KEY") else 'normal'
+        label(ax, 0.8, y, n, fontsize=8, weight=w, ha='left', va='center')
+        y -= 0.5
 
     plt.tight_layout()
     plt.savefig('docs/ssr_wiring_pro.pdf', dpi=300, bbox_inches='tight')
-    print("✓ Created ssr_wiring_pro.pdf")
+    plt.savefig('docs/ssr_wiring_pro.svg', dpi=300, bbox_inches='tight')
+    print("Created ssr_wiring_pro.pdf and .svg")
     plt.close()
 
 
+# =============================================================================
+# DIAGRAM 2: I2C / OLED + BME280 WIRING
+# =============================================================================
 def create_i2c_diagram():
-    """OLED/BME280 I2C Wiring - Updated"""
-    fig, ax = plt.subplots(figsize=(14, 10))
-    ax.set_xlim(0, 14)
-    ax.set_ylim(0, 10)
-    ax.axis('off')
+    fig, ax = new_page(23, 16)
 
-    # Title
-    ax.text(7, 9.5, 'OLED & BME280 I2C WIRING DIAGRAM',
-            ha='center', fontsize=18, weight='bold')
-    ax.text(7, 9.1, '3-Meter Run: Waveshare Module → Thermostat Location',
-            ha='center', fontsize=12)
+    label(ax, 11.5, 15.5, 'OLED & BME280 I2C WIRING DIAGRAM',
+          fontsize=16, weight='bold', va='center')
+    label(ax, 11.5, 14.9, '3-Meter Cable: Waveshare Module  →  Thermostat Location',
+          fontsize=10, color='#666', va='center')
 
-    # Waveshare Module Box
-    ws_box = FancyBboxPatch((0.5, 4), 3, 4, boxstyle="round,pad=0.1",
-                            edgecolor='#0066cc', facecolor='#e6f3ff', linewidth=3)
-    ax.add_patch(ws_box)
-    ax.text(2, 7.7, 'WAVESHARE MODULE', ha='center', fontsize=12, weight='bold')
-    ax.text(2, 7.4, 'ESP32-S3-Relay-6CH', ha='center', fontsize=9, style='italic')
-    ax.text(2, 7.1, 'IP65 Enclosure', ha='center', fontsize=8, color='#666')
-    ax.text(2, 6.85, '6.3"×4.33"×3.54"', ha='center', fontsize=8, color='#666')
+    # --- LEFT: Waveshare Module ---
+    box(ax, 0.5, 6.0, 4.0, 6.0, '#0066cc', '#e6f3ff', 3)
+    label(ax, 2.5, 11.7, 'WAVESHARE MODULE', fontsize=12, weight='bold', va='center')
+    label(ax, 2.5, 11.2, 'ESP32-S3-Relay-6CH', fontsize=9, va='center', color='#666')
+    label(ax, 2.5, 10.7, 'IP65 Enclosure', fontsize=8, va='center', color='#888')
 
-    # Module I2C pins
-    ax.plot(3.5, 6.2, 'o', color='#ff0000', markersize=10)
-    ax.text(3.7, 6.2, '3.3V', va='center', fontsize=9)
+    # Power info
+    box(ax, 1.0, 6.3, 3.0, 1.2, '#ff6600', '#fff3e0', 1.5)
+    label(ax, 2.5, 7.2, 'Power: 7-36V DC', fontsize=8, weight='bold', va='center')
+    label(ax, 2.5, 6.7, 'Onboard 3.3V regulator', fontsize=7, va='center', color='#666')
 
-    ax.plot(3.5, 5.9, 'o', color='black', markersize=10)
-    ax.text(3.7, 5.9, 'GND', va='center', fontsize=9)
+    # Output pins (right side) — wide spacing for labels
+    px = 4.5
+    pin(ax, px, 10.0, '#ff0000')
+    label(ax, px + 0.2, 10.0, '3.3V', fontsize=9, ha='left', va='center')
+    pin(ax, px, 9.2, 'black')
+    label(ax, px + 0.2, 9.2, 'GND', fontsize=9, ha='left', va='center')
+    pin(ax, px, 8.4, '#00aa00')
+    label(ax, px + 0.2, 8.4, 'GPIO 8 (SDA)', fontsize=9, ha='left', va='center')
+    pin(ax, px, 7.6, '#0066ff')
+    label(ax, px + 0.2, 7.6, 'GPIO 9 (SCL)', fontsize=9, ha='left', va='center')
 
-    ax.plot(3.5, 5.6, 'o', color='#00cc00', markersize=10)
-    ax.text(3.7, 5.6, 'GPIO 8 (SDA)', va='center', fontsize=9)
+    # --- MIDDLE: 3-Meter Cable ---
+    cx1 = 6.5
+    cx2 = 13.5
+    cmid = (cx1 + cx2) / 2
 
-    ax.plot(3.5, 5.3, 'o', color='#0066ff', markersize=10)
-    ax.text(3.7, 5.3, 'GPIO 9 (SCL)', va='center', fontsize=9)
+    # Cable background
+    ax.fill_between([cx1, cx2], [7.2, 7.2], [10.4, 10.4], color='#f5f5f5', zorder=0)
+    ax.plot([cx1, cx2], [10.4, 10.4], color='#ccc', lw=1, ls='--', zorder=1)
+    ax.plot([cx1, cx2], [7.2, 7.2], color='#ccc', lw=1, ls='--', zorder=1)
+    label(ax, cmid, 11.0, '3-METER CABLE RUN', fontsize=13, weight='bold', va='center')
+    label(ax, cmid, 10.6, '18 AWG Thermostat Wire (4 conductors)', fontsize=9, va='center')
 
-    # Power supply info
-    pwr_box = FancyBboxPatch((0.8, 4.3), 2.4, 0.9, boxstyle="round,pad=0.05",
-                             edgecolor='#ff6600', facecolor='#fff3e0', linewidth=1.5)
-    ax.add_patch(pwr_box)
-    ax.text(2, 5, 'Power: 7-36V DC', ha='center', fontsize=9, weight='bold')
-    ax.text(2, 4.7, 'Onboard 3.3V reg', ha='center', fontsize=7, style='italic', color='#666')
-    ax.text(2, 4.45, '(or 5V USB-C)', ha='center', fontsize=7, style='italic', color='#666')
+    # Four horizontal wires with labels BELOW each wire
+    wires_data = [
+        (10.0, '#ff0000', '3.3V (red wire)'),
+        (9.2,  'black',   'GND (black wire)'),
+        (8.4,  '#00aa00', 'SDA (green wire)'),
+        (7.6,  '#0066ff', 'SCL (blue wire)'),
+    ]
+    for wy, wc, wl in wires_data:
+        wire(ax, (px, wy), (14.0, wy), color=wc, lw=2.5)
+        label(ax, cmid, wy - 0.55, wl, fontsize=8, color=wc)
 
-    # 3-Meter Cable Run
-    ax.plot([4, 9.5], [6.5, 6.5], linewidth=6, color='#666666', linestyle='--', solid_capstyle='round')
-    ax.text(6.75, 7, '3-METER CABLE RUN', ha='center', fontsize=12, weight='bold')
-    ax.text(6.75, 6.7, '18 AWG Thermostat Wire (4 conductors)', ha='center', fontsize=9)
+    # --- RIGHT: Thermostat Location ---
+    box(ax, 13.5, 3.5, 9.0, 10.5, '#ff6600', '#fff8f0', 3)
+    label(ax, 18.0, 13.7, 'THERMOSTAT LOCATION', fontsize=13, weight='bold', va='center')
+    label(ax, 18.0, 13.2, '(Former Dometic Stat Position)', fontsize=9, va='center', color='#666')
 
-    # Cable wires
-    ax.plot([3.5, 9.5], [6.2, 6.2], color='#ff0000', linewidth=3)
-    ax.text(6.75, 6.05, '3.3V (red)', ha='center', fontsize=8, color='#ff0000')  # BELOW line
+    # Bus bar — vertical at x=14.5
+    bus_x = 14.5
+    wire(ax, (bus_x, 7.6), (bus_x, 10.0), color='#888', lw=5)
+    label(ax, bus_x, 10.3, 'BUS', fontsize=7, weight='bold', color='#888', va='center')
 
-    ax.plot([3.5, 9.5], [5.9, 5.9], color='black', linewidth=3)
-    ax.text(6.75, 5.75, 'GND (black)', ha='center', fontsize=8)  # BELOW line
+    # Bus arrival dots
+    for wy, wc, _ in wires_data:
+        pin(ax, bus_x, wy, wc, 10)
 
-    ax.plot([3.5, 9.5], [5.6, 5.6], color='#00cc00', linewidth=3)
-    ax.text(6.75, 5.45, 'SDA (green)', ha='center', fontsize=8, color='#00cc00')  # BELOW line
+    # ---- OLED (upper device) ----
+    box(ax, 17.0, 9.0, 4.5, 3.2, '#444', '#2a2a4a', 2)
+    screen = Rectangle((17.3, 10.3), 3.9, 1.2, facecolor='#000', edgecolor='#555', lw=1, zorder=3)
+    ax.add_patch(screen)
+    label(ax, 19.25, 10.9, '128x64', fontsize=9, color='#00ff00', va='center')
+    label(ax, 19.25, 9.8, 'SSD1306 OLED', fontsize=10, weight='bold', color='white', va='center')
+    label(ax, 19.25, 9.3, 'I2C: 0x3C', fontsize=8, color='#ccc', va='center')
 
-    ax.plot([3.5, 9.5], [5.3, 5.3], color='#0066ff', linewidth=3)
-    ax.text(6.75, 5.15, 'SCL (blue)', ha='center', fontsize=8, color='#0066ff')  # BELOW line
+    # OLED pins on LEFT edge
+    oled_px = 17.0
+    oled_pins = [(12.0, '#ff0000', 'VCC'), (11.6, 'black', 'GND'),
+                 (11.2, '#00aa00', 'SDA'), (10.8, '#0066ff', 'SCL')]
+    for py, pc, pl in oled_pins:
+        pin(ax, oled_px, py, pc, 6)
+        label(ax, oled_px - 0.15, py, pl, fontsize=7, ha='right', va='center')
 
-    # Thermostat Location
-    therm_box = FancyBboxPatch((9, 3), 4.5, 5, boxstyle="round,pad=0.1",
-                               edgecolor='#ff6600', facecolor='#fff5e6', linewidth=3)
-    ax.add_patch(therm_box)
-    ax.text(11.25, 7.7, 'THERMOSTAT LOCATION', ha='center', fontsize=12, weight='bold')
-    ax.text(11.25, 7.4, '(Former Dometic Stat Position)', ha='center', fontsize=9, style='italic')
+    # ---- BME280 (lower device) ----
+    box(ax, 17.0, 4.5, 4.5, 3.2, '#444', '#4a4a6a', 2)
+    label(ax, 19.25, 7.3, 'BME280', fontsize=12, weight='bold', color='white', va='center')
+    label(ax, 19.25, 6.7, 'Temp / Humidity / Pressure', fontsize=8, color='#aaa', va='center')
+    label(ax, 19.25, 6.2, 'I2C: 0x76', fontsize=8, color='#ccc', va='center')
 
-    # 12V supply at thermostat (optional)
-    v12_box = FancyBboxPatch((9.5, 6.7), 1.5, 0.8, boxstyle="round,pad=0.05",
-                             edgecolor='#666', facecolor='#f0f0f0', linewidth=1.5)
-    ax.add_patch(v12_box)
-    ax.text(10.25, 7.3, '12V Supply', ha='center', fontsize=9, weight='bold')
-    ax.text(10.25, 7.1, '(Available)', ha='center', fontsize=7, style='italic')
-    ax.plot(9.7, 6.9, 'o', color='#cc0000', markersize=8)
-    ax.text(9.9, 6.9, '12V+', va='center', fontsize=8)
-    ax.plot(10.7, 6.9, 'o', color='black', markersize=8)
-    ax.text(10.9, 6.9, 'GND', va='center', fontsize=8)
+    # BME pins on LEFT edge
+    bme_pins = [(7.5, '#ff0000', 'VCC'), (7.1, 'black', 'GND'),
+                (6.7, '#00aa00', 'SDA'), (6.3, '#0066ff', 'SCL')]
+    for py, pc, pl in bme_pins:
+        pin(ax, oled_px, py, pc, 6)
+        label(ax, oled_px - 0.15, py, pl, fontsize=7, ha='right', va='center')
 
-    # Ground connection
-    ax.plot([9.5, 10.7], [5.9, 6.9], color='black', linewidth=3.5)
-    ax.text(10, 6.3, '← Common\nGround OK', fontsize=8, color='#0066cc', weight='bold')
+    # ---- Bus to OLED wiring (vertical risers at unique x, then horizontal to pin) ----
+    # Each signal gets its own x column to avoid overlaps
+    riser = {  # signal: riser_x
+        '3v3': 15.2,
+        'gnd': 15.6,
+        'sda': 16.0,
+        'scl': 16.4,
+    }
 
-    # Connection bus points
-    ax.plot(9.5, 6.2, 'o', color='#ff0000', markersize=12)
-    ax.plot(9.5, 5.9, 'o', color='black', markersize=12)
-    ax.plot(9.5, 5.6, 'o', color='#00cc00', markersize=12)
-    ax.plot(9.5, 5.3, 'o', color='#0066ff', markersize=12)
+    # 3.3V → OLED VCC
+    wire(ax, (bus_x, 10.0), (riser['3v3'], 10.0), color='#ff0000', lw=2)
+    wire(ax, (riser['3v3'], 10.0), (riser['3v3'], 12.0), color='#ff0000', lw=2)
+    wire(ax, (riser['3v3'], 12.0), (oled_px, 12.0), color='#ff0000', lw=2)
 
-    # OLED Display
-    oled_box = FancyBboxPatch((9.5, 4.2), 1.5, 1.3, boxstyle="round,pad=0.05",
-                              edgecolor='black', facecolor='#f0f0f0', linewidth=2)
-    ax.add_patch(oled_box)
-    ax.text(10.25, 5.3, 'OLED', ha='center', fontsize=10, weight='bold')
-    ax.text(10.25, 5.05, 'SSD1306', ha='center', fontsize=8)
-    ax.text(10.25, 4.85, '128x64', ha='center', fontsize=8)
-    ax.text(10.25, 4.6, 'I2C: 0x3C', ha='center', fontsize=7, style='italic', color='#666')
+    # GND → OLED GND
+    wire(ax, (bus_x, 9.2), (riser['gnd'], 9.2), color='black', lw=2)
+    wire(ax, (riser['gnd'], 9.2), (riser['gnd'], 11.6), color='black', lw=2)
+    wire(ax, (riser['gnd'], 11.6), (oled_px, 11.6), color='black', lw=2)
 
-    ax.plot(9.7, 4.3, 'o', color='#ff0000', markersize=6)
-    ax.text(9.5, 4.3, 'VCC', ha='right', va='center', fontsize=7)
-    ax.plot(10, 4.3, 'o', color='black', markersize=6)
-    ax.text(10, 4.15, 'GND', ha='center', fontsize=7)
-    ax.plot(10.5, 4.3, 'o', color='#00cc00', markersize=6)
-    ax.text(10.5, 4.15, 'SDA', ha='center', fontsize=7)
-    ax.plot(10.8, 4.3, 'o', color='#0066ff', markersize=6)
-    ax.text(10.8, 4.15, 'SCL', ha='center', fontsize=7)
+    # SDA → OLED SDA
+    wire(ax, (bus_x, 8.4), (riser['sda'], 8.4), color='#00aa00', lw=2)
+    wire(ax, (riser['sda'], 8.4), (riser['sda'], 11.2), color='#00aa00', lw=2)
+    wire(ax, (riser['sda'], 11.2), (oled_px, 11.2), color='#00aa00', lw=2)
 
-    # BME280 Sensor
-    bme_box = FancyBboxPatch((11.5, 4.2), 1.5, 1.3, boxstyle="round,pad=0.05",
-                             edgecolor='black', facecolor='#f0f0f0', linewidth=2)
-    ax.add_patch(bme_box)
-    ax.text(12.25, 5.3, 'BME280', ha='center', fontsize=10, weight='bold')
-    ax.text(12.25, 5.05, 'Temp/Hum/', ha='center', fontsize=8)
-    ax.text(12.25, 4.85, 'Pressure', ha='center', fontsize=8)
-    ax.text(12.25, 4.6, 'I2C: 0x76', ha='center', fontsize=7, style='italic', color='#666')
+    # SCL → OLED SCL
+    wire(ax, (bus_x, 7.6), (riser['scl'], 7.6), color='#0066ff', lw=2)
+    wire(ax, (riser['scl'], 7.6), (riser['scl'], 10.8), color='#0066ff', lw=2)
+    wire(ax, (riser['scl'], 10.8), (oled_px, 10.8), color='#0066ff', lw=2)
 
-    ax.plot(11.7, 4.3, 'o', color='#ff0000', markersize=6)
-    ax.text(11.5, 4.3, 'VCC', ha='right', va='center', fontsize=7)
-    ax.plot(12, 4.3, 'o', color='black', markersize=6)
-    ax.text(12, 4.15, 'GND', ha='center', fontsize=7)
-    ax.plot(12.5, 4.3, 'o', color='#00cc00', markersize=6)
-    ax.text(12.5, 4.15, 'SDA', ha='center', fontsize=7)
-    ax.plot(12.8, 4.3, 'o', color='#0066ff', markersize=6)
-    ax.text(12.8, 4.15, 'SCL', ha='center', fontsize=7)
+    # ---- Bus to BME280 wiring (risers go DOWN from bus) ----
+    # 3.3V → BME VCC
+    wire(ax, (riser['3v3'], 10.0), (riser['3v3'], 7.5), color='#ff0000', lw=2)
+    wire(ax, (riser['3v3'], 7.5), (oled_px, 7.5), color='#ff0000', lw=2)
 
-    # Wiring at thermostat location
-    # 3.3V bus
-    ax.plot([9.5, 9.7], [6.2, 4.3], color='#ff0000', linewidth=2)
-    ax.plot([9.5, 11.7], [6.2, 4.3], color='#ff0000', linewidth=2)
+    # GND → BME GND
+    wire(ax, (riser['gnd'], 9.2), (riser['gnd'], 7.1), color='black', lw=2)
+    wire(ax, (riser['gnd'], 7.1), (oled_px, 7.1), color='black', lw=2)
 
-    # GND bus
-    ax.plot([9.5, 10], [5.9, 4.3], color='black', linewidth=2)
-    ax.plot([9.5, 12], [5.9, 4.3], color='black', linewidth=2)
+    # SDA → BME SDA
+    wire(ax, (riser['sda'], 8.4), (riser['sda'], 6.7), color='#00aa00', lw=2)
+    wire(ax, (riser['sda'], 6.7), (oled_px, 6.7), color='#00aa00', lw=2)
 
-    # SDA bus
-    ax.plot([9.5, 10.5], [5.6, 4.3], color='#00cc00', linewidth=2)
-    ax.plot([9.5, 12.5], [5.6, 4.3], color='#00cc00', linewidth=2)
+    # SCL → BME SCL
+    wire(ax, (riser['scl'], 7.6), (riser['scl'], 6.3), color='#0066ff', lw=2)
+    wire(ax, (riser['scl'], 6.3), (oled_px, 6.3), color='#0066ff', lw=2)
 
-    # SCL bus
-    ax.plot([9.5, 10.8], [5.3, 4.3], color='#0066ff', linewidth=2)
-    ax.plot([9.5, 12.8], [5.3, 4.3], color='#0066ff', linewidth=2)
-
-    # I2C specs box
-    spec_box = FancyBboxPatch((9.5, 3.2), 3.5, 0.8, boxstyle="round,pad=0.05",
-                              edgecolor='#666', facecolor='white', linewidth=1.5)
-    ax.add_patch(spec_box)
-    ax.text(11.25, 3.8, 'I2C BUS SPECS', ha='center', fontsize=9, weight='bold')
-    ax.text(9.7, 3.6, '• Frequency: 400 kHz (can reduce to 100 kHz)', fontsize=7)
-    ax.text(9.7, 3.45, '• Pull-ups: Internal (ESP32-S3)', fontsize=7)
-    ax.text(9.7, 3.3, '• GPIO 8 (SDA), GPIO 9 (SCL)', fontsize=7)
-
-    # Technical notes
-    notes_box = FancyBboxPatch((0.5, 0.3), 6, 2.8, boxstyle="round,pad=0.1",
-                               edgecolor='#0066cc', facecolor='#f0f8ff', linewidth=2.5)
-    ax.add_patch(notes_box)
-    ax.text(3.5, 2.9, 'TECHNICAL NOTES', ha='center', fontsize=11, weight='bold')
-
+    # ---- Notes ----
+    box(ax, 0.5, 0.5, 9.0, 4.5, '#0066cc', '#f0f8ff', 2)
+    label(ax, 5.0, 4.7, 'TECHNICAL NOTES', fontsize=11, weight='bold', va='center')
     notes = [
         "GROUNDING:",
-        "✓ Safe to tie OLED/BME280 GND to 12VDC ground",
-        "✓ All grounds are common reference (0V)",
-        "✓ Waveshare module powered by 7-36V DC (or 5V USB-C)",
-        "✓ I2C requires shared ground for proper signaling",
-        "✓ No voltage conflict (power rail ≠ ground rail)"
+        "  Safe to tie OLED/BME280 GND to 12VDC ground",
+        "  All grounds are common reference (0V)",
+        "  I2C requires shared ground for proper signaling",
+        "",
+        "I2C BUS:",
+        "  400 kHz (can reduce to 100 kHz for long cable)",
+        "  Internal pull-ups on ESP32-S3",
+        "  GPIO 8 = SDA, GPIO 9 = SCL",
+        "",
+        "WARNING: OLED/BME280 VCC = 3.3V ONLY (not 12V!)",
     ]
-
-    y_pos = 2.5
-    for note in notes:
-        if note.startswith("GROUND"):
-            ax.text(0.7, y_pos, note, fontsize=9, weight='bold')
-        else:
-            ax.text(0.7, y_pos, note, fontsize=8)
-        y_pos -= 0.35
-
-    # Warning box
-    warn_box = FancyBboxPatch((0.5, 0.5), 6, 0.5, boxstyle="round,pad=0.05",
-                              edgecolor='#ff6600', facecolor='#fff9e6', linewidth=2.5)
-    ax.add_patch(warn_box)
-    ax.text(3.5, 0.75, '⚠ Do NOT connect OLED/BME280 VCC to 12V - Only 3.3V!',
-            ha='center', fontsize=9, weight='bold', color='#ff6600')
+    y = 4.2
+    for n in notes:
+        if n == "":
+            y -= 0.15
+            continue
+        w = 'bold' if n.endswith(":") or n.startswith("WARNING") else 'normal'
+        c = '#ff6600' if n.startswith("WARNING") else 'black'
+        label(ax, 0.8, y, n, fontsize=8, weight=w, ha='left', va='center', color=c)
+        y -= 0.35
 
     plt.tight_layout()
     plt.savefig('docs/oled_bme280_wiring_pro.pdf', dpi=300, bbox_inches='tight')
-    print("✓ Created oled_bme280_wiring_pro.pdf")
+    plt.savefig('docs/oled_bme280_wiring_pro.svg', dpi=300, bbox_inches='tight')
+    print("Created oled_bme280_wiring_pro.pdf and .svg")
     plt.close()
 
 
+# =============================================================================
+# DIAGRAM 3: ESP32-S3 MAIN CONTROLLER WIRING
+# =============================================================================
 def create_esp32_main_wiring():
-    """ESP32-S3 Main Controller Wiring - Unchanged"""
-    fig, ax = plt.subplots(figsize=(12, 9))
-    ax.set_xlim(0, 12)
-    ax.set_ylim(0, 9)
-    ax.axis('off')
+    fig, ax = new_page(20, 14)
 
-    # Title
-    ax.text(6, 8.5, 'ESP32-S3 MAIN CONTROLLER WIRING',
-            ha='center', fontsize=16, weight='bold')
-    ax.text(6, 8.2, 'IP: 192.168.71.152 | Serial: 5B41038621 | /dev/esp32_main',
-            ha='center', fontsize=10, color='#666')
+    label(ax, 10, 13.5, 'ESP32-S3 MAIN CONTROLLER WIRING',
+          fontsize=16, weight='bold', va='center')
+    label(ax, 10, 13.0, 'IP: 192.168.71.152  |  /dev/esp32_main',
+          fontsize=10, color='#666', va='center')
 
-    # Power Supply Box
-    pwr_box = FancyBboxPatch((7.5, 6.5), 4, 1.5, boxstyle="round,pad=0.1",
-                             edgecolor='#FF9800', facecolor='#fff3e0', linewidth=2)
-    ax.add_patch(pwr_box)
-    ax.text(9.5, 7.8, 'Power Supply', ha='center', fontsize=11, weight='bold')
-    ax.text(9.5, 7.5, '12V DC → Buck Conv → 5V', ha='center', fontsize=9)
-    ax.text(9.5, 7.2, '5V → ESP32 VIN', ha='center', fontsize=9)
-    ax.text(9.5, 6.9, 'Onboard: 5V → 3.3V', ha='center', fontsize=8, style='italic', color='#888')
+    # --- Power Supply (top) ---
+    box(ax, 11.0, 10.5, 7.0, 1.8, '#FF9800', '#fff3e0', 2)
+    label(ax, 14.5, 12.0, 'Power Supply', fontsize=11, weight='bold', va='center')
+    label(ax, 14.5, 11.5, '12V DC → Buck Converter → 5V', fontsize=9, va='center')
+    label(ax, 14.5, 11.0, '5V → ESP32 VIN | Onboard 3.3V reg', fontsize=8, va='center', color='#888')
 
-    # ESP32 Board
-    esp_box = FancyBboxPatch((4.5, 3.5), 3, 4, boxstyle="round,pad=0.1",
-                             edgecolor='#333', facecolor='#1a1a2e', linewidth=2.5)
-    ax.add_patch(esp_box)
-    ax.text(6, 7.2, 'ESP32-S3', ha='center', fontsize=12, weight='bold', color='white')
-    ax.text(6, 6.9, 'Main Controller', ha='center', fontsize=9, color='#aaa')
-
-    # USB Port
-    usb = Rectangle((5.5, 7.45), 1, 0.2, facecolor='#555', edgecolor='#777', linewidth=1)
+    # --- ESP32 (right side) ---
+    box(ax, 11.0, 4.0, 4.5, 5.5, '#333', '#1a1a2e', 2.5)
+    usb = Rectangle((12.5, 9.4), 1.5, 0.2, facecolor='#555', edgecolor='#777', lw=1, zorder=3)
     ax.add_patch(usb)
-    ax.text(6, 7.55, 'USB-C', ha='center', va='center', fontsize=7, color='white')
+    label(ax, 13.25, 9.5, 'USB-C', fontsize=6, color='white', va='center')
+    label(ax, 13.25, 9.0, 'ESP32-S3', fontsize=13, weight='bold', color='white', va='center')
+    label(ax, 13.25, 8.5, 'Main Controller', fontsize=9, color='#aaa', va='center')
 
-    # ESP32 Left pins
-    ax.plot(4.5, 6.7, 'o', color='#4CAF50', markersize=10)
-    ax.text(4.3, 6.7, '3.3V', ha='right', va='center', fontsize=9, weight='bold')
+    # ESP32 pins (LEFT side) — well spaced
+    esp_x = 11.0
+    esp_pins = [
+        (7.5, '#4CAF50', '3.3V'),
+        (6.8, 'black',   'GND'),
+        (6.1, '#2196F3', 'GPIO 8 (SDA)'),
+        (5.4, '#2196F3', 'GPIO 9 (SCL)'),
+    ]
+    for py, pc, pl in esp_pins:
+        pin(ax, esp_x, py, pc, 9)
+        label(ax, esp_x + 0.2, py, pl, fontsize=8, ha='left', va='center',
+              color=pc if pc != 'black' else '#333', weight='bold')
 
-    ax.plot(4.5, 6.2, 'o', color='black', markersize=10)
-    ax.text(4.3, 6.2, 'GND', ha='right', va='center', fontsize=9, weight='bold')
+    # 5V/VIN pin (right side)
+    pin(ax, 15.5, 7.5, '#f44336', 9)
+    label(ax, 15.7, 7.5, '5V/VIN', fontsize=8, ha='left', va='center',
+          weight='bold', color='#f44336')
 
-    ax.plot(4.5, 5.5, 'o', color='#2196F3', markersize=10)
-    ax.text(4.3, 5.5, 'GPIO 8', ha='right', va='center', fontsize=9, weight='bold', color='#2196F3')
+    # 5V wire from power supply
+    wire(ax, (14.5, 10.5), (14.5, 7.8), color='#f44336', lw=2.5)
+    wire(ax, (14.5, 7.8), (14.5, 7.5), color='#f44336', lw=2.5)
+    wire(ax, (14.5, 7.5), (15.5, 7.5), color='#f44336', lw=2.5)
+    label(ax, 15.0, 9.5, '5V', fontsize=8, color='#f44336', ha='left', va='center')
 
-    ax.plot(4.5, 4.9, 'o', color='#2196F3', markersize=10)
-    ax.text(4.3, 4.9, 'GPIO 9', ha='right', va='center', fontsize=9, weight='bold', color='#2196F3')
+    # --- BME280 (top left) ---
+    box(ax, 0.5, 7.5, 4.5, 3.0, '#666', '#4a4a6a', 2)
+    label(ax, 2.75, 10.2, 'BME280', fontsize=12, weight='bold', color='white', va='center')
+    label(ax, 2.75, 9.6, 'Temp / Humidity / Pressure', fontsize=8, color='#aaa', va='center')
+    label(ax, 2.75, 9.1, 'Addr: 0x76', fontsize=7, color='#ccc', va='center')
 
-    # ESP32 Right pin
-    ax.plot(7.5, 6.7, 'o', color='#f44336', markersize=10)
-    ax.text(7.7, 6.7, '5V/VIN', va='center', fontsize=9, weight='bold', color='#f44336')
+    # BME pins (right side)
+    bme_x = 5.0
+    bme_pins = [(8.8, '#4CAF50', 'VCC'), (8.4, 'black', 'GND'),
+                (8.0, '#2196F3', 'SDA'), (7.6, '#2196F3', 'SCL')]
+    for py, pc, pl in bme_pins:
+        pin(ax, bme_x, py, pc, 7)
+        label(ax, bme_x + 0.15, py, pl, fontsize=7, ha='left', va='center')
 
-    # BME280 Sensor
-    bme_box = FancyBboxPatch((0.5, 5), 2.5, 1.5, boxstyle="round,pad=0.1",
-                             edgecolor='#666', facecolor='#4a4a6a', linewidth=2)
-    ax.add_patch(bme_box)
-    ax.text(1.75, 6.2, 'BME280', ha='center', fontsize=10, weight='bold', color='white')
-    ax.text(1.75, 5.9, 'Temp/Humidity', ha='center', fontsize=8, color='#aaa')
-    ax.text(1.75, 5.6, 'Pressure', ha='center', fontsize=8, color='#aaa')
-    ax.text(1.75, 5.3, 'Addr: 0x76', ha='center', fontsize=7, color='#ccc', style='italic')
-
-    # BME280 pins
-    ax.plot(3, 6.1, 'o', color='#4CAF50', markersize=8)
-    ax.text(3.15, 6.1, 'VCC', va='center', fontsize=8)
-    ax.plot(3, 5.85, 'o', color='black', markersize=8)
-    ax.text(3.15, 5.85, 'GND', va='center', fontsize=8)
-    ax.plot(3, 5.6, 'o', color='#2196F3', markersize=8)
-    ax.text(3.15, 5.6, 'SDA', va='center', fontsize=8, color='#2196F3')
-    ax.plot(3, 5.35, 'o', color='#2196F3', markersize=8)
-    ax.text(3.15, 5.35, 'SCL', va='center', fontsize=8, color='#2196F3')
-
-    # OLED Display
-    oled_box = FancyBboxPatch((0.5, 3), 2.5, 1.6, boxstyle="round,pad=0.1",
-                              edgecolor='#666', facecolor='#1a1a4a', linewidth=2)
-    ax.add_patch(oled_box)
-    # Screen
-    screen = Rectangle((0.7, 3.5), 2.1, 0.8, facecolor='#000', edgecolor='#444', linewidth=1)
+    # --- OLED (bottom left) ---
+    box(ax, 0.5, 3.5, 4.5, 3.2, '#666', '#1a1a4a', 2)
+    screen = Rectangle((0.7, 4.5), 4.1, 1.4, facecolor='#000', edgecolor='#444', lw=1, zorder=3)
     ax.add_patch(screen)
-    ax.text(1.75, 3.9, '128x64', ha='center', va='center', fontsize=9, color='#00ff00')
-    ax.text(1.75, 3.3, 'SSD1306 OLED', ha='center', fontsize=9, weight='bold', color='white')
-    ax.text(1.75, 3.1, 'Addr: 0x3C', ha='center', fontsize=7, color='#ccc', style='italic')
+    label(ax, 2.75, 5.2, '128x64', fontsize=9, color='#00ff00', va='center')
+    label(ax, 2.75, 4.1, 'SSD1306 OLED', fontsize=9, weight='bold', color='white', va='center')
+    label(ax, 2.75, 3.7, 'Addr: 0x3C', fontsize=7, color='#ccc', va='center')
 
-    # OLED pins
-    ax.plot(3, 4.3, 'o', color='#4CAF50', markersize=8)
-    ax.text(3.15, 4.3, 'VCC', va='center', fontsize=8)
-    ax.plot(3, 4.05, 'o', color='black', markersize=8)
-    ax.text(3.15, 4.05, 'GND', va='center', fontsize=8)
-    ax.plot(3, 3.8, 'o', color='#2196F3', markersize=8)
-    ax.text(3.15, 3.8, 'SDA', va='center', fontsize=8, color='#2196F3')
-    ax.plot(3, 3.55, 'o', color='#2196F3', markersize=8)
-    ax.text(3.15, 3.55, 'SCL', va='center', fontsize=8, color='#2196F3')
+    # OLED pins (right side)
+    oled_pins = [(6.4, '#4CAF50', 'VCC'), (6.0, 'black', 'GND'),
+                 (5.6, '#2196F3', 'SDA'), (5.2, '#2196F3', 'SCL')]
+    for py, pc, pl in oled_pins:
+        pin(ax, bme_x, py, pc, 7)
+        label(ax, bme_x + 0.15, py, pl, fontsize=7, ha='left', va='center')
 
-    # Wiring - 3.3V bus
-    ax.plot([4.5, 3.8], [6.7, 6.7], color='#4CAF50', linewidth=2.5)
-    ax.plot([3.8, 3.8, 3], [6.7, 6.1, 6.1], color='#4CAF50', linewidth=2.5)
-    ax.plot([3.8, 3.8, 3], [6.7, 4.3, 4.3], color='#4CAF50', linewidth=2.5)
+    # --- Bus bars (vertical columns between devices and ESP32) ---
+    # 4 vertical columns at distinct x positions
+    bx = {'3v3': 7.0, 'gnd': 7.8, 'sda': 8.6, 'scl': 9.4}
 
-    # GND bus
-    ax.plot([4.5, 3.5], [6.2, 6.2], color='black', linewidth=2.5)
-    ax.plot([3.5, 3.5, 3], [6.2, 5.85, 5.85], color='black', linewidth=2.5)
-    ax.plot([3.5, 3.5, 3], [6.2, 4.05, 4.05], color='black', linewidth=2.5)
+    # Draw bus bars as vertical lines spanning from OLED bottom to BME top
+    wire(ax, (bx['3v3'], 5.2), (bx['3v3'], 8.8), color='#4CAF50', lw=3)
+    wire(ax, (bx['gnd'], 5.2), (bx['gnd'], 8.4), color='black', lw=3)
+    wire(ax, (bx['sda'], 5.2), (bx['sda'], 8.0), color='#2196F3', lw=3)
+    wire(ax, (bx['scl'], 5.2), (bx['scl'], 7.6), color='#2196F3', lw=3)
 
-    # SDA bus (GPIO 8)
-    ax.plot([4.5, 3.7], [5.5, 5.5], color='#2196F3', linewidth=2.5)
-    ax.plot([3.7, 3.7, 3], [5.5, 5.6, 5.6], color='#2196F3', linewidth=2.5)
-    ax.plot([3.7, 3.7, 3], [5.5, 3.8, 3.8], color='#2196F3', linewidth=2.5)
+    # Labels at top of each bus — placed well above wire endpoints
+    label(ax, bx['3v3'], 9.5, '3.3V', fontsize=7, color='#4CAF50', weight='bold', va='bottom')
+    label(ax, bx['gnd'], 9.1, 'GND', fontsize=7, weight='bold', va='bottom')
+    label(ax, bx['sda'], 8.7, 'SDA', fontsize=7, color='#2196F3', weight='bold', va='bottom')
+    label(ax, bx['scl'], 8.3, 'SCL', fontsize=7, color='#2196F3', weight='bold', va='bottom')
 
-    # SCL bus (GPIO 9)
-    ax.plot([4.5, 3.6], [4.9, 4.9], color='#2196F3', linewidth=2.5)
-    ax.plot([3.6, 3.6, 3], [4.9, 5.35, 5.35], color='#2196F3', linewidth=2.5)
-    ax.plot([3.6, 3.6, 3], [4.9, 3.55, 3.55], color='#2196F3', linewidth=2.5)
+    # BME → bus (horizontal)
+    wire(ax, (bme_x, 8.8), (bx['3v3'], 8.8), color='#4CAF50', lw=2)
+    wire(ax, (bme_x, 8.4), (bx['gnd'], 8.4), color='black', lw=2)
+    wire(ax, (bme_x, 8.0), (bx['sda'], 8.0), color='#2196F3', lw=2)
+    wire(ax, (bme_x, 7.6), (bx['scl'], 7.6), color='#2196F3', lw=2)
 
-    # 5V from power supply
-    ax.plot([9.5, 9.5, 7.5], [6.5, 6.7, 6.7], color='#f44336', linewidth=2.5)
+    # OLED → bus (horizontal)
+    wire(ax, (bme_x, 6.4), (bx['3v3'], 6.4), color='#4CAF50', lw=2)
+    wire(ax, (bme_x, 6.0), (bx['gnd'], 6.0), color='black', lw=2)
+    wire(ax, (bme_x, 5.6), (bx['sda'], 5.6), color='#2196F3', lw=2)
+    wire(ax, (bme_x, 5.2), (bx['scl'], 5.2), color='#2196F3', lw=2)
 
-    # Legend Box
-    legend_box = FancyBboxPatch((7.5, 3.5), 4, 2.5, boxstyle="round,pad=0.1",
-                                edgecolor='#ddd', facecolor='#f5f5f5', linewidth=1.5)
-    ax.add_patch(legend_box)
-    ax.text(9.5, 5.8, 'Pin Assignments', ha='center', fontsize=11, weight='bold')
+    # Bus → ESP32 (horizontal)
+    wire(ax, (bx['3v3'], 7.5), (esp_x, 7.5), color='#4CAF50', lw=2)
+    wire(ax, (bx['gnd'], 6.8), (esp_x, 6.8), color='black', lw=2)
+    wire(ax, (bx['sda'], 6.1), (esp_x, 6.1), color='#2196F3', lw=2)
+    wire(ax, (bx['scl'], 5.4), (esp_x, 5.4), color='#2196F3', lw=2)
 
-    # Legend items
-    ax.plot([7.8, 8.3], [5.5, 5.5], color='#2196F3', linewidth=2.5)
-    ax.text(8.5, 5.5, 'I2C SDA (GPIO 8)', va='center', fontsize=9)
-
-    ax.plot([7.8, 8.3], [5.2, 5.2], color='#2196F3', linewidth=2.5)
-    ax.text(8.5, 5.2, 'I2C SCL (GPIO 9)', va='center', fontsize=9)
-
-    ax.plot([7.8, 8.3], [4.9, 4.9], color='#4CAF50', linewidth=2.5)
-    ax.text(8.5, 4.9, '3.3V Power', va='center', fontsize=9)
-
-    ax.plot([7.8, 8.3], [4.6, 4.6], color='#f44336', linewidth=2.5)
-    ax.text(8.5, 4.6, '5V (Buck Conv)', va='center', fontsize=9)
-
-    ax.plot([7.8, 8.3], [4.3, 4.3], color='black', linewidth=2.5)
-    ax.text(8.5, 4.3, 'Ground', va='center', fontsize=9)
-
-    # I2C Addresses
-    i2c_box = FancyBboxPatch((7.5, 0.8), 4, 1, boxstyle="round,pad=0.1",
-                             edgecolor='#2196F3', facecolor='#e3f2fd', linewidth=1.5)
-    ax.add_patch(i2c_box)
-    ax.text(9.5, 1.6, 'I2C Addresses', ha='center', fontsize=10, weight='bold')
-    ax.text(7.7, 1.3, 'BME280: 0x76', fontsize=9)
-    ax.text(7.7, 1.0, 'SSD1306: 0x3C', fontsize=9)
+    # --- Legend ---
+    box(ax, 11.0, 1.0, 7.0, 2.5, '#ddd', '#f8f8f8', 1.5)
+    label(ax, 14.5, 3.2, 'Wire Legend', fontsize=11, weight='bold', va='center')
+    items = [
+        (2.7, '#2196F3', 'I2C SDA (GPIO 8) + SCL (GPIO 9)'),
+        (2.2, '#4CAF50', '3.3V Power'),
+        (1.7, '#f44336', '5V (Buck Converter → VIN)'),
+        (1.2, 'black',   'Ground'),
+    ]
+    for iy, ic, il in items:
+        wire(ax, (11.3, iy), (12.0, iy), color=ic, lw=2.5)
+        label(ax, 12.3, iy, il, fontsize=9, ha='left', va='center')
 
     # Notes
-    ax.text(6, 0.5, 'Both I2C devices share the same SDA/SCL bus', ha='center', fontsize=9, color='#666')
-    ax.text(6, 0.2, 'Power: 12V DC → Buck Converter (5V) → ESP32 VIN', ha='center', fontsize=9, color='#666')
+    label(ax, 10, 0.4, 'BME280: 0x76  |  SSD1306: 0x3C  |  I2C 400 kHz  |  Both share SDA/SCL bus',
+          fontsize=9, color='#888', va='center')
 
     plt.tight_layout()
     plt.savefig('docs/esp32_main_wiring_pro.pdf', dpi=300, bbox_inches='tight')
-    print("✓ Created esp32_main_wiring_pro.pdf")
+    plt.savefig('docs/esp32_main_wiring_pro.svg', dpi=300, bbox_inches='tight')
+    print("Created esp32_main_wiring_pro.pdf and .svg")
     plt.close()
 
 
-if __name__ == '__main__':
-    print("\nCreating updated professional wiring diagrams...")
-    print("=" * 60)
-    print("Component updates:")
-    print("  • Waveshare ESP32-S3-Relay-6CH (replaces ESP32 + HL-52S)")
-    print("  • IP65 waterproof enclosure (6.3\"×4.33\"×3.54\")")
-    print("  • Updated GPIO assignments")
-    print("  • Wire labels positioned BELOW lines")
-    print("=" * 60)
-
-    create_ssr_diagram()
-    create_i2c_diagram()
-    create_esp32_main_wiring()
-
-    print("=" * 60)
-    print("Diagrams created successfully!")
-    print("\nNext: Create comprehensive relay splice diagram...")
-
-
+# =============================================================================
+# DIAGRAM 4: COMPREHENSIVE RELAY SPLICE
+# =============================================================================
 def create_relay_splice_comprehensive():
-    """Comprehensive Waveshare Module to Dometic Brisk II Wiring"""
-    fig, ax = plt.subplots(figsize=(18, 14))
-    ax.set_xlim(0, 18)
-    ax.set_ylim(0, 14)
-    ax.axis('off')
+    fig, ax = new_page(28, 20)
 
-    # Title
-    ax.text(9, 13.5, 'WAVESHARE ESP32-S3 — DIRECT 120VAC WIRING TO DOMETIC BRISK II',
-            ha='center', fontsize=20, weight='bold')
-    ax.text(9, 13.1, 'SSR-25DA for Compressor | Relay Channels for Fans + Furnace | Dual Freeze Protection',
-            ha='center', fontsize=12, color='#666')
+    label(ax, 14, 19.5, 'WAVESHARE ESP32-S3 — DIRECT 120VAC WIRING TO DOMETIC BRISK II',
+          fontsize=18, weight='bold', va='center')
+    label(ax, 14, 18.9, 'SSR-25DA for Compressor  |  Relay Channels for Fans + Furnace  |  Dual Freeze Protection',
+          fontsize=11, color='#666', va='center')
 
-    # Waveshare Module Box (Left)
-    ws_box = FancyBboxPatch((0.5, 8), 4.5, 4.5, boxstyle="round,pad=0.1",
-                            edgecolor='#0066cc', facecolor='#e6f3ff', linewidth=3)
-    ax.add_patch(ws_box)
-    ax.text(2.75, 12.2, 'WAVESHARE ESP32-S3-RELAY-6CH', ha='center', fontsize=13, weight='bold')
-    ax.text(2.75, 11.9, 'Industrial 6-Channel Relay Module', ha='center', fontsize=10)
-    ax.text(2.75, 11.6, 'IP65 Waterproof Enclosure (6.3"×4.33"×3.54")', ha='center', fontsize=9, color='#666')
+    # =====================================================
+    # LEFT: Waveshare Module
+    # =====================================================
+    box(ax, 0.5, 7.0, 6.0, 11.0, '#0066cc', '#e6f3ff', 3)
+    label(ax, 3.5, 17.7, 'WAVESHARE ESP32-S3-RELAY-6CH', fontsize=13, weight='bold', va='center')
+    label(ax, 3.5, 17.2, 'IP65 Enclosure  |  7-36V DC', fontsize=9, va='center', color='#666')
+    label(ax, 3.5, 16.7, 'Relay: 10A @ 250VAC per channel', fontsize=8, va='center', color='#888')
 
-    # Power specs
-    ax.text(2.75, 11.2, 'Power: 7-36V DC (or 5V USB-C)', ha='center', fontsize=8, style='italic')
-    ax.text(2.75, 10.95, 'Relay Rating: 10A @ 250VAC / 30VDC', ha='center', fontsize=8, style='italic')
-
-    # GPIO assignments
-    relay_channels = [
-        (5, 10.5, 'CH1 (GPIO 1): Furnace', '#ff6600'),
-        (5, 10.1, 'CH2 (GPIO 2): Compressor→SSR', '#cc0000'),
-        (5, 9.7, 'CH3 (GPIO 41): Fan Low', '#ff6600'),
-        (5, 9.3, 'CH4 (GPIO 42): Fan High', '#ff6600'),
-        (5, 8.9, 'CH5 (GPIO 45): Available', '#999'),
-        (5, 8.5, 'CH6 (GPIO 46): Available', '#999'),
+    # Channel pins — right side of box
+    ch_x = 6.5
+    channels = [
+        (16.0, 'CH1 (GPIO 1): Furnace',       '#ff6600'),
+        (15.2, 'CH2 (GPIO 2): Compressor→SSR', '#cc0000'),
+        (14.4, 'CH3 (GPIO 41): Fan Low',       '#ff0000'),
+        (13.6, 'CH4 (GPIO 42): Fan High',      '#333333'),
+        (12.8, 'CH5 (GPIO 45): Available',      '#aaa'),
+        (12.0, 'CH6 (GPIO 46): Available',      '#aaa'),
     ]
+    for cy, cl, cc in channels:
+        pin(ax, ch_x, cy, cc, 9)
+        label(ax, ch_x - 0.2, cy, cl, fontsize=9, ha='right', va='center', color=cc)
 
-    for x, y, label, color in relay_channels:
-        ax.plot(x, y, 'o', color=color, markersize=9)
-        ax.text(x+0.15, y, label, va='center', fontsize=9, color=color)
+    # Other pins
+    pin(ax, ch_x, 11.0, '#2196F3', 7)
+    label(ax, ch_x - 0.2, 11.0, 'I2C: GPIO 8/9', fontsize=8, ha='right', va='center', color='#2196F3')
+    pin(ax, ch_x, 10.2, '#00cccc', 7)
+    label(ax, ch_x - 0.2, 10.2, 'DS18B20: GPIO 10', fontsize=8, ha='right', va='center', color='#00cccc')
+    pin(ax, ch_x, 9.4, 'black', 7)
+    label(ax, ch_x - 0.2, 9.4, 'GND', fontsize=8, ha='right', va='center')
+    pin(ax, ch_x, 8.6, '#cc0000', 7)
+    label(ax, ch_x - 0.2, 8.6, '12V+', fontsize=8, ha='right', va='center', color='#cc0000')
+    pin(ax, ch_x, 7.8, '#ff0000', 7)
+    label(ax, ch_x - 0.2, 7.8, '3.3V', fontsize=8, ha='right', va='center', color='#ff0000')
 
-    # I2C and 1-Wire
-    ax.plot(5, 10.9, 'o', color='#2196F3', markersize=8)
-    ax.text(5.15, 10.9, 'I2C: GPIO 8 (SDA), GPIO 9 (SCL)', va='center', fontsize=8, color='#2196F3')
+    # =====================================================
+    # TOP CENTER: SSR-25DA
+    # =====================================================
+    box(ax, 9.0, 15.5, 5.0, 3.0, '#cc0000', '#ffebee', 3)
+    label(ax, 11.5, 18.2, 'SSR-25DA', fontsize=14, weight='bold', va='center', color='#cc0000')
+    label(ax, 11.5, 17.6, 'Solid State Relay', fontsize=10, va='center')
+    label(ax, 11.5, 17.1, '3-32VDC → 25A/380VAC', fontsize=9, va='center', color='#666')
 
-    ax.plot(5, 8.2, 'o', color='#00cccc', markersize=8)
-    ax.text(5.15, 8.2, 'DS18B20: GPIO 10 (1-Wire)', va='center', fontsize=8, color='#00cccc')
+    pin(ax, 9.0, 16.8, '#cc0000', 9)
+    label(ax, 8.8, 16.8, 'DC+', fontsize=9, ha='right', va='center')
+    pin(ax, 9.0, 16.0, 'black', 9)
+    label(ax, 8.8, 16.0, 'DC-', fontsize=9, ha='right', va='center')
+    pin(ax, 14.0, 16.8, '#ff0000', 9)
+    label(ax, 14.2, 16.8, 'AC1 (in)', fontsize=9, ha='left', va='center')
+    pin(ax, 14.0, 16.0, '#ff0000', 9)
+    label(ax, 14.2, 16.0, 'AC2 (out)', fontsize=9, ha='left', va='center')
 
-    # SSR-25DA (Middle-Top)
-    ssr_box = FancyBboxPatch((6, 9.5), 3, 2.5, boxstyle="round,pad=0.1",
-                             edgecolor='#cc0000', facecolor='#ffebee', linewidth=3)
-    ax.add_patch(ssr_box)
-    ax.text(7.5, 11.8, 'SSR-25DA', ha='center', fontsize=12, weight='bold', color='#cc0000')
-    ax.text(7.5, 11.5, 'Solid State Relay', ha='center', fontsize=10)
-    ax.text(7.5, 11.25, '3-32VDC → 25A/380VAC', ha='center', fontsize=9, style='italic')
+    # =====================================================
+    # TOP RIGHT: 120VAC Source
+    # =====================================================
+    box(ax, 21.0, 16.0, 6.0, 2.5, '#ff0000', '#ffebee', 3)
+    label(ax, 24.0, 18.2, '120VAC SOURCE', fontsize=14, weight='bold', va='center', color='#ff0000')
+    pin(ax, 21.5, 17.0, '#ff0000', 10)
+    label(ax, 21.3, 17.0, 'HOT', fontsize=10, ha='right', va='center')
+    pin(ax, 26.5, 17.0, '#0066ff', 10)
+    label(ax, 26.7, 17.0, 'NEUTRAL', fontsize=10, ha='left', va='center')
 
-    # SSR pins
-    ax.plot(6, 10.7, 'o', color='#cc0000', markersize=9)
-    ax.text(5.8, 10.7, 'DC+', ha='right', va='center', fontsize=9)
-    ax.plot(6, 10.2, 'o', color='black', markersize=9)
-    ax.text(5.8, 10.2, 'DC-', ha='right', va='center', fontsize=9)
-    
-    ax.plot(9, 10.7, 'o', color='#ff0000', markersize=9)
-    ax.text(9.2, 10.7, 'AC1 (in)', va='center', fontsize=9)
-    ax.plot(9, 10.2, 'o', color='#ff0000', markersize=9)
-    ax.text(9.2, 10.2, 'AC2 (out)', va='center', fontsize=9)
+    # =====================================================
+    # MIDDLE RIGHT: Load Chain
+    # =====================================================
+    box(ax, 16.0, 13.0, 5.0, 3.5, 'black', '#f0f0f0', 2.5)
+    label(ax, 18.5, 16.2, 'LOAD CHAIN', fontsize=12, weight='bold', va='center')
+    pin(ax, 18.5, 15.3, '#ff0000', 9)
+    label(ax, 18.5, 15.0, 'Supco SFPC (freeze stat)', fontsize=8, va='center')
+    label(ax, 18.5, 14.6, 'NC: opens 35F, closes 50F', fontsize=7, va='center', color='#666')
+    pin(ax, 18.5, 14.0, '#ff0000', 9)
+    label(ax, 18.5, 13.7, 'Bimetal Cutout', fontsize=8, va='center')
 
-    # Wire: CH2 to SSR DC+
-    ax.plot([5, 6], [10.1, 10.7], color='#cc0000', linewidth=2.5)
-    ax.text(5.5, 10.2, '12V Trigger', fontsize=8, color='#cc0000')  # BELOW line
+    # =====================================================
+    # RIGHT: 6-Pin Dometic Cable
+    # =====================================================
+    box(ax, 21.0, 7.0, 6.5, 8.0, '#4CAF50', '#e8f5e9', 2.5)
+    label(ax, 24.25, 14.7, '6-PIN DOMETIC CABLE', fontsize=13, weight='bold', va='center', color='#4CAF50')
+    label(ax, 24.25, 14.2, 'to Brisk II Rooftop AC', fontsize=10, va='center')
+    label(ax, 24.25, 13.7, '(14 AWG minimum)', fontsize=8, va='center', color='#666')
 
-    # Ground to SSR DC-
-    ax.plot([2.75, 2.75, 6], [8, 7, 7], color='black', linewidth=2.5)
-    ax.plot([6, 6], [7, 10.2], color='black', linewidth=2.5)
-    ax.text(4, 6.85, 'GND', ha='center', fontsize=8)  # BELOW line
-
-    # 120VAC Source (Top Right)
-    vac_box = FancyBboxPatch((14.5, 10.5), 3, 2, boxstyle="round,pad=0.1",
-                             edgecolor='#ff0000', facecolor='#ffebee', linewidth=3)
-    ax.add_patch(vac_box)
-    ax.text(16, 12.3, '120VAC SOURCE', ha='center', fontsize=13, weight='bold', color='#ff0000')
-    
-    ax.plot(14.7, 11.8, 'o', color='#ff0000', markersize=10)
-    ax.text(14.5, 11.8, 'HOT', ha='right', va='center', fontsize=10)
-    ax.plot(14.7, 11.2, 'o', color='#0066ff', markersize=10)
-    ax.text(14.5, 11.2, 'NEUTRAL', ha='right', va='center', fontsize=10)
-
-    # Wire: 120VAC HOT to SSR AC1
-    ax.plot([14.7, 13, 13, 9], [11.8, 11.8, 10.7, 10.7], color='#ff0000', linewidth=3.5)
-    ax.text(11, 11.2, '⚠ 120VAC HOT', ha='center', fontsize=9, color='#ff0000', weight='bold')
-
-    # Load Chain (Middle)
-    load_box = FancyBboxPatch((10, 8.5), 3, 2, boxstyle="round,pad=0.1",
-                              edgecolor='black', facecolor='#f0f0f0', linewidth=2.5)
-    ax.add_patch(load_box)
-    ax.text(11.5, 10.3, 'LOAD CHAIN', ha='center', fontsize=11, weight='bold')
-    
-    ax.plot(11.5, 9.7, 'o', color='#ff0000', markersize=9)
-    ax.text(11.5, 9.9, 'Supco SFPC', ha='center', fontsize=9)
-    ax.text(11.5, 9.5, '(freeze stat)', ha='center', fontsize=7, style='italic', color='#666')
-    
-    ax.plot(11.5, 9, 'o', color='#ff0000', markersize=9)
-    ax.text(11.5, 8.8, 'Bimetal Cutout', ha='center', fontsize=9)
-
-    # Wire: SSR AC2 to Load Chain
-    ax.plot([9, 11.5], [10.2, 9.7], color='#ff0000', linewidth=3.5)
-    ax.text(10.2, 9.7, '⚠ 120VAC SWITCHED', fontsize=8, color='#ff0000', weight='bold')  # BELOW line
-
-    # Wire through load chain
-    ax.plot([11.5, 11.5], [9.7, 9], color='#ff0000', linewidth=3.5)
-
-    # 6-Pin Dometic Cable
-    cable_box = FancyBboxPatch((14.5, 5), 3, 4.5, boxstyle="round,pad=0.1",
-                               edgecolor='#4CAF50', facecolor='#e8f5e9', linewidth=2.5)
-    ax.add_patch(cable_box)
-    ax.text(16, 9.3, '6-PIN DOMETIC CABLE', ha='center', fontsize=12, weight='bold', color='#4CAF50')
-    ax.text(16, 9, 'to Brisk II Rooftop AC', ha='center', fontsize=10)
-    ax.text(16, 8.7, '(14 AWG minimum)', ha='center', fontsize=8, style='italic')
-
-    # Cable pins
+    cp_x = 21.5
     cable_pins = [
-        (14.7, 8.3, 'Pin 1: Blue (Compressor)', '#0000ff'),
-        (14.7, 7.9, 'Pin 2: Black (Fan Hi)', '#333'),
-        (14.7, 7.5, 'Pin 3: Yellow (unused)', '#cccc00'),
-        (14.7, 7.1, 'Pin 4: Red (Fan Lo)', '#ff0000'),
-        (14.7, 6.7, 'Pin 5: White (Neutral)', '#ccc'),
-        (14.7, 6.3, 'Pin 6: Green (Ground)', '#00cc00'),
+        (13.0, 'Pin 1: Blue (Compressor)',  '#0000ff'),
+        (12.2, 'Pin 2: Black (Fan Hi)',     '#333333'),
+        (11.4, 'Pin 3: Yellow (unused)',    '#cccc00'),
+        (10.6, 'Pin 4: Red (Fan Lo)',       '#ff0000'),
+        (9.8,  'Pin 5: White (Neutral)',    '#aaa'),
+        (9.0,  'Pin 6: Green (Ground)',     '#00aa00'),
     ]
-    
-    for x, y, label, color in cable_pins:
-        ax.plot(x, y, 'o', color=color, markersize=10)
-        ax.text(x+0.15, y, label, va='center', fontsize=9)
+    for cy, cl, cc in cable_pins:
+        pin(ax, cp_x, cy, cc, 10)
+        label(ax, cp_x + 0.2, cy, cl, fontsize=9, ha='left', va='center')
 
-    # Compressor (Bottom Right)
-    comp_box = FancyBboxPatch((14.5, 3), 3, 1.5, boxstyle="round,pad=0.1",
-                              edgecolor='black', facecolor='#f0f0f0', linewidth=2.5)
-    ax.add_patch(comp_box)
-    ax.text(16, 4.3, 'COMPRESSOR', ha='center', fontsize=12, weight='bold')
-    ax.plot(16, 3.5, 'o', color='#0000ff', markersize=9)
-    ax.text(16, 3.3, 'Pin 1 Blue', ha='center', fontsize=9)
+    # =====================================================
+    # WIRING — All orthogonal, clean routing
+    # =====================================================
 
-    # Wire: Load chain to compressor
-    ax.plot([11.5, 11.5, 14.7], [9, 8.3, 8.3], color='#0000ff', linewidth=3.5)
-    ax.plot([14.7, 16], [8.3, 3.5], color='#0000ff', linewidth=3.5)
+    # --- CH2 → SSR DC+ ---
+    # Right from CH2, up to SSR DC+
+    wire(ax, (ch_x, 15.2), (7.8, 15.2), color='#cc0000', lw=2.5)
+    wire(ax, (7.8, 15.2), (7.8, 16.8), color='#cc0000', lw=2.5)
+    wire(ax, (7.8, 16.8), (9.0, 16.8), color='#cc0000', lw=2.5)
+    label(ax, 7.4, 16.2, 'CH2', fontsize=7, color='#cc0000', ha='left', va='center')
 
-    # Wire: Compressor to NEUTRAL
-    ax.plot([16, 16, 14.7], [3.5, 2.5, 2.5], color='#0066ff', linewidth=3.5)
-    ax.plot([14.7, 14.7], [2.5, 6.7], color='#0066ff', linewidth=3.5)
-    ax.plot([14.7, 14.7], [6.7, 11.2], color='#0066ff', linewidth=3.5)
+    # --- GND → SSR DC- ---
+    # From GND pin, right to x=7.5, up to SSR DC-
+    wire(ax, (ch_x, 9.4), (7.5, 9.4), color='black', lw=2.5)
+    wire(ax, (7.5, 9.4), (7.5, 16.0), color='black', lw=2.5)
+    wire(ax, (7.5, 16.0), (9.0, 16.0), color='black', lw=2.5)
+    label(ax, 7.1, 12.5, 'GND', fontsize=7, ha='right', va='center')
 
-    # Fan relays to cable (simplified)
-    # Fan Low (CH3 → Pin 4 Red)
-    ax.plot([5, 14.7], [9.7, 7.1], color='#ff0000', linewidth=2.5)
-    ax.text(9, 8.2, 'Fan Low', fontsize=8, color='#ff0000')  # BELOW line
+    # --- 120VAC HOT → SSR AC1 ---
+    # Straight horizontal along y=17
+    wire(ax, (21.5, 17.0), (15.0, 17.0), color='#ff0000', lw=3.5)
+    wire(ax, (15.0, 17.0), (15.0, 16.8), color='#ff0000', lw=3.5)
+    wire(ax, (15.0, 16.8), (14.0, 16.8), color='#ff0000', lw=3.5)
+    label(ax, 18.0, 17.5, '120VAC HOT', fontsize=10, color='#ff0000', weight='bold', va='bottom')
 
-    # Fan High (CH4 → Pin 2 Black)
-    ax.plot([5, 14.7], [9.3, 7.9], color='#333', linewidth=2.5)
-    ax.text(9, 8.5, 'Fan High', fontsize=8)  # BELOW line
+    # --- SSR AC2 → Load Chain ---
+    wire(ax, (14.0, 16.0), (15.5, 16.0), color='#ff0000', lw=3.5)
+    wire(ax, (15.5, 16.0), (15.5, 15.3), color='#ff0000', lw=3.5)
+    wire(ax, (15.5, 15.3), (18.5, 15.3), color='#ff0000', lw=3.5)
+    label(ax, 17.0, 15.8, '120VAC Switched', fontsize=8, color='#ff0000', weight='bold', va='bottom')
 
-    # Furnace (CH1 - dry contact)
-    furn_box = FancyBboxPatch((0.5, 5.5), 4.5, 2, boxstyle="round,pad=0.1",
-                              edgecolor='#ff6600', facecolor='#fff3e0', linewidth=2)
-    ax.add_patch(furn_box)
-    ax.text(2.75, 7.3, 'FURNACE', ha='center', fontsize=11, weight='bold')
-    ax.text(2.75, 7, '(Dry Contact Closure)', ha='center', fontsize=9)
-    ax.text(2.75, 6.7, 'Separate unit with own blower', ha='center', fontsize=8, style='italic', color='#666')
-    
-    ax.plot([5, 5, 3.5], [10.5, 6.5, 6.5], color='#ff6600', linewidth=2.5)
-    ax.text(4, 6.3, 'CH1 NO', fontsize=8, color='#ff6600')  # BELOW line
-    ax.plot(3.5, 6.5, 'o', color='#ff6600', markersize=8)
-    ax.plot(2, 6.5, 'o', color='#ff6600', markersize=8)
-    ax.text(2.75, 6.3, 'Furnace terminals', ha='center', fontsize=7)
+    # Through load chain
+    wire(ax, (18.5, 15.3), (18.5, 14.0), color='#ff0000', lw=3.5)
 
-    # DS18B20 Freeze Sensor
-    ds_box = FancyBboxPatch((0.5, 3), 4.5, 2, boxstyle="round,pad=0.1",
-                            edgecolor='#00cccc', facecolor='#e0f7fa', linewidth=2)
-    ax.add_patch(ds_box)
-    ax.text(2.75, 4.8, 'DS18B20 FREEZE SENSOR', ha='center', fontsize=11, weight='bold', color='#00cccc')
-    ax.text(2.75, 4.5, '1-Wire, GPIO 10, 4.7K pullup to 3.3V', ha='center', fontsize=9)
-    ax.text(2.75, 4.25, 'Waterproof probe on evaporator coil', ha='center', fontsize=8, style='italic', color='#666')
-    ax.text(2.75, 3.95, 'Cut compressor @ 32°F, restart @ 45°F', ha='center', fontsize=8, color='#cc0000')
-    ax.text(2.75, 3.7, 'Software protection (primary)', ha='center', fontsize=7, style='italic')
-    
-    ax.plot([5, 5, 2.75], [8.2, 4.4, 4.4], color='#00cccc', linewidth=2)
-    ax.text(3.5, 4.25, 'GPIO 10', fontsize=8, color='#00cccc')  # BELOW line
+    # Load chain → Cable Pin 1 (Compressor)
+    wire(ax, (18.5, 14.0), (18.5, 13.0), color='#0000ff', lw=3.5)
+    wire(ax, (18.5, 13.0), (21.5, 13.0), color='#0000ff', lw=3.5)
 
-    # Safety Notes Box (Bottom Left)
-    safety_box = FancyBboxPatch((0.5, 0.3), 9, 2.3, boxstyle="round,pad=0.1",
-                                edgecolor='#ff0000', facecolor='#fff5f5', linewidth=3, linestyle='--')
-    ax.add_patch(safety_box)
-    ax.text(5, 2.4, '⚠ SAFETY CRITICAL - 120VAC WIRING ⚠', ha='center', fontsize=12, weight='bold', color='#ff0000')
+    # --- NEUTRAL bus ---
+    # From 120VAC NEU down right side to Cable Pin 5
+    wire(ax, (26.5, 17.0), (27.5, 17.0), color='#0066ff', lw=3.5)
+    wire(ax, (27.5, 17.0), (27.5, 9.8), color='#0066ff', lw=3.5)
+    wire(ax, (27.5, 9.8), (21.5, 9.8), color='#0066ff', lw=3.5)
+    label(ax, 27.7, 13.0, 'NEUTRAL', fontsize=9, color='#0066ff', rotation=90, ha='left', va='center')
 
-    safety_notes = [
-        "CRITICAL POINTS:",
-        "• Waveshare CH2 relay NO terminal switches 12VDC to SSR DC+ (milliamp trigger current)",
-        "• SSR-25DA switches high-current 120VAC to compressor (needs heatsink ~15W @ 12A load)",
-        "• CH1/CH3/CH4 relays switch 120VAC directly to fans/furnace (2-3A loads, 10A relay rating)",
-        "• Supco SFPC hardware freeze stat: NC contact, opens 35°F, closes 50°F (in series after SSR)",
-        "• DS18B20 software freeze protection: Cut @ 32°F, restart @ 45°F (dual layer protection)",
-        "• All 120VAC wiring: 14 AWG minimum, install in proper junction box per NEC",
-        "• Old Dometic control box REMOVED from circuit — direct ESP32 control",
+    # --- Fan Low: CH3 → Cable Pin 4 ---
+    # Route AROUND Load Chain box: horizontal to x=15.7, down, then right to pin
+    wire(ax, (ch_x, 14.4), (15.7, 14.4), color='#ff0000', lw=2.5)
+    wire(ax, (15.7, 14.4), (15.7, 10.6), color='#ff0000', lw=2.5)
+    wire(ax, (15.7, 10.6), (21.5, 10.6), color='#ff0000', lw=2.5)
+    label(ax, 18.5, 10.0, 'Fan Lo (CH3 → Pin 4)', fontsize=7, color='#ff0000')
+
+    # --- Fan High: CH4 → Cable Pin 2 ---
+    # Route AROUND Load Chain box: horizontal to x=15.2, down, then right to pin
+    wire(ax, (ch_x, 13.6), (15.2, 13.6), color='#333', lw=2.5)
+    wire(ax, (15.2, 13.6), (15.2, 12.2), color='#333', lw=2.5)
+    wire(ax, (15.2, 12.2), (21.5, 12.2), color='#333', lw=2.5)
+    label(ax, 18.5, 11.6, 'Fan Hi (CH4 → Pin 2)', fontsize=7, color='#333')
+
+    # --- CH1 → Furnace ---
+    # From CH1 pin straight DOWN (at x=6.5) to furnace box
+    # Route LEFT of the waveshare box to avoid crossing other channel pins
+    wire(ax, (ch_x, 16.0), (8.0, 16.0), color='#ff6600', lw=2.5)
+    wire(ax, (8.0, 16.0), (8.0, 5.5), color='#ff6600', lw=2.5)
+    wire(ax, (8.0, 5.5), (5.5, 5.5), color='#ff6600', lw=2.5)
+    label(ax, 8.3, 11.0, 'CH1 NO', fontsize=9, color='#ff6600', rotation=90, ha='left', va='center')
+
+    # =====================================================
+    # BOTTOM LEFT: Furnace
+    # =====================================================
+    box(ax, 0.5, 4.0, 6.0, 2.5, '#ff6600', '#fff3e0', 2)
+    label(ax, 3.5, 6.2, 'FURNACE', fontsize=12, weight='bold', va='center')
+    label(ax, 3.5, 5.7, '(Dry Contact Closure)', fontsize=9, va='center')
+    label(ax, 3.5, 5.2, 'Separate unit with own blower', fontsize=8, va='center', color='#666')
+    pin(ax, 2.0, 4.5, '#ff6600', 9)
+    label(ax, 2.0, 4.2, 'T1', fontsize=8, va='center')
+    pin(ax, 5.5, 4.5, '#ff6600', 9)
+    label(ax, 5.5, 4.2, 'T2', fontsize=8, va='center')
+    # Wire arrives at T2 from above
+    wire(ax, (5.5, 5.5), (5.5, 4.5), color='#ff6600', lw=2.5)
+
+    # =====================================================
+    # BOTTOM CENTER: DS18B20 (3-lead: VCC, Data, GND)
+    # =====================================================
+    box(ax, 9.0, 4.0, 8.0, 2.5, '#00cccc', '#e0f7fa', 2)
+    label(ax, 12.5, 6.2, 'DS18B20 FREEZE SENSOR', fontsize=11, weight='bold', va='center', color='#00cccc')
+    label(ax, 12.5, 5.7, 'Waterproof probe on evaporator coil', fontsize=8, va='center', color='#666')
+    label(ax, 12.5, 5.2, 'Software: Cut compressor @ 32F, restart @ 45F', fontsize=8, va='center', color='#cc0000')
+    label(ax, 12.5, 4.5, '4.7K\u03A9 pull-up: Data \u2192 3.3V', fontsize=7, va='center', color='#666')
+
+    # DS18B20 pins on left edge (3 leads)
+    ds_px = 9.0
+    pin(ax, ds_px, 5.8, '#ff0000', 7)
+    label(ax, ds_px + 0.15, 5.8, 'VCC', fontsize=7, ha='left', va='center', color='#ff0000')
+    pin(ax, ds_px, 5.3, '#00cccc', 7)
+    label(ax, ds_px + 0.15, 5.3, 'Data', fontsize=7, ha='left', va='center', color='#00cccc')
+    pin(ax, ds_px, 4.8, 'black', 7)
+    label(ax, ds_px + 0.15, 4.8, 'GND', fontsize=7, ha='left', va='center')
+
+    # --- DS18B20 wiring: 3 leads from Waveshare ---
+    # VCC (3.3V): from 3.3V pin, right to riser, down to sensor VCC
+    wire(ax, (ch_x, 7.8), (8.7, 7.8), color='#ff0000', lw=2)
+    wire(ax, (8.7, 7.8), (8.7, 5.8), color='#ff0000', lw=2)
+    wire(ax, (8.7, 5.8), (ds_px, 5.8), color='#ff0000', lw=2)
+
+    # Data (GPIO 10): from GPIO 10 pin, right to riser, down to sensor Data
+    wire(ax, (ch_x, 10.2), (8.5, 10.2), color='#00cccc', lw=2)
+    wire(ax, (8.5, 10.2), (8.5, 5.3), color='#00cccc', lw=2)
+    wire(ax, (8.5, 5.3), (ds_px, 5.3), color='#00cccc', lw=2)
+
+    # GND: branch from GND bus at junction, right to riser, down to sensor GND
+    pin(ax, 7.5, 9.4, 'black', 5)  # junction dot for GND branch
+    wire(ax, (7.5, 9.4), (8.3, 9.4), color='black', lw=2)
+    wire(ax, (8.3, 9.4), (8.3, 4.8), color='black', lw=2)
+    wire(ax, (8.3, 4.8), (ds_px, 4.8), color='black', lw=2)
+
+    # =====================================================
+    # BOTTOM: Safety Notes + Specs
+    # =====================================================
+    box(ax, 0.5, 0.3, 13.0, 3.2, '#ff0000', '#fff5f5', 2.5)
+    label(ax, 7.0, 3.2, 'SAFETY CRITICAL — 120VAC WIRING', fontsize=11, weight='bold',
+          va='center', color='#ff0000')
+    notes = [
+        "  CH2 relay NO switches 12VDC milliamp trigger to SSR DC+",
+        "  SSR-25DA switches 120VAC to compressor (heatsink required ~15W @ 12A)",
+        "  CH3/CH4 switch 120VAC directly to fans (2-3A, 10A relay rating)",
+        "  CH1 = dry contact for furnace (separate unit)",
+        "  Dual freeze protection: DS18B20 software (32F) + Supco SFPC hardware (35F)",
+        "  All 120VAC wiring: 14 AWG minimum, proper junction box per NEC",
     ]
+    y = 2.8
+    for n in notes:
+        label(ax, 0.8, y, n, fontsize=8, ha='left', va='center')
+        y -= 0.38
 
-    y_pos = 2.1
-    for note in safety_notes:
-        if note.startswith("CRITICAL"):
-            ax.text(0.7, y_pos, note, fontsize=9, weight='bold')
-            y_pos -= 0.23
-        else:
-            ax.text(0.7, y_pos, note, fontsize=8)
-            y_pos -= 0.22
-
-    # Component Specs Box (Bottom Right)
-    spec_box = FancyBboxPatch((10, 0.3), 7.5, 2.3, boxstyle="round,pad=0.1",
-                              edgecolor='#0066cc', facecolor='#f0f8ff', linewidth=2)
-    ax.add_patch(spec_box)
-    ax.text(13.75, 2.4, 'COMPONENT SPECIFICATIONS', ha='center', fontsize=11, weight='bold', color='#0066cc')
-
+    box(ax, 14.0, 0.3, 13.5, 3.2, '#0066cc', '#f0f8ff', 2)
+    label(ax, 20.75, 3.2, 'COMPONENT SPECIFICATIONS', fontsize=11, weight='bold',
+          va='center', color='#0066cc')
     specs = [
         "WAVESHARE ESP32-S3-RELAY-6CH:",
-        "  • Power: 7-36V DC (or 5V USB-C) | Enclosure: IP65 waterproof (6.3\"×4.33\"×3.54\")",
-        "  • Relay Rating: 10A @ 250VAC/30VDC per channel (6 channels total)",
-        "  • Optocoupler + digital + power isolation for safety | Onboard RS485 interface",
-        "",
+        "  Power: 7-36V DC (or 5V USB-C) | IP65 (6.3\" x 4.33\" x 3.54\")",
+        "  Relay: 10A @ 250VAC/30VDC per channel (6 channels)",
         "GPIO ASSIGNMENTS:",
-        "  • Relays: CH1=GPIO1, CH2=GPIO2, CH3=GPIO41, CH4=GPIO42, CH5=GPIO45, CH6=GPIO46",
-        "  • I2C: SDA=GPIO8, SCL=GPIO9 (to remote OLED/BME280 via 3m cable)",
-        "  • 1-Wire: GPIO10 (DS18B20 freeze sensor with 4.7K pullup)",
-        "  • RS485: TX=GPIO17, RX=GPIO18 | Buzzer: GPIO21 | RGB LED: GPIO38",
+        "  CH1=GPIO1  CH2=GPIO2  CH3=GPIO41  CH4=GPIO42  CH5=GPIO45  CH6=GPIO46",
+        "  I2C: SDA=GPIO8, SCL=GPIO9 | 1-Wire: GPIO10 | Buzzer: GPIO21 | LED: GPIO38",
     ]
-
-    y_pos = 2.1
-    for spec in specs:
-        if spec == "":
-            y_pos -= 0.15
-        elif spec.endswith(":"):
-            ax.text(10.2, y_pos, spec, fontsize=9, weight='bold')
-            y_pos -= 0.2
-        else:
-            ax.text(10.2, y_pos, spec, fontsize=7.5)
-            y_pos -= 0.18
+    y = 2.8
+    for s in specs:
+        w = 'bold' if s.endswith(":") else 'normal'
+        label(ax, 14.3, y, s, fontsize=8, ha='left', va='center', weight=w)
+        y -= 0.38
 
     plt.tight_layout()
     plt.savefig('docs/esp32_remote_relay_splice_pro.pdf', dpi=300, bbox_inches='tight')
-    print("✓ Created esp32_remote_relay_splice_pro.pdf")
+    plt.savefig('docs/esp32_remote_relay_splice_pro.svg', dpi=300, bbox_inches='tight')
+    print("Created esp32_remote_relay_splice_pro.pdf and .svg")
     plt.close()
 
 
+# =============================================================================
 if __name__ == '__main__':
-    print("\nCreating updated professional wiring diagrams...")
+    print("\nCreating wiring diagrams (11.5x8 pages, orthogonal routing)...")
     print("=" * 60)
-    print("Component updates:")
-    print("  • Waveshare ESP32-S3-Relay-6CH (replaces ESP32 + HL-52S)")
-    print("  • IP65 waterproof enclosure (6.3\"×4.33\"×3.54\")")
-    print("  • Updated GPIO assignments")
-    print("  • Wire labels positioned BELOW lines")
-    print("=" * 60)
-
     create_ssr_diagram()
     create_i2c_diagram()
     create_esp32_main_wiring()
     create_relay_splice_comprehensive()
-
     print("=" * 60)
-    print("All diagrams created successfully!")
+    print("All diagrams created in docs/")
