@@ -32,7 +32,8 @@ class RemoteThermostatController:
         self.heating_active = False
         self.cooling_active = False
         self.last_state_change = 0
-        self.last_pico_sync = 0
+        self.last_remote_sync = 0
+        self.sync_enabled = True  # Auto-sync Kitchen → Living Room
 
     def update_readings(self, temp_f, humidity, pressure):
         """Update local sensor readings"""
@@ -44,7 +45,7 @@ class RemoteThermostatController:
         """Set operating mode"""
         if mode in config.MODE_NAMES:
             self.mode = mode
-            # Sync to Pico
+            # Sync to Remote
             self._sync_to_remote()
             if mode == config.MODE_OFF:
                 self._all_off()
@@ -70,12 +71,21 @@ class RemoteThermostatController:
         """Check if enough time has passed since last state change"""
         return (time.time() - self.last_state_change) >= config.MIN_CYCLE_TIME
 
+    def set_sync_enabled(self, enabled):
+        """Enable/disable auto-sync of Kitchen settings to Living Room"""
+        self.sync_enabled = enabled
+        print(f"Auto-sync {'ON' if enabled else 'OFF'}")
+        if enabled:
+            self._sync_to_remote()
+
     def _sync_to_remote(self):
         """Sync settings to Remote (debounced)"""
-        now = time.time()
-        if now - self.last_pico_sync < 1:  # Don't sync more than once per second
+        if not self.sync_enabled:
             return
-        self.last_pico_sync = now
+        now = time.time()
+        if now - self.last_remote_sync < 1:  # Don't sync more than once per second
+            return
+        self.last_remote_sync = now
 
         try:
             self.remote.set_mode(self.mode)
@@ -86,13 +96,13 @@ class RemoteThermostatController:
             print(f"Remote sync error: {e}")
 
     def run_control_loop(self):
-        """Main control logic - monitors and sends commands to Pico"""
+        """Main control logic - monitors and sends commands to Remote"""
         if self.current_temp is None:
             return
 
         # Periodic re-sync to Remote (handles Remote reboots, ensures settings stay consistent)
         now = time.time()
-        if now - self.last_pico_sync >= 60:
+        if now - self.last_remote_sync >= 60:
             self._sync_to_remote()
 
         if self.mode == config.MODE_OFF:
@@ -221,6 +231,7 @@ class RemoteThermostatController:
             'cool_setpoint': self.cool_setpoint,
             'heating_active': self.heating_active,
             'cooling_active': self.cooling_active,
+            'sync_enabled': self.sync_enabled,
             'env': get_env(),
             'dry_run': config.DRY_RUN,
             'debug': config.DEBUG

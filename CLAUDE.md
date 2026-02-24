@@ -1,34 +1,30 @@
 # RV Thermostat Project Notes
 
-## Hardware Notes
-- User's phone has an IR filter - cannot see IR LEDs through phone camera
-- IR LED circuit uses 2N2222 NPN transistor driver with GPIO 18
-- 5V buck converter powers IR LEDs and HL-52S relay module
-- Circuit: base resistor (1K-10K) + LED current limiting resistor (50 ohm recommended but currently omitted)
-- IR range ~1 foot - position ESP32 Remote within 1 foot of heater
-- IR LED polarity: longer leg = anode (toward 5V), shorter leg = cathode (toward transistor collector)
-- NOTE: Currently running without current limiting resistor for max brightness; may shorten LED lifespan
-
 ## ESP32 Devices
 - **Main ESP32-S3** (N16R8, 44-pin): /dev/ttyACM0, IP 192.168.71.152
   - 16MB Flash, 8MB PSRAM
   - I2C: SDA=GPIO 8, SCL=GPIO 9
   - Has BME280 sensor and OLED display
   - Runs web UI, thermostat brain, scheduler
-- **Remote ESP32-S3** (N16R8, 44-pin): /dev/ttyACM1, IP 192.168.71.153
-  - 16MB Flash, 8MB PSRAM
+- **Remote: Waveshare ESP32-S3-Relay-6CH**: /dev/ttyACM1, IP 192.168.71.153
+  - ESP32-S3-WROOM-1U-N16 (16MB Flash, NO PSRAM)
+  - DIN-rail enclosed, 7-36V DC input or 5V USB-C
+  - 6 built-in relays (10A @ 250VAC per channel, active HIGH)
+  - 40-pin expansion header (inside case) for sensor GPIOs
   - USB: QinHeng CH340 — shows as /dev/ttyACM*
-  - Serial: 5B3E033335, MAC: 1c:db:d4:ae:a2:1c
-  - GPIO 22-25 don't exist on S3; GPIO 26-37 reserved for flash/PSRAM
-  - Controls: Furnace relay, Rooftop AC compressor + fan relays, IR transmitter
-  - I2C: SDA=GPIO 8, SCL=GPIO 9
-  - Relay Furnace: GPIO 38 (active HIGH, 5V module)
-  - Relay Compressor: GPIO 39 (active HIGH, 5V module)
-  - Relay Fan Low: GPIO 40 (active HIGH, 5V module)
-  - Relay Fan High: GPIO 41 (active HIGH, 5V module)
-  - DS18B20 Freeze Sensor: GPIO 42 (1-Wire, 4.7K pull-up to 3.3V)
-  - GPIO 17, 18 unused (IR replaced by Broadlink RM4 Mini)
-  - Has BME280 sensor and OLED display
+  - Controls: Furnace relay, Rooftop AC compressor + fan relays
+  - **Relay CH1**: GPIO 1 — Furnace (dry contact closure)
+  - **Relay CH2**: GPIO 2 — Compressor (triggers SSR-25DA via 12VDC)
+  - **Relay CH3**: GPIO 41 — Rooftop AC fan low speed
+  - **Relay CH4**: GPIO 42 — Rooftop AC fan high speed
+  - **Relay CH5**: GPIO 45 — Expansion (dehumidifier, disabled)
+  - **Relay CH6**: GPIO 46 — Expansion (vent fan, disabled)
+  - I2C: SDA=GPIO 8, SCL=GPIO 9 (expansion header Pin 32/34)
+  - DS18B20 Freeze Sensor: GPIO 10 (expansion header, 4.7K pull-up to 3.3V)
+  - RGB LED: GPIO 38 (WS2812B, onboard)
+  - Buzzer: GPIO 21 (passive, onboard)
+  - RS485: GPIO 17 TX, GPIO 18 RX (hardwired to transceiver, future use)
+  - Has BME280 sensor and OLED display (via expansion header I2C)
 - **Broadlink RM4 Mini**: IP 192.168.71.155, MAC e8:70:72:ab:f9:25
   - Device type: 0x520c (rm4mini)
   - WiFi IR blaster for Whynter + Dr. Heater
@@ -66,10 +62,9 @@
   - Accessible via red "FORCE ALL OFF" button in web UI
   - Fixes out-of-sync IR devices when mode changes fail to turn off equipment
 
-## Relay Wiring Notes
-- All 4 relays (GPIO 38-41): Active HIGH module, 5V VCC, jumper on HIGH trigger
-  - HIGH trigger required because 3.3V GPIO vs 5V VCC leaves 1.7V across optocoupler, falsely triggering active LOW relays
-  - boot.py sets all relay GPIOs LOW (OFF) immediately on startup
+## Relay Wiring Notes — Waveshare ESP32-S3-Relay-6CH
+- 6 built-in relays (10A @ 250VAC, 1NO+1NC per channel), active HIGH
+  - boot.py sets CH1-CH4 GPIOs (1, 2, 41, 42) LOW (OFF) immediately on startup
 - Only Low + High fan speeds (no Medium) to fit existing 5-wire thermostat cable
 - Furnace is a standalone unit with its own blower (relay is just contact closure)
 - Fan relays are for Dometic Brisk II rooftop AC only
@@ -80,22 +75,22 @@
   - Decoded proprietary digital protocol from Dometic CT thermostat via 4-wire data cable
   - 4-wire connector: +12V from supply, +12V to stat, -12V ground, orange (digital data)
   - Board relays (HF3FF 012-1ZS1): K1 (freeze safety), K2/K3/K4 (switching), K5 (empty, reversing valve)
-- **ESP32 HL-52S relays + SSR-25DA switch 120VAC** to Brisk II via 6-pin cable
-  - Compressor: GPIO 39 → HL-52S Relay 2 (switches 12VDC) → SSR-25DA DC+ → SSR AC out → bimetal cutout → Pin 1 Blue
+- **Waveshare relays + SSR-25DA switch 120VAC** to Brisk II via 6-pin cable
+  - Compressor: CH2 (GPIO 2) → switches 12VDC → SSR-25DA DC+ → SSR AC out → bimetal cutout → Pin 1 Blue
   - SSR-25DA (Twtade): 25A/380VAC solid state relay, 3-32VDC input, needs heatsink (~15W @ 12A)
   - SSR AC1 = 120VAC LINE (hot), SSR AC2 = compressor load output
-  - HL-52S Relay 2 COM = 12VDC (NOT on 120VAC bus), only triggers SSR at milliamp current
-  - Relay 3-4 COM bus = 120VAC LINE (fans only, ~2-3A each — within HL-52S 10A rating)
-  - GPIO 40 NO → Pin 4 Red (fan low)
-  - GPIO 41 NO → Pin 2 Black (fan high)
-  - GPIO 38 = furnace dry contact (separate unit, NOT on 120VAC bus)
+  - CH2 COM = 12VDC (NOT on 120VAC bus), only triggers SSR at milliamp current
+  - CH3/CH4 COM bus = 120VAC LINE (fans only, ~2-3A each — within 10A relay rating)
+  - CH3 (GPIO 41) NO → Pin 4 Red (fan low)
+  - CH4 (GPIO 42) NO → Pin 2 Black (fan high)
+  - CH1 (GPIO 1) = furnace dry contact (separate unit, NOT on 120VAC bus)
   - Pin 5 White (neutral) = pass-through, no relay
   - Pin 6 Green/Yellow (ground) = pass-through, no relay
   - Pin 3 Yellow (reversing valve) = not connected
 - **6-pin cable carries 120VAC** (NOT 24VAC as originally assumed)
 - **14 AWG minimum** for all 120VAC wiring, in proper junction box
 - **Freeze protection (dual layer)**:
-  - Software: DS18B20 waterproof probe on evaporator coil (GPIO 42, 4.7K pull-up)
+  - Software: DS18B20 waterproof probe on evaporator coil (GPIO 10 via expansion header, 4.7K pull-up to 3.3V)
     - Cut compressor at 32°F, allow restart at 45°F
   - Hardware: Supco SFPC freeze stat (clamp-on, NC, opens 35°F, closes 50°F) on suction line, in series after SSR AC2 output
 - See wiring diagrams in docs/ (PDF + SVG)
@@ -123,7 +118,9 @@
 - `thermostat_remote.py` auto-syncs mode, heat/cool setpoints to Remote every 60 seconds
 - Also syncs immediately on any Kitchen setting change (debounced to 1/sec)
 - Handles Remote ESP32 reboots — settings restored within 60 seconds
-- Manual SYNC button in web UI still available for immediate force-sync
+- Web UI has AUTO-SYNC ZONES toggle (ON/OFF) to enable/disable sync
+- `sync_enabled` flag gates both immediate sync and 60-second periodic sync
+- Toggle ON immediately syncs current Kitchen settings to Living Room
 
 ## Deployment
 - Use `mpremote connect /dev/ttyACM0` for Main
@@ -131,32 +128,36 @@
 - Both boards show as ttyACM* (CH340 USB-serial)
 - Deploy boot.py LAST to prevent main.py from blocking subsequent file copies
 - If main.py is running, interrupt via serial (Ctrl+C) then use `mpremote resume fs cp`
-- MicroPython firmware: v1.27.0 SPIRAM-OCT variant for ESP32-S3
+- MicroPython firmware: v1.27.0 for ESP32-S3
+  - Main: SPIRAM-OCT variant (has 8MB PSRAM)
+  - Remote (Waveshare): Standard variant (no PSRAM)
 - udev rules in `99-esp32-thermostat.rules` create persistent symlinks by USB serial number
 
 ### OTA Deployment via WebREPL
-- `python3 deploy_ota.py remote|main|both` deploys files over WiFi
+- `python3 deploy_ota.py remote|main|both` deploys files over WiFi + auto-restarts
+- `python3 deploy_ota.py restart remote|main|both` restarts without uploading
+- `python3 deploy_ota.py main file1.py file2.py` deploys specific files + restarts
+- `--no-restart` flag skips restart (just uploads files)
 - Uses raw WebSocket protocol to ESP32 WebREPL (port 8266)
 - Custom implementation (mpremote ws: doesn't support special chars in password)
 - Critical: `_handshake()` reads HTTP response 1 byte at a time to avoid consuming WebSocket frames
-- **No automatic reset** — files uploaded successfully, boards stay online
-- **Manual power cycle required** to load new code after upload
-- **All reset methods fail** when triggered via WebREPL:
-  - ❌ `machine.reset()` - hard reset, boards go offline
-  - ❌ `machine.soft_reset()` - soft reset, boards go offline
-  - ❌ `machine.deepsleep(500)` - full hardware reset, boards go offline
-  - Known issue with ESP32-S3 + MicroPython v1.27.0
-  - Network stack doesn't reinitialize properly after programmatic reset
-  - Boards either crash during reset/wake or fail to reconnect WiFi
-- **Workaround**: Remote power switch (smart plug/relay) for true remote OTA with reset
+- **Warm restart** (no power cycle needed):
+  - Sends Ctrl+C via WebREPL to interrupt running main.py
+  - Executes `_restart.py` helper which purges cached user modules from `sys.modules`
+  - Re-runs `main.py` via `exec()` — WiFi + WebREPL stay up the entire time
+  - `connect_wifi()` detects WiFi already connected and skips re-init
+  - HTTP verification confirms board is back online after restart
+- **Hardware resets still fail** via WebREPL (machine.reset/soft_reset/deepsleep all kill WiFi)
+  - ESP32-S3 + MicroPython v1.27.0: network stack doesn't reinitialize after programmatic reset
+  - Warm restart avoids this by never tearing down WiFi
 - WebREPL password: V!ncent16
 
 ## Wiring Diagrams
 - Generated by `create_diagrams_updated.py` using matplotlib
 - Outputs both PDF and SVG to `docs/` directory
 - 4 diagrams, each 11.5x8 inch landscape, 300 DPI:
-  - `ssr_wiring_pro` — SSR-25DA compressor wiring (Waveshare → HL-52S CH2 → SSR → Load Chain → Compressor)
-  - `oled_bme280_wiring_pro` — I2C cable run from Waveshare to OLED + BME280 at thermostat location
+  - `ssr_wiring_pro` — SSR-25DA compressor wiring (Waveshare CH2 → SSR → Load Chain → Compressor)
+  - `oled_bme280_wiring_pro` — I2C cable run from Waveshare expansion header to OLED + BME280 at thermostat location
   - `esp32_main_wiring_pro` — Main ESP32-S3 board wiring with BME280, OLED, bus bars
   - `esp32_remote_relay_splice_pro` — Comprehensive relay splice showing all 120VAC wiring, fan routing, DS18B20 3-lead sensor
 - Design rules: orthogonal (Manhattan-style) wire routing only, wire labels below lines with clear spacing, colored wires per signal type

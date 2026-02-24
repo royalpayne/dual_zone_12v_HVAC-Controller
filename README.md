@@ -1,129 +1,95 @@
-# RV Thermostat - Dual ESP32 System
+# RV Thermostat - Dual ESP32-S3 HVAC Control System
 
-A DIY RV thermostat using two ESP32 microcontrollers to control three HVAC systems: furnace, rooftop AC, and Whynter portable AC/heater.
+A DIY RV thermostat using two ESP32-S3 microcontrollers to control three HVAC systems: propane furnace, Dometic Brisk II rooftop AC, and Whynter ARC-14SH portable AC/heater.
 
 ## Architecture
 
-**ESP32 Main (192.168.71.152):**
+**Main ESP32-S3** (Kitchen, 192.168.71.152):
 - System orchestration and scheduling
-- BMP280 sensor (temperature/pressure)
+- BME280 sensor (temperature/humidity/pressure)
 - SSD1306 OLED display
-- Web interface
-- Remote control via HTTP API
+- Web interface with dual-zone control
+- Auto-syncs settings to Remote
 
-**ESP32 Remote (192.168.71.153):**
-- HVAC hardware control
-- BMP280 sensor (temperature/pressure)
-- DHT11 sensor (humidity)
+**Remote: Waveshare ESP32-S3-Relay-6CH** (Living Room, 192.168.71.153):
+- HVAC hardware control via 6 built-in 10A relays
+- BME280 sensor (temperature/humidity/pressure)
 - SSD1306 OLED display
-- 2-channel relay module (furnace + rooftop AC)
-- IR transmitter/receiver (portable AC control)
+- DS18B20 evaporator freeze sensor
+- Whynter + Dr. Heater IR control via Broadlink RM4 Mini
 
-## Wiring Diagrams
+**Broadlink RM4 Mini** (192.168.71.155):
+- WiFi IR blaster for Whynter portable AC and Dr. Infrared Heater
+- Protocol-based Whynter commands (no learned codes needed)
+- Raw captured codes for Dr. Heater
 
-**ESP32 Main:** [wiring/esp32_main_wiring.svg](wiring/esp32_main_wiring.svg) - BMP280 and OLED connections
+## Relay Wiring (Waveshare Remote)
 
-**ESP32 Remote:** [wiring/esp32_remote_wiring.svg](wiring/esp32_remote_wiring.svg) - Complete HVAC hardware wiring
+| Channel | GPIO | Function |
+|---------|------|----------|
+| CH1 | 1 | Furnace (dry contact closure) |
+| CH2 | 2 | Compressor (triggers SSR-25DA) |
+| CH3 | 41 | Rooftop AC fan low speed |
+| CH4 | 42 | Rooftop AC fan high speed |
+| CH5 | 45 | Expansion (dehumidifier, disabled) |
+| CH6 | 46 | Expansion (vent fan, disabled) |
 
-Both diagrams include color-coded wiring and detailed hardware notes.
+## Sensor Wiring (via expansion header)
 
-### ESP32 Main Wiring
+| Component | GPIO | Header Pin |
+|-----------|------|------------|
+| BME280 SDA | 8 | Pin 32 |
+| BME280 SCL | 9 | Pin 34 |
+| DS18B20 data | 10 | — (4.7K pull-up to 3.3V) |
+| 3.3V | — | Pin 36 |
+| GND | — | Pin 3/8/13 |
 
-| Component | Pin | ESP32 GPIO |
-|-----------|-----|------------|
-| BMP280 SDA | SDA | GPIO 21 |
-| BMP280 SCL | SCL | GPIO 22 |
-| BMP280 VCC | 3.3V | 3.3V |
-| BMP280 GND | GND | GND |
-| OLED SDA | SDA | GPIO 21 |
-| OLED SCL | SCL | GPIO 22 |
-| OLED VCC | 3.3V | 3.3V |
-| OLED GND | GND | GND |
+## Deployment
 
-### ESP32 Remote Wiring
+### OTA (preferred)
+```bash
+python3 deploy_ota.py remote          # Deploy + restart Remote
+python3 deploy_ota.py main            # Deploy + restart Main
+python3 deploy_ota.py both            # Deploy + restart both
+python3 deploy_ota.py restart remote  # Restart only
+```
 
-| Component | Pin | ESP32 GPIO |
-|-----------|-----|------------|
-| BMP280 SDA | SDA | GPIO 21 |
-| BMP280 SCL | SCL | GPIO 22 |
-| DHT11 Data | S | GPIO 4 |
-| OLED SDA | SDA | GPIO 21 |
-| OLED SCL | SCL | GPIO 22 |
-| Relay IN1 | - | GPIO 25 (Furnace) |
-| Relay IN2 | - | GPIO 26 (Rooftop AC) |
-| IR LED | + | GPIO 18 |
-| IR Receiver | OUT | GPIO 19 (optional) |
-
-## Installation
-
-### Prerequisites
-- MicroPython firmware installed on both ESP32s
-- mpremote installed: `pip install mpremote`
-- Both ESP32s connected via USB
-
-### ESP32 Main Setup
-
-1. Create `config_local.py` with WiFi credentials:
-   ```python
-   WIFI_SSID = "YourNetwork"
-   WIFI_PASSWORD = "YourPassword"
-   ```
-
-2. Deploy to ESP32 Main:
-   ```bash
-   source venv/bin/activate
-   mpremote connect /dev/ttyUSB0 cp *.py :
-   mpremote connect /dev/ttyUSB0 reset
-   ```
-
-### ESP32 Remote Setup
-
-1. Create `esp32_remote/config_local.py` with WiFi credentials
-
-2. Deploy using the script:
-   ```bash
-   ./deploy_esp32_remote.sh
-   ```
-
-3. Verify connection:
-   ```bash
-   curl http://192.168.71.153/api/status
-   ```
-
-### Testing
-
-Test components:
-```python
->>> import test
->>> test.test_all()
-   ```
-
-4. Run the thermostat:
-   ```python
-   >>> import main
-   >>> main.main()
-   ```
-
-## Files
-
-| File | Purpose |
-|------|---------|
-| config.py | All settings |
-| bmp280.py | BMP280 driver |
-| sensor.py | Combined BMP280+DHT11 |
-| ssd1306.py | OLED driver |
-| display.py | Screen layouts |
-| thermostat.py | Control logic |
-| webserver.py | Web interface |
-| main.py | Entry point |
-| test.py | Component tests |
+### USB Serial
+```bash
+mpremote connect /dev/ttyACM0 cp *.py :         # Main
+mpremote connect /dev/ttyACM1 cp *.py :         # Remote
+```
 
 ## Web Interface
 
-Open the IP address shown on the OLED in your phone browser.
+Open the IP address shown on the OLED in your browser.
 
 Features:
-- Current temperature, humidity, pressure
+- Current temperature, humidity, pressure (both zones)
 - Heat/cool setpoint adjustment
 - Mode selection (Off/Heat/Cool/Auto)
-- Cooling system selection (Rooftop/Portable)
+- Whynter portable AC boost control
+- Dr. Infrared Heater control
+- Auto-sync toggle (Kitchen → Living Room)
+- Force All Off emergency shutdown
+
+## API Endpoints
+
+### Main ESP32 (Kitchen)
+- `GET /api/status` — Thermostat status
+- `POST /api/mode` — Set mode (off/heat/cool/auto)
+- `POST /api/heat_setpoint` — Set heat setpoint
+- `POST /api/cool_setpoint` — Set cool setpoint
+- `POST /api/sync_enabled` — Toggle auto-sync
+
+### Remote ESP32 (Living Room)
+- `GET /api/status` — Thermostat + sensor status
+- `POST /api/mode` — Set mode
+- `GET /api/whynter?power=on|off` — Whynter control
+- `GET /api/heater?power=on|off` — Heater control
+- `GET /api/force_all_off` — Emergency shutdown
+
+## MicroPython Firmware
+
+- **Main**: ESP32-S3 SPIRAM-OCT v1.27.0 (has 8MB PSRAM)
+- **Remote (Waveshare)**: ESP32-S3 Standard v1.27.0 (no PSRAM)

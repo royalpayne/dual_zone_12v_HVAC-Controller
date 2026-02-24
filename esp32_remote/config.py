@@ -5,7 +5,7 @@
 WIFI_SSID = "YOUR_WIFI_SSID"
 WIFI_PASSWORD = "YOUR_WIFI_PASSWORD"
 
-# Static IP Configuration (ESP32 Remote - migrated from Pico W)
+# Static IP Configuration (ESP32 Remote)
 STATIC_IP = "192.168.71.153"
 SUBNET_MASK = "255.255.255.0"
 GATEWAY = "192.168.71.1"

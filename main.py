@@ -1,7 +1,7 @@
 # RV Thermostat - Main Entry Point
 # ================================
 # 
-# Upload all .py files to your Pico W, then reset.
+# Upload all .py files to your ESP32, then reset.
 # Connect to the WiFi and open the IP address in your browser.
 
 import time
@@ -25,7 +25,16 @@ def connect_wifi(display):
     """Connect to WiFi network with static IP"""
     wlan = network.WLAN(network.STA_IF)
 
-    # ESP32 requires proper init sequence
+    # On warm restart (OTA deploy), WiFi is already connected — skip re-init
+    # to avoid tearing down the network stack (ESP32-S3 fails to reconnect)
+    if wlan.active() and wlan.isconnected():
+        ip = wlan.ifconfig()[0]
+        print(f"Already connected: {ip}")
+        if display:
+            display.draw_wifi_status(True, ip)
+        return ip
+
+    # Full init sequence for cold boot
     wlan.active(False)
     time.sleep(0.5)
     wlan.active(True)
@@ -34,13 +43,6 @@ def connect_wifi(display):
     # Configure static IP before connecting
     wlan.ifconfig((config.STATIC_IP, config.SUBNET_MASK, config.GATEWAY, config.DNS_SERVER))
     print(f"Static IP configured: {config.STATIC_IP}")
-
-    if wlan.isconnected():
-        ip = wlan.ifconfig()[0]
-        print(f"Already connected: {ip}")
-        if display:
-            display.draw_wifi_status(True, ip)
-        return ip
 
     print(f"Connecting to {config.WIFI_SSID}...")
     if display:

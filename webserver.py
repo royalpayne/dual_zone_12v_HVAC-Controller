@@ -203,6 +203,8 @@ class ThermostatWebServer:
                 self.thermostat.set_heat_setpoint(float(data.get('temp', 68)))
             elif 'POST /api/cool_setpoint' in request:
                 self.thermostat.set_cool_setpoint(float(data.get('temp', 75)))
+            elif 'POST /api/sync_enabled' in request:
+                self.thermostat.set_sync_enabled(bool(data.get('enabled', True)))
         except:
             pass
         return self._api_status()
@@ -287,7 +289,7 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 .temp-small{font-size:32px;text-align:center}
 .sync-card{background:#1f4068;text-align:center}
 .btn.sync{background:#38b000;padding:16px 32px;font-size:18px}
-.btn.sync.synced{background:#2a9d8f}
+.btn.sync.on{background:#2a9d8f}
 .btn.home{background:#38b000}
 </style>
 </head>
@@ -315,8 +317,9 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 </div>
 
 <div class="card sync-card">
-<button class="btn sync synced" id="syncbtn" onclick="syncZones()">SYNCED!</button>
-<div style="margin-top:8px;font-size:12px;color:#888">Copy Kitchen settings to Living Room</div>
+<div style="font-size:14px;color:#888;margin-bottom:8px">AUTO-SYNC ZONES</div>
+<button class="btn sync" id="syncbtn" onclick="toggleSync()">OFF</button>
+<div style="margin-top:8px;font-size:12px;color:#888">Kitchen settings &rarr; Living Room</div>
 </div>
 
 <div class="card">
@@ -395,6 +398,7 @@ var st=document.getElementById('status');
 st.className=d.heating_active?'heating':d.cooling_active?'cooling':'';
 st.textContent=d.heating_active?'HEATING':d.cooling_active?'COOLING':'Idle';
 for(var i=0;i<4;i++)document.getElementById('m'+i).className='btn'+(d.mode==i?' active':'');
+if(d.sync_enabled!==undefined){syncOn=d.sync_enabled;updSyncBtn();}
 if(d.remote){updRemote(d.remote);}else{
 var ps=document.getElementById('pstatus');ps.className='offline';ps.textContent='Offline';}
 }
@@ -452,14 +456,16 @@ fetch('/api/remote/force_all_off',{method:'POST',body:'{}'}).then(r=>r.json()).t
 }
 function fanSpeed(s){fetch('/api/remote/fan_speed',{method:'POST',body:JSON.stringify({speed:s})}).then(r=>r.json()).then(updRemote);}
 function fanOnly(on){fetch('/api/remote/fan_only',{method:'POST',body:JSON.stringify({on:on})}).then(r=>r.json()).then(updRemote);}
-function syncZones(){
+var syncOn=true;
+function toggleSync(){
+syncOn=!syncOn;
+updSyncBtn();
+fetch('/api/sync_enabled',{method:'POST',body:JSON.stringify({enabled:syncOn})}).then(r=>r.json()).then(upd);
+}
+function updSyncBtn(){
 var btn=document.getElementById('syncbtn');
-btn.textContent='SYNCING...';
-btn.className='btn sync synced';
-fetch('/api/remote/sync',{method:'POST',body:'{}'}).then(r=>r.json()).then(function(r){
-updRemote(r);btn.textContent='SYNCED!';
-setTimeout(function(){btn.textContent='SYNCED!';btn.className='btn sync synced';},2000);
-}).catch(function(){btn.textContent='SYNC FAILED';btn.className='btn sync';});
+btn.textContent=syncOn?'ON':'OFF';
+btn.className=syncOn?'btn sync on':'btn sync';
 }
 get();setInterval(get,3000);
 </script>

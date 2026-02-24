@@ -2,10 +2,13 @@
 """Deploy files to ESP32 devices over WiFi via WebREPL (raw socket protocol).
 
 Usage:
-    python3 deploy_ota.py remote   # Deploy esp32_remote/ files to Remote ESP32
-    python3 deploy_ota.py main     # Deploy root files to Main ESP32
-    python3 deploy_ota.py both     # Deploy to both
-    python3 deploy_ota.py remote thermostat.py webserver.py  # Deploy specific files
+    python3 deploy_ota.py remote                    # Deploy + restart Remote ESP32
+    python3 deploy_ota.py main                      # Deploy + restart Main ESP32
+    python3 deploy_ota.py both                      # Deploy + restart both
+    python3 deploy_ota.py remote thermostat.py      # Deploy specific files + restart
+    python3 deploy_ota.py restart remote             # Restart only (no file upload)
+    python3 deploy_ota.py restart both               # Restart both (no file upload)
+    python3 deploy_ota.py main --no-restart          # Deploy without restart
 """
 
 import os
@@ -23,7 +26,7 @@ DEVICES = {
             'main.py', 'boot.py', 'config.py', 'thermostat.py', 'webserver.py',
             'broadlink_client.py', 'ir_whynter.py', 'ir_heater.py',
             'sensor.py', 'bme280.py', 'bmp280.py', 'display.py', 'ssd1306.py',
-            'webrepl_cfg.py',
+            'webrepl_cfg.py', '_restart.py',
         ],
     },
     'main': {
@@ -33,7 +36,7 @@ DEVICES = {
             'main.py', 'boot.py', 'config.py', 'webserver.py',
             'thermostat_remote.py', 'remote_client.py', 'scheduler.py',
             'sensor.py', 'bme280.py', 'bmp280.py', 'display.py', 'ssd1306.py',
-            'webrepl_cfg.py',
+            'webrepl_cfg.py', '_restart.py',
         ],
     },
 }
@@ -174,24 +177,87 @@ def _put_file(ws, local_path, remote_name):
         raise OSError(f"PUT failed: code {code}")
 
 
-def _deepsleep_reset(ip):
-    """Connect via WebREPL, interrupt main.py, then deepsleep (full hardware reset)."""
+def _warm_restart(ip):
+    """Interrupt main.py via WebREPL, purge module cache, re-execute main.py.
+
+    Uses _restart.py helper script on the device (uploaded with deploy).
+    This avoids a full hardware reset — WiFi and WebREPL stay up the entire
+    time.  Updated modules are loaded fresh from flash.
+    """
+    print(f"  Restarting ({ip})...")
+    s = None
     try:
         s, ws = _connect(ip)
-        # Ctrl-C interrupts running main.py (sends KeyboardInterrupt)
+
+        # Ctrl-C twice — interrupts running main() loop (caught by
+        # KeyboardInterrupt handler which breaks out of while True).
         ws.write(b"\r\x03\x03", frame=FRAME_TXT)
-        time.sleep(0.5)
-        # Deepsleep: full hardware reset including WiFi (wakes after 500ms)
-        ws.write(b"import machine; machine.deepsleep(500)\r\n", frame=FRAME_TXT)
-        time.sleep(0.5)
+        time.sleep(2)
+
+        # Execute _restart.py helper which purges module cache and
+        # re-runs main.py.  Single REPL line avoids paste mode issues.
+        ws.write(b"exec(open('_restart.py').read())\r\n", frame=FRAME_TXT)
+        time.sleep(1)
+
         s.close()
-        print("  Deepsleep reset sent (full hardware reset, wakes in 0.5s).")
+        s = None
+        return True
     except Exception as e:
-        print(f"  Reset failed ({e}) — may need power cycle.")
+        print(f"  Warm restart failed: {e}")
+        return False
+    finally:
+        if s:
+            try:
+                s.close()
+            except Exception:
+                pass
 
 
-def deploy(target, specific_files=None):
-    """Deploy files to a target device via WebREPL."""
+def _verify_http(ip, port=80, timeout=20):
+    """Verify device responds to HTTP /api/status after restart."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            s = socket.socket()
+            s.settimeout(5)
+            s.connect((ip, port))
+            s.sendall(
+                b"GET /api/status HTTP/1.0\r\n"
+                b"Host: " + ip.encode() + b"\r\n\r\n"
+            )
+            resp = b""
+            while True:
+                chunk = s.recv(1024)
+                if not chunk:
+                    break
+                resp += chunk
+            s.close()
+            if b'"mode"' in resp:
+                return True
+        except Exception:
+            pass
+        time.sleep(2)
+    return False
+
+
+def restart(target):
+    """Warm-restart a device (no file upload)."""
+    dev = DEVICES[target]
+    ip = dev['ip']
+    print(f"\nRestarting {target.upper()} ({ip})...")
+    if _warm_restart(ip):
+        print(f"  Waiting for {target.upper()} to come back up...")
+        time.sleep(8)
+        if _verify_http(ip):
+            print(f"  ✓ {target.upper()} is back online!")
+        else:
+            print(f"  ⚠ {target.upper()} not responding — may need power cycle.")
+    else:
+        print(f"  ✗ Restart failed — power cycle required.")
+
+
+def deploy(target, specific_files=None, do_restart=True):
+    """Deploy files to a target device via WebREPL, then warm-restart."""
     dev = DEVICES[target]
     ip = dev['ip']
     files = specific_files if specific_files else dev['files']
@@ -225,27 +291,71 @@ def deploy(target, specific_files=None):
                     pass
 
     print(f"\n  {ok} uploaded, {fail} failed")
-    if fail == 0 and ok > 0:
-        print(f"  ✓ Upload complete.")
-        print(f"  ⚠ Power cycle {target} to load new code.")
-        print(f"     (Automatic reset via WebREPL not reliable - all methods tested fail)")
-    elif fail > 0:
+    if fail > 0:
         print(f"  ✗ Retry failed files or check WiFi/WebREPL.")
+        return False
+
+    if ok == 0:
+        return True
+
+    print(f"  ✓ Upload complete.")
+
+    if not do_restart:
+        print(f"  ⚠ Skipping restart (--no-restart). Power cycle to load new code.")
+        return True
+
+    # Warm restart: Ctrl+C → purge modules → re-exec main.py (WiFi stays up)
+    if _warm_restart(ip):
+        print(f"  Waiting for {target.upper()} to come back up...")
+        time.sleep(8)
+        if _verify_http(ip):
+            print(f"  ✓ {target.upper()} is back online with new code!")
+            return True
+        else:
+            print(f"  ⚠ {target.upper()} not responding — may need power cycle.")
+            return False
+    else:
+        print(f"  ✗ Warm restart failed — power cycle to load new code.")
+        return False
 
 
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] not in ('remote', 'main', 'both'):
+    args = sys.argv[1:]
+    if not args:
         print(__doc__)
         sys.exit(1)
 
-    target = sys.argv[1]
-    specific_files = sys.argv[2:] if len(sys.argv) > 2 else None
+    # Parse flags
+    do_restart = '--no-restart' not in args
+    args = [a for a in args if not a.startswith('--')]
+
+    if not args:
+        print(__doc__)
+        sys.exit(1)
+
+    # restart-only mode: deploy_ota.py restart <target>
+    if args[0] == 'restart':
+        target = args[1] if len(args) > 1 else 'both'
+        if target not in ('remote', 'main', 'both'):
+            print(f"Unknown target: {target}")
+            sys.exit(1)
+        targets = ['remote', 'main'] if target == 'both' else [target]
+        for t in targets:
+            restart(t)
+        return
+
+    target = args[0]
+    if target not in ('remote', 'main', 'both'):
+        print(f"Unknown target: {target}")
+        sys.exit(1)
+
+    specific_files = args[1:] if len(args) > 1 else None
 
     if target == 'both':
-        deploy('remote', specific_files)
-        deploy('main', specific_files)
+        deploy('remote', specific_files, do_restart)
+        deploy('main', specific_files, do_restart)
     else:
-        deploy(target, specific_files)
+        deploy(target, specific_files, do_restart)
 
 
 if __name__ == '__main__':

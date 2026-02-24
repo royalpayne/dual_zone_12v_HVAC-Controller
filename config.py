@@ -64,13 +64,9 @@ I2C_SDA_PIN = 8
 I2C_SCL_PIN = 9
 I2C_FREQ = 400000
 
-# Relay pins
+# Relay pins (Main board - not currently wired, relays are on Remote)
 RELAY_FURNACE_PIN = 25
 RELAY_ROOFTOP_AC_PIN = 26
-
-# IR pins
-IR_LED_PIN = 18
-IR_RECEIVER_PIN = 19
 
 # I2C Addresses
 BMP280_ADDR = 0x76  # Some modules use 0x77

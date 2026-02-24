@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate ESP32 Direct 120VAC Wiring Instruction PDF.
 
-SSR-25DA approach: ESP32 HL-52S Relay 2 switches 12VDC to trigger an SSR-25DA
-solid state relay for the compressor. HL-52S Relays 3-4 switch 120VAC directly
+SSR-25DA approach: Waveshare ESP32-S3-Relay-6CH CH2 switches 12VDC to trigger
+an SSR-25DA solid state relay for the compressor. CH3/CH4 switch 120VAC directly
 for fans. The Dometic Etratech control box is eliminated.
 """
 
@@ -13,7 +13,7 @@ class WiringPDF(FPDF):
     def header(self):
         self.set_font('Helvetica', 'B', 10)
         self.set_text_color(100, 100, 100)
-        self.cell(0, 8, 'ESP32 RV Thermostat - SSR-25DA + HL-52S Wiring Instructions',
+        self.cell(0, 8, 'Waveshare ESP32-S3-Relay-6CH - SSR-25DA Wiring Instructions',
                   align='C', new_x="LMARGIN", new_y="NEXT")
         self.line(10, self.get_y(), 200, self.get_y())
         self.ln(4)
@@ -95,11 +95,14 @@ def build_pdf():
     # --- Title ---
     pdf.set_font('Helvetica', 'B', 20)
     pdf.set_text_color(20, 20, 60)
-    pdf.cell(0, 12, 'ESP32 Wiring: SSR-25DA + HL-52S', align='C',
+    pdf.cell(0, 12, 'Waveshare ESP32-S3-Relay-6CH', align='C',
              new_x="LMARGIN", new_y="NEXT")
     pdf.set_font('Helvetica', '', 13)
     pdf.set_text_color(80, 80, 80)
     pdf.cell(0, 8, 'Dometic Brisk II Direct Wiring (No Control Box)',
+             align='C', new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font('Helvetica', '', 11)
+    pdf.cell(0, 7, 'SSR-25DA Compressor + Direct Fan Relay Switching',
              align='C', new_x="LMARGIN", new_y="NEXT")
     pdf.ln(6)
 
@@ -108,30 +111,35 @@ def build_pdf():
     # =================================================================
     pdf.section_title('1. Overview')
     pdf.body_text(
-        'This document describes how to wire the ESP32-S3 Remote to control the '
-        'Dometic Brisk II rooftop AC unit. The Dometic Etratech control box '
-        '(P/N 3313199.000) is eliminated. The ESP32 controls all loads via two '
+        'This document describes how to wire the Waveshare ESP32-S3-Relay-6CH '
+        'module to control the Dometic Brisk II rooftop AC unit. The Dometic '
+        'Etratech control box (P/N 3313199.000) is eliminated. The Waveshare '
+        'module has 6 built-in 10A relays and controls all loads via two '
         'switching stages:'
     )
     pdf.bullet(
         'SSR-25DA solid state relay for the compressor (25A capacity, handles '
-        '~12A running current and inrush)')
+        '~12A running current and inrush). Triggered by CH2 relay via 12VDC.')
     pdf.bullet(
-        'HL-52S relay module for fans (10A contacts, adequate for ~2-3A fan motors) '
-        'and furnace (dry contact)')
+        'Waveshare CH3/CH4 relays for fans (10A contacts, adequate for ~2-3A '
+        'fan motors). These switch 120VAC directly.')
+    pdf.bullet(
+        'Waveshare CH1 relay for furnace (dry contact closure to standalone '
+        'unit with its own blower).')
     pdf.body_text(
-        'The HL-52S Relay 2 does NOT switch 120VAC for the compressor. Instead, '
-        'it switches 12VDC from the RV battery to the SSR-25DA DC input, which '
-        'then switches 120VAC to the compressor. This keeps all high-current '
-        'switching on the SSR while the HL-52S handles only milliamp-level '
-        '12VDC trigger current.'
+        'CH2 does NOT switch 120VAC for the compressor. Instead, it switches '
+        '12VDC from the RV battery to the SSR-25DA DC input, which then '
+        'switches 120VAC to the compressor. This keeps all high-current '
+        'switching on the SSR while CH2 handles only milliamp-level 12VDC '
+        'trigger current.'
     )
 
     pdf.warning_box(
-        'WARNING: This system switches 120VAC through the SSR-25DA and HL-52S '
-        'relay contacts. All 120VAC wiring must be in a proper junction box with '
-        '14 AWG wire (minimum for 15A circuit). The SSR-25DA must be mounted on '
-        'a heatsink. Disconnect shore power before all wiring work.')
+        'WARNING: This system switches 120VAC through the SSR-25DA and '
+        'Waveshare relay contacts. All 120VAC wiring must be in a proper '
+        'junction box with 14 AWG wire (minimum for 15A circuit). The '
+        'SSR-25DA must be mounted on a heatsink. Disconnect shore power '
+        'before all wiring work.')
 
     # =================================================================
     # Section 2: System Architecture
@@ -140,20 +148,21 @@ def build_pdf():
 
     pdf.sub_title('Compressor Signal Path')
     pdf.body_text(
-        'ESP32 GPIO 39 HIGH -> HL-52S Relay 2 closes -> 12VDC from RV battery '
-        'reaches SSR-25DA DC+ input -> SSR turns ON -> 120VAC LINE flows through '
-        'SSR AC output -> Supco SFPC freeze stat (NC) -> 6-pin Blue wire -> '
-        'Compressor motor')
+        'ESP32 GPIO 2 HIGH -> Waveshare CH2 relay closes -> 12VDC from RV '
+        'battery reaches SSR-25DA DC+ input -> SSR turns ON -> 120VAC LINE '
+        'flows through SSR AC output -> Supco SFPC freeze stat (NC) -> '
+        '6-pin Blue wire -> Compressor motor')
     pdf.info_box(
         'The SSR-25DA handles the full compressor load current (25A rating vs '
-        '~12A running). The HL-52S Relay 2 only switches 12VDC at milliamps to '
+        '~12A running). The CH2 relay only switches 12VDC at milliamps to '
         'trigger the SSR. This eliminates relay contact wear and welding risk.')
 
     pdf.sub_title('Fan Signal Path')
     pdf.body_text(
-        'ESP32 GPIO 40/41 HIGH -> HL-52S Relay 3/4 closes -> 120VAC LINE flows '
-        'directly through relay NO contact -> 6-pin Red/Black wire -> Fan motor. '
-        'Fan motors draw ~2-3A, well within the HL-52S 10A contact rating.')
+        'ESP32 GPIO 41/42 HIGH -> Waveshare CH3/CH4 relay closes -> 120VAC '
+        'LINE flows directly through relay NO contact -> 6-pin Red/Black wire '
+        '-> Fan motor. Fan motors draw ~2-3A, well within the Waveshare 10A '
+        'contact rating.')
 
     pdf.sub_title('Freeze Protection (Dual-Layer)')
     pdf.body_text(
@@ -161,8 +170,9 @@ def build_pdf():
         'gone. Freeze protection is now provided by two independent layers:')
     pdf.bullet(
         'SOFTWARE: DS18B20 waterproof probe on the evaporator coil, connected to '
-        'ESP32 GPIO 42. When evaporator temp drops below 32F, the ESP32 cuts the '
-        'compressor (GPIO 39 LOW). Held off until evaporator recovers to 45F.')
+        'ESP32 GPIO 10 (via expansion header inside the Waveshare case). When '
+        'evaporator temp drops below 32F, the ESP32 cuts the compressor '
+        '(GPIO 2 LOW). Held off until evaporator recovers to 45F.')
     pdf.bullet(
         'HARDWARE BACKUP: Supco SFPC freeze protection control. Clamp-on device '
         'that snaps onto the suction line. Normally closed, opens at 35F, closes '
@@ -175,6 +185,27 @@ def build_pdf():
     pdf.add_page()
     pdf.section_title('3. Component Reference')
 
+    pdf.sub_title('Waveshare ESP32-S3-Relay-6CH')
+    w_ws = [40, 150]
+    pdf.table_row(['Spec', 'Value'], w_ws, bold=True, fill=True)
+    pdf.table_row(['MCU', 'ESP32-S3-WROOM-1U-N16 (16MB Flash, no PSRAM)'], w_ws)
+    pdf.table_row(['Relays', '6 channels, 10A @ 250VAC per channel, 1NO+1NC'], w_ws)
+    pdf.table_row(['Trigger', 'Active HIGH (GPIO HIGH = relay ON)'], w_ws)
+    pdf.table_row(['Power', '7-36V DC input or 5V USB-C'], w_ws)
+    pdf.table_row(['Enclosure', 'DIN-rail ABS case (145 x 90 x 40mm)'], w_ws)
+    pdf.table_row(['Expansion', '40-pin expansion header (inside case)'], w_ws)
+    pdf.table_row(['Onboard', 'WS2812B RGB LED (GPIO 38), buzzer (GPIO 21)'], w_ws)
+    pdf.table_row(['RS485', 'GPIO 17 TX, GPIO 18 RX (hardwired to transceiver)'], w_ws)
+    pdf.ln(2)
+    pdf.body_text('Relay channel assignments:')
+    pdf.bullet('CH1 (GPIO 1): Furnace dry contact closure')
+    pdf.bullet('CH2 (GPIO 2): Compressor -- switches 12VDC to SSR-25DA DC+ trigger')
+    pdf.bullet('CH3 (GPIO 41): Fan Low -- switches 120VAC directly')
+    pdf.bullet('CH4 (GPIO 42): Fan High -- switches 120VAC directly')
+    pdf.bullet('CH5 (GPIO 45): Expansion (dehumidifier, currently disabled)')
+    pdf.bullet('CH6 (GPIO 46): Expansion (vent fan, currently disabled)')
+    pdf.ln(2)
+
     pdf.sub_title('SSR-25DA Solid State Relay')
     w_ssr = [40, 150]
     pdf.table_row(['Spec', 'Value'], w_ssr, bold=True, fill=True)
@@ -184,7 +215,7 @@ def build_pdf():
     pdf.table_row(['Heatsink', 'Required (~15W dissipation at 12A load)'], w_ssr)
     pdf.ln(2)
     pdf.body_text('Terminal assignments:')
-    pdf.bullet('DC+ (pin 3): 12VDC from HL-52S Relay 2 NO output')
+    pdf.bullet('DC+ (pin 3): 12VDC from Waveshare CH2 relay NO output')
     pdf.bullet('DC- (pin 4): 12VDC GND (RV battery negative)')
     pdf.bullet('AC1 (pin 1): 120VAC LINE (hot) input')
     pdf.bullet('AC2 (pin 2): Output to freeze stat -> 6-pin Blue wire')
@@ -193,8 +224,8 @@ def build_pdf():
     pdf.info_box(
         'Why not trigger the SSR directly from 3.3V GPIO? The SSR-25DA needs '
         '~5mA minimum to trigger reliably. At 3.3V through its internal resistor '
-        'and LED, only ~1.5mA is available. Using the HL-52S relay to switch 12VDC '
-        'provides ~15mA -- well above the minimum threshold.')
+        'and LED, only ~1.5mA is available. Using the Waveshare CH2 relay to '
+        'switch 12VDC provides ~15mA -- well above the minimum threshold.')
 
     pdf.sub_title('Supco SFPC Freeze Protection Control')
     w_sfpc = [40, 150]
@@ -210,15 +241,6 @@ def build_pdf():
         'device works. The Supco SFPC has a wider differential (15F) which '
         'reduces nuisance trips.')
 
-    pdf.sub_title('HL-52S 4-Channel Relay Module')
-    w_hl = [40, 150]
-    pdf.table_row(['Spec', 'Value'], w_hl, bold=True, fill=True)
-    pdf.table_row(['Trigger', 'Active HIGH (jumper set to HIGH)'], w_hl)
-    pdf.table_row(['VCC', '5V from buck converter'], w_hl)
-    pdf.table_row(['Contacts', '10A @ 250VAC per relay (SRD-05VDC-SL-C)'], w_hl)
-    pdf.table_row(['Isolation', 'Optocoupler, 3.3V GPIO compatible'], w_hl)
-    pdf.ln(4)
-
     # =================================================================
     # Section 4: Wiring Reference
     # =================================================================
@@ -233,27 +255,30 @@ def build_pdf():
     w5 = [15, 35, 50, 90]
     pdf.table_row(['Pin', 'Color', 'Function', 'Connection'], w5, bold=True, fill=True)
     pdf.table_row(['1', 'Blue', 'Compressor', 'SSR AC2 -> freeze stat -> Blue'], w5)
-    pdf.table_row(['2', 'Black', 'Fan High', 'HL-52S Relay 4 NO -> Black'], w5)
+    pdf.table_row(['2', 'Black', 'Fan High', 'CH4 (GPIO 42) NO -> Black'], w5)
     pdf.table_row(['3', 'Yellow', 'Rev Valve', 'Not connected (no heat pump)'], w5)
-    pdf.table_row(['4', 'Red', 'Fan Low', 'HL-52S Relay 3 NO -> Red'], w5)
+    pdf.table_row(['4', 'Red', 'Fan Low', 'CH3 (GPIO 41) NO -> Red'], w5)
     pdf.table_row(['5', 'White', 'Neutral', 'Pass-through to AC unit'], w5)
     pdf.table_row(['6', 'Grn/Ylw', 'Chassis Gnd', 'Pass-through to AC unit'], w5)
     pdf.ln(4)
 
-    pdf.sub_title('HL-52S Relay Connections')
+    pdf.sub_title('Waveshare Relay Connections')
 
     w4 = [40, 30, 55, 65]
-    pdf.table_row(['Relay', 'GPIO', 'Switches', 'Connection'], w4, bold=True, fill=True)
-    pdf.table_row(['Relay 1', 'GPIO 38', 'Dry contact', 'Furnace call (no voltage)'], w4)
-    pdf.table_row(['Relay 2', 'GPIO 39', '12VDC', 'SSR DC+ trigger (from RV battery)'], w4)
-    pdf.table_row(['Relay 3', 'GPIO 40', '120VAC', 'Fan Low (direct to Red)'], w4)
-    pdf.table_row(['Relay 4', 'GPIO 41', '120VAC', 'Fan High (direct to Black)'], w4)
+    pdf.table_row(['Channel', 'GPIO', 'Switches', 'Connection'], w4, bold=True, fill=True)
+    pdf.table_row(['CH1', 'GPIO 1', 'Dry contact', 'Furnace call (no voltage)'], w4)
+    pdf.table_row(['CH2', 'GPIO 2', '12VDC', 'SSR DC+ trigger (from RV battery)'], w4)
+    pdf.table_row(['CH3', 'GPIO 41', '120VAC', 'Fan Low (direct to Red)'], w4)
+    pdf.table_row(['CH4', 'GPIO 42', '120VAC', 'Fan High (direct to Black)'], w4)
+    pdf.table_row(['CH5', 'GPIO 45', 'Reserved', 'Expansion (dehumidifier)'], w4)
+    pdf.table_row(['CH6', 'GPIO 46', 'Reserved', 'Expansion (vent fan)'], w4)
     pdf.ln(2)
 
     pdf.warning_box(
-        'Relay 2 (Compressor) is NOT on the 120VAC bus. Its COM connects to RV '
-        '+12VDC, and its NO connects to SSR DC+. The SSR handles 120VAC switching. '
-        'Relay 1 (Furnace) is a dry contact. Only Relays 3 and 4 carry 120VAC.')
+        'CH2 (Compressor) is NOT on the 120VAC bus. Its COM connects to RV '
+        '+12VDC, and its NO connects to SSR DC+. The SSR handles 120VAC '
+        'switching. CH1 (Furnace) is a dry contact. Only CH3 and CH4 carry '
+        '120VAC.')
 
     # =================================================================
     # Section 5: Wiring Procedure
@@ -284,38 +309,39 @@ def build_pdf():
     pdf.bullet(
         'AC1 (pin 1): Connect with 14 AWG wire to 120VAC LINE (hot). Use a '
         'Wago 221-412 or wire nut to branch LINE to both the SSR AC1 and the '
-        'Relay 3/4 COM bus.')
+        'CH3/CH4 COM bus.')
     pdf.bullet(
         'AC2 (pin 2): Connect with 14 AWG wire to the Supco SFPC freeze stat '
         'input terminal. The freeze stat output connects to the 6-pin Blue wire.')
     pdf.bullet(
-        'DC+ (pin 3): Connect with 18-22 AWG wire to HL-52S Relay 2 NO terminal.')
+        'DC+ (pin 3): Connect with 18-22 AWG wire to Waveshare CH2 NO '
+        'screw terminal.')
     pdf.bullet(
         'DC- (pin 4): Connect with 18-22 AWG wire to RV 12VDC GND (battery '
         'negative / chassis ground).')
     pdf.ln(2)
 
     # Step 3
-    pdf.sub_title('Step 3: Wire 120VAC Bus to Relay 3/4 COM')
+    pdf.sub_title('Step 3: Wire 120VAC Bus to CH3/CH4 COM')
     pdf.bullet(
-        'Create a 120VAC LINE bus to Relay 3 COM and Relay 4 COM. Use 14 AWG '
-        'wire and Wago connectors or wire nuts to branch from the same LINE '
-        'wire feeding SSR AC1.')
+        'Create a 120VAC LINE bus to CH3 COM and CH4 COM screw terminals. Use '
+        '14 AWG wire and Wago connectors or wire nuts to branch from the same '
+        'LINE wire feeding SSR AC1.')
     pdf.bullet(
-        'Relay 3 NO (GPIO 40) -> 14 AWG -> 6-pin Red wire (Fan Low)')
+        'CH3 NO (GPIO 41) -> 14 AWG -> 6-pin Red wire (Fan Low)')
     pdf.bullet(
-        'Relay 4 NO (GPIO 41) -> 14 AWG -> 6-pin Black wire (Fan High)')
+        'CH4 NO (GPIO 42) -> 14 AWG -> 6-pin Black wire (Fan High)')
     pdf.ln(2)
 
     # Step 4
-    pdf.sub_title('Step 4: Wire 12VDC to Relay 2 COM')
+    pdf.sub_title('Step 4: Wire 12VDC to CH2 COM')
     pdf.bullet(
-        'Connect RV +12VDC (house battery / converter) to Relay 2 COM terminal. '
-        'Use 18-22 AWG wire. This is the SSR trigger source.')
+        'Connect RV +12VDC (house battery / converter) to CH2 COM screw '
+        'terminal. Use 18-22 AWG wire. This is the SSR trigger source.')
     pdf.bullet(
-        'Relay 2 NO connects to SSR DC+ (already done in Step 2).')
+        'CH2 NO connects to SSR DC+ (already done in Step 2).')
     pdf.bullet(
-        'When GPIO 39 goes HIGH, Relay 2 closes, 12VDC reaches SSR DC+, and '
+        'When GPIO 2 goes HIGH, CH2 closes, 12VDC reaches SSR DC+, and '
         'the SSR turns on 120VAC to the compressor.')
     pdf.ln(2)
 
@@ -332,9 +358,9 @@ def build_pdf():
     pdf.ln(2)
 
     # Step 6
-    pdf.sub_title('Step 6: Wire Furnace (Relay 1)')
+    pdf.sub_title('Step 6: Wire Furnace (CH1)')
     pdf.bullet(
-        'Connect furnace call wires to Relay 1 COM and NO terminals. This is '
+        'Connect furnace call wires to CH1 COM and NO screw terminals. This is '
         'a dry contact closure -- no 120VAC, no 12VDC on these terminals.')
     pdf.ln(2)
 
@@ -357,22 +383,58 @@ def build_pdf():
         'Mount the waterproof DS18B20 probe on the evaporator coil in contact '
         'with copper tubing or aluminum fins. Use thermal paste and secure '
         'with cable tie or aluminum tape.')
-    pdf.bullet('Wire: Red to 3.3V, Black to GND, Yellow/White data to GPIO 42.')
     pdf.bullet(
-        'Solder a 4.7K ohm pull-up resistor between GPIO 42 and 3.3V, as '
-        'close to the ESP32 as practical.')
+        'Open the Waveshare case to access the 40-pin expansion header. '
+        'Wire: Red to 3.3V (Pin 36), Black to GND (Pin 3/8/13), '
+        'Yellow/White data to GPIO 10.')
+    pdf.bullet(
+        'Solder a 4.7K ohm pull-up resistor between GPIO 10 and 3.3V, as '
+        'close to the expansion header as practical.')
     pdf.bullet('Route sensor cable away from 120VAC wires to avoid noise.')
 
     # =================================================================
-    # Section 6: Freeze Protection Details
+    # Section 6: I2C Sensor + OLED Wiring
     # =================================================================
     pdf.add_page()
-    pdf.section_title('6. Freeze Protection Details')
+    pdf.section_title('6. I2C Sensor and Display Wiring')
+
+    pdf.body_text(
+        'The BME280 temperature/humidity/pressure sensor and SSD1306 OLED '
+        'display are mounted at the thermostat location (former Dometic stat '
+        'position) and connected to the Waveshare module via a 3-meter cable '
+        'run through the expansion header inside the case.')
+
+    pdf.sub_title('Expansion Header Pin Connections')
+    w_i2c = [40, 40, 55, 55]
+    pdf.table_row(['Signal', 'GPIO', 'Header Pin', 'Wire Color'], w_i2c, bold=True, fill=True)
+    pdf.table_row(['SDA', 'GPIO 8', 'Pin 32 (GP27)', 'Green'], w_i2c)
+    pdf.table_row(['SCL', 'GPIO 9', 'Pin 34 (GP28)', 'Blue'], w_i2c)
+    pdf.table_row(['3.3V', '--', 'Pin 36 (3V3)', 'Red'], w_i2c)
+    pdf.table_row(['GND', '--', 'Pin 3/8/13', 'Black'], w_i2c)
+    pdf.ln(2)
+
+    pdf.sub_title('I2C Devices (Shared Bus)')
+    w_dev = [60, 40, 90]
+    pdf.table_row(['Device', 'Address', 'Function'], w_dev, bold=True, fill=True)
+    pdf.table_row(['BME280', '0x76', 'Temperature, humidity, pressure'], w_dev)
+    pdf.table_row(['SSD1306 OLED', '0x3C', '128x64 pixel display'], w_dev)
+    pdf.ln(2)
+
+    pdf.info_box(
+        'Both devices share the same I2C bus (SDA + SCL). Use 18 AWG '
+        '4-conductor thermostat wire for the 3-meter cable run. I2C bus '
+        'speed: 400 kHz (can reduce to 100 kHz if cable causes issues). '
+        'WARNING: OLED and BME280 VCC = 3.3V ONLY (not 5V or 12V!).')
+
+    # =================================================================
+    # Section 7: Freeze Protection Details
+    # =================================================================
+    pdf.section_title('7. Freeze Protection Details')
 
     pdf.sub_title('Software Layer (DS18B20)')
     w_th = [95, 95]
     pdf.table_row(['Condition', 'Action'], w_th, bold=True, fill=True)
-    pdf.table_row(['Evap temp < 32F', 'Cut compressor (GPIO 39 LOW)'], w_th)
+    pdf.table_row(['Evap temp < 32F', 'Cut compressor (GPIO 2 LOW)'], w_th)
     pdf.table_row(['Evap temp >= 45F', 'Allow compressor to resume'], w_th)
     pdf.table_row(['DS18B20 not found', 'Software freeze protection disabled'], w_th)
     pdf.table_row(['Check interval', 'Every 5 seconds'], w_th)
@@ -393,13 +455,13 @@ def build_pdf():
         'compressor circuit if the suction line reaches 35F.')
 
     # =================================================================
-    # Section 7: Failsafe Behavior
+    # Section 8: Failsafe Behavior
     # =================================================================
-    pdf.section_title('7. Failsafe Behavior')
+    pdf.section_title('8. Failsafe Behavior')
 
     pdf.body_text(
         'The system is fail-safe: any single point of failure results in HVAC OFF. '
-        'The SSR-25DA and HL-52S relays are normally open, so power loss to the '
+        'The Waveshare relays and SSR-25DA are normally open, so power loss to the '
         'ESP32 disconnects all loads.')
 
     w6 = [60, 130]
@@ -411,7 +473,7 @@ def build_pdf():
     pdf.table_row(['DS18B20 reads < 32F', 'Software cuts compressor, recovery at 45F'], w6)
     pdf.table_row(['SFPC trips (< 35F)', 'Hardware breaks compressor circuit'], w6)
     pdf.table_row(['SSR failure (open)', 'Compressor stays OFF (safe direction)'], w6)
-    pdf.table_row(['HL-52S relay welded', 'Only that one fan load stays on'], w6)
+    pdf.table_row(['Relay welded shut', 'Only that one fan load stays on'], w6)
     pdf.table_row(['120VAC bus fault', 'Breaker trips -> all loads OFF'], w6)
     pdf.ln(4)
 
@@ -421,58 +483,66 @@ def build_pdf():
         'OFF) but not fail-operational.')
 
     # =================================================================
-    # Section 8: ESP32-S3 Remote GPIO Reference
+    # Section 9: Waveshare GPIO Reference
     # =================================================================
     pdf.add_page()
-    pdf.section_title('8. ESP32-S3 Remote GPIO Reference')
-    pdf.body_text('ESP32-S3 N16R8 (40-pin) at IP 192.168.71.153')
+    pdf.section_title('9. Waveshare ESP32-S3-Relay-6CH GPIO Reference')
+    pdf.body_text('IP: 192.168.71.153 | DIN-rail enclosure | 7-36V DC or 5V USB-C')
 
     w7 = [30, 50, 55, 55]
-    pdf.table_row(['GPIO', 'Function', 'Relay/Device', 'Load'], w7, bold=True, fill=True)
-    pdf.table_row(['38', 'Furnace', 'Relay 1 NO/COM', 'Dry contact closure'], w7)
-    pdf.table_row(['39', 'Compressor', 'Relay 2 -> SSR', '12VDC trigger -> SSR 120VAC'], w7)
-    pdf.table_row(['40', 'Fan Low', 'Relay 3 NO', '120VAC -> Red'], w7)
-    pdf.table_row(['41', 'Fan High', 'Relay 4 NO', '120VAC -> Black'], w7)
-    pdf.table_row(['42', 'Freeze Sensor', 'DS18B20', '1-Wire, 4.7K pull-up to 3.3V'], w7)
-    pdf.table_row(['8', 'I2C SDA', 'BME280 / OLED', 'Sensor + display'], w7)
-    pdf.table_row(['9', 'I2C SCL', 'BME280 / OLED', 'Sensor + display'], w7)
+    pdf.table_row(['GPIO', 'Function', 'Channel/Device', 'Load'], w7, bold=True, fill=True)
+    pdf.table_row(['1', 'Furnace', 'CH1 NO/COM', 'Dry contact closure'], w7)
+    pdf.table_row(['2', 'Compressor', 'CH2 -> SSR', '12VDC trigger -> SSR 120VAC'], w7)
+    pdf.table_row(['41', 'Fan Low', 'CH3 NO', '120VAC -> Pin 4 Red'], w7)
+    pdf.table_row(['42', 'Fan High', 'CH4 NO', '120VAC -> Pin 2 Black'], w7)
+    pdf.table_row(['45', 'Expansion', 'CH5', 'Dehumidifier (disabled)'], w7)
+    pdf.table_row(['46', 'Expansion', 'CH6', 'Vent fan (disabled)'], w7)
+    pdf.table_row(['8', 'I2C SDA', 'Header Pin 32', 'BME280 + OLED'], w7)
+    pdf.table_row(['9', 'I2C SCL', 'Header Pin 34', 'BME280 + OLED'], w7)
+    pdf.table_row(['10', 'Freeze Sensor', 'Expansion header', '1-Wire DS18B20, 4.7K pull-up'], w7)
+    pdf.table_row(['38', 'RGB LED', 'Onboard', 'WS2812B status indicator'], w7)
+    pdf.table_row(['21', 'Buzzer', 'Onboard', 'Passive buzzer for alerts'], w7)
+    pdf.table_row(['17', 'RS485 TX', 'Onboard', 'Hardwired to transceiver'], w7)
+    pdf.table_row(['18', 'RS485 RX', 'Onboard', 'Hardwired to transceiver'], w7)
     pdf.ln(4)
 
     pdf.sub_title('Power Architecture')
     pdf.bullet(
         'Control side: RV 12VDC battery system (always available with battery). '
-        'Powers ESP32 (via USB or regulator), relay module VCC, SSR trigger.')
+        'Powers Waveshare module (7-36V DC input) and SSR trigger via CH2.')
     pdf.bullet(
         'Load side: 120VAC shore power through SSR and relay contacts. '
-        'Completely isolated from control side via optocouplers.')
-    pdf.bullet('boot.py sets all relay GPIOs LOW (OFF) immediately on startup.')
+        'Completely isolated from control side via relay contacts.')
+    pdf.bullet('boot.py sets CH1-CH4 GPIOs (1, 2, 41, 42) LOW (OFF) on startup.')
 
     # =================================================================
-    # Section 9: Pre-Installation Checklist
+    # Section 10: Pre-Installation Checklist
     # =================================================================
     pdf.add_page()
-    pdf.section_title('9. Pre-Installation Checklist')
+    pdf.section_title('10. Pre-Installation Checklist')
 
     pdf.sub_title('Tools Required')
     pdf.bullet('Digital multimeter with continuity and AC voltage modes')
     pdf.bullet('Non-contact voltage tester (NCVT)')
     pdf.bullet('Wire strippers rated for 14 AWG and 18-22 AWG')
     pdf.bullet('Crimping tool for ring/spade terminals (if used)')
-    pdf.bullet('Screwdriver set (flat and Phillips) for relay/SSR screw terminals')
+    pdf.bullet('Small screwdriver for Waveshare screw terminals and SSR terminals')
     pdf.bullet('Soldering iron (for DS18B20 pull-up resistor)')
     pdf.bullet('Heat shrink tubing and heat gun')
     pdf.bullet('Cable ties and/or aluminum tape (for sensor mounting)')
     pdf.ln(2)
 
     pdf.sub_title('Materials')
-    pdf.bullet('ESP32-S3 Remote with HL-52S relay module (already assembled)')
+    pdf.bullet('Waveshare ESP32-S3-Relay-6CH module (DIN-rail)')
     pdf.bullet('Twtade SSR-25DA solid state relay')
     pdf.bullet('Aluminum heatsink for SSR (at least 4"x4")')
     pdf.bullet('Thermal paste (for SSR-to-heatsink and DS18B20 mounting)')
-    pdf.bullet('5V buck converter (already powering relay module and IR LEDs)')
     pdf.bullet('Supco SFPC freeze protection control (clamp-on)')
     pdf.bullet('DS18B20 waterproof temperature sensor (stainless steel probe)')
     pdf.bullet('4.7K ohm resistor (1/4W, for DS18B20 pull-up)')
+    pdf.bullet('BME280 sensor breakout board')
+    pdf.bullet('SSD1306 OLED display (128x64, I2C)')
+    pdf.bullet('18 AWG 4-conductor thermostat wire (~3 meters for I2C run)')
     pdf.bullet('14 AWG stranded copper wire (THHN or equivalent), 3-4 feet')
     pdf.bullet('18-22 AWG wire for 12VDC SSR trigger connections')
     pdf.bullet('Wire nuts (14 AWG rated) or Wago 221-412/415 connectors')
@@ -487,28 +557,30 @@ def build_pdf():
         'SSR-25DA mounted on heatsink with thermal paste',
         'SSR AC1 (pin 1) connected to 120VAC LINE (14 AWG)',
         'SSR AC2 (pin 2) -> Supco SFPC -> 6-pin Blue (compressor)',
-        'SSR DC+ (pin 3) connected to HL-52S Relay 2 NO',
+        'SSR DC+ (pin 3) connected to Waveshare CH2 NO terminal',
         'SSR DC- (pin 4) connected to RV 12VDC GND',
-        'Relay 2 COM connected to RV +12VDC (NOT 120VAC)',
-        '120VAC LINE bus connected to Relay 3/4 COM only (14 AWG)',
-        'Relay 3 NO (GPIO 40) -> 6-pin Red (fan low)',
-        'Relay 4 NO (GPIO 41) -> 6-pin Black (fan high)',
-        'Relay 1 (GPIO 38) wired as dry contact for furnace ONLY',
-        'Relay 1 NOT connected to 120VAC or 12VDC bus',
+        'CH2 COM connected to RV +12VDC (NOT 120VAC)',
+        '120VAC LINE bus connected to CH3/CH4 COM only (14 AWG)',
+        'CH3 NO (GPIO 41) -> 6-pin Red (fan low)',
+        'CH4 NO (GPIO 42) -> 6-pin Black (fan high)',
+        'CH1 (GPIO 1) wired as dry contact for furnace ONLY',
+        'CH1 NOT connected to 120VAC or 12VDC bus',
         'Neutral (White) passes through directly -- NOT switched',
         'Ground (Green/Yellow) passes through directly -- NOT switched',
         'Yellow wire (reversing valve) capped with wire nut',
         'Supco SFPC clamped on suction line near evaporator',
         'Supco SFPC verified NC (closed) at room temperature',
-        'DS18B20 wired to GPIO 42 with 4.7K pull-up to 3.3V',
+        'DS18B20 wired to GPIO 10 (expansion header) with 4.7K pull-up to 3.3V',
         'DS18B20 probe mounted on evaporator coil with thermal paste',
+        'I2C cable: SDA=GPIO 8 (Pin 32), SCL=GPIO 9 (Pin 34), 3.3V, GND',
+        'BME280 and OLED responding on I2C bus',
         'All 120VAC connections inside junction box',
         'All wire nuts / Wago connectors tight and secure',
         'Junction box closed and cable clamps installed',
         'Shore power reconnected',
         'ESP32 boot verified: all relays OFF on startup',
         'Each relay tested individually from web UI',
-        'SSR trigger verified: GPIO 39 HIGH -> compressor runs',
+        'SSR trigger verified: GPIO 2 HIGH -> compressor runs',
         'DS18B20 reading verified in web UI (reasonable temperature)',
         'Freeze protection tested: sensor below 32F -> compressor cuts',
     ]
