@@ -6,25 +6,19 @@
   - I2C: SDA=GPIO 8, SCL=GPIO 9
   - Has BME280 sensor and OLED display
   - Runs web UI, thermostat brain, scheduler
-- **Remote: Waveshare ESP32-S3-Relay-6CH**: /dev/ttyACM1, IP 192.168.71.153
-  - ESP32-S3-WROOM-1U-N16 (16MB Flash, NO PSRAM)
-  - DIN-rail enclosed, 7-36V DC input or 5V USB-C
-  - 6 built-in relays (10A @ 250VAC per channel, active HIGH)
-  - 40-pin expansion header (inside case) for sensor GPIOs
+- **Remote ESP32-S3** (N16R8, 44-pin): /dev/ttyACM1, IP 192.168.71.153
+  - 16MB Flash, 8MB PSRAM
   - USB: QinHeng CH340 — shows as /dev/ttyACM*
   - Controls: Furnace relay, Rooftop AC compressor + fan relays
-  - **Relay CH1**: GPIO 1 — Furnace (dry contact closure)
-  - **Relay CH2**: GPIO 2 — Compressor (triggers SSR-25DA via 12VDC)
-  - **Relay CH3**: GPIO 41 — Rooftop AC fan low speed
-  - **Relay CH4**: GPIO 42 — Rooftop AC fan high speed
-  - **Relay CH5**: GPIO 45 — Expansion (dehumidifier, disabled)
-  - **Relay CH6**: GPIO 46 — Expansion (vent fan, disabled)
-  - I2C: SDA=GPIO 8, SCL=GPIO 9 (expansion header Pin 32/34)
-  - DS18B20 Freeze Sensor: GPIO 10 (expansion header, 4.7K pull-up to 3.3V)
-  - RGB LED: GPIO 38 (WS2812B, onboard)
-  - Buzzer: GPIO 21 (passive, onboard)
-  - RS485: GPIO 17 TX, GPIO 18 RX (hardwired to transceiver, future use)
-  - Has BME280 sensor and OLED display (via expansion header I2C)
+  - External 4-channel relay module (active HIGH, set via jumper)
+  - **Relay 1**: GPIO 4 — Furnace (dry contact closure)
+  - **Relay 2**: GPIO 5 — Compressor (triggers SSR-25DA via 12VDC)
+  - **Relay 3**: GPIO 6 — Rooftop AC fan low speed
+  - **Relay 4**: GPIO 15 — Rooftop AC fan high speed
+  - I2C: SDA=GPIO 41, SCL=GPIO 40
+  - DS18B20 Freeze Sensor: GPIO 42 (4.7K pull-up to 3.3V)
+  - RGB LED: GPIO 48 (WS2812B, onboard)
+  - Has BME280 sensor and OLED display
 - **Broadlink RM4 Mini**: IP 192.168.71.155, MAC e8:70:72:ab:f9:25
   - Device type: 0x520c (rm4mini)
   - WiFi IR blaster for Whynter + Dr. Heater
@@ -62,9 +56,9 @@
   - Accessible via red "FORCE ALL OFF" button in web UI
   - Fixes out-of-sync IR devices when mode changes fail to turn off equipment
 
-## Relay Wiring Notes — Waveshare ESP32-S3-Relay-6CH
-- 6 built-in relays (10A @ 250VAC, 1NO+1NC per channel), active HIGH
-  - boot.py sets CH1-CH4 GPIOs (1, 2, 41, 42) LOW (OFF) immediately on startup
+## Relay Wiring Notes — ESP32-S3-N16R8 + 4-Channel Relay Module
+- External 4-channel relay module (active HIGH, set via jumper)
+  - boot.py sets GPIOs (4, 5, 6, 15) LOW (OFF) immediately on startup
 - Only Low + High fan speeds (no Medium) to fit existing 5-wire thermostat cable
 - Furnace is a standalone unit with its own blower (relay is just contact closure)
 - Fan relays are for Dometic Brisk II rooftop AC only
@@ -75,22 +69,22 @@
   - Decoded proprietary digital protocol from Dometic CT thermostat via 4-wire data cable
   - 4-wire connector: +12V from supply, +12V to stat, -12V ground, orange (digital data)
   - Board relays (HF3FF 012-1ZS1): K1 (freeze safety), K2/K3/K4 (switching), K5 (empty, reversing valve)
-- **Waveshare relays + SSR-25DA switch 120VAC** to Brisk II via 6-pin cable
-  - Compressor: CH2 (GPIO 2) → switches 12VDC → SSR-25DA DC+ → SSR AC out → bimetal cutout → Pin 1 Blue
+- **4-ch relay module + SSR-25DA switch 120VAC** to Brisk II via 6-pin cable
+  - Compressor: Relay 2 (GPIO 5) → switches 12VDC → SSR-25DA DC+ → SSR AC out → bimetal cutout → Pin 1 Blue
   - SSR-25DA (Twtade): 25A/380VAC solid state relay, 3-32VDC input, needs heatsink (~15W @ 12A)
   - SSR AC1 = 120VAC LINE (hot), SSR AC2 = compressor load output
-  - CH2 COM = 12VDC (NOT on 120VAC bus), only triggers SSR at milliamp current
-  - CH3/CH4 COM bus = 120VAC LINE (fans only, ~2-3A each — within 10A relay rating)
-  - CH3 (GPIO 41) NO → Pin 4 Red (fan low)
-  - CH4 (GPIO 42) NO → Pin 2 Black (fan high)
-  - CH1 (GPIO 1) = furnace dry contact (separate unit, NOT on 120VAC bus)
+  - Compressor relay COM = 12VDC (NOT on 120VAC bus), only triggers SSR at milliamp current
+  - Fan relay COM bus = 120VAC LINE (fans only, ~2-3A each)
+  - Relay 3 (GPIO 6) NO → Pin 4 Red (fan low)
+  - Relay 4 (GPIO 15) NO → Pin 2 Black (fan high)
+  - Relay 1 (GPIO 4) = furnace dry contact (separate unit, NOT on 120VAC bus)
   - Pin 5 White (neutral) = pass-through, no relay
   - Pin 6 Green/Yellow (ground) = pass-through, no relay
   - Pin 3 Yellow (reversing valve) = not connected
 - **6-pin cable carries 120VAC** (NOT 24VAC as originally assumed)
 - **14 AWG minimum** for all 120VAC wiring, in proper junction box
 - **Freeze protection (dual layer)**:
-  - Software: DS18B20 waterproof probe on evaporator coil (GPIO 10 via expansion header, 4.7K pull-up to 3.3V)
+  - Software: DS18B20 waterproof probe on evaporator coil (GPIO 42, 4.7K pull-up to 3.3V)
     - Cut compressor at 32°F, allow restart at 45°F
   - Hardware: Supco SFPC freeze stat (clamp-on, NC, opens 35°F, closes 50°F) on suction line, in series after SSR AC2 output
 - See wiring diagrams in docs/ (PDF + SVG)
@@ -130,7 +124,7 @@
 - If main.py is running, interrupt via serial (Ctrl+C) then use `mpremote resume fs cp`
 - MicroPython firmware: v1.27.0 for ESP32-S3
   - Main: SPIRAM-OCT variant (has 8MB PSRAM)
-  - Remote (Waveshare): Standard variant (no PSRAM)
+  - Remote (N16R8): SPIRAM-OCT variant (has 8MB PSRAM)
 - udev rules in `99-esp32-thermostat.rules` create persistent symlinks by USB serial number
 
 ### OTA Deployment via WebREPL
@@ -156,8 +150,8 @@
 - Generated by `create_diagrams_updated.py` using matplotlib
 - Outputs both PDF and SVG to `docs/` directory
 - 4 diagrams, each 11.5x8 inch landscape, 300 DPI:
-  - `ssr_wiring_pro` — SSR-25DA compressor wiring (Waveshare CH2 → SSR → Load Chain → Compressor)
-  - `oled_bme280_wiring_pro` — I2C cable run from Waveshare expansion header to OLED + BME280 at thermostat location
+  - `ssr_wiring_pro` — SSR-25DA compressor wiring (Relay 2 → SSR → Load Chain → Compressor)
+  - `oled_bme280_wiring_pro` — I2C cable run from ESP32-S3 to OLED + BME280 at thermostat location
   - `esp32_main_wiring_pro` — Main ESP32-S3 board wiring with BME280, OLED, bus bars
   - `esp32_remote_relay_splice_pro` — Comprehensive relay splice showing all 120VAC wiring, fan routing, DS18B20 3-lead sensor
 - Design rules: orthogonal (Manhattan-style) wire routing only, wire labels below lines with clear spacing, colored wires per signal type

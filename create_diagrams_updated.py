@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Create all wiring diagrams for RV thermostat project.
-- Waveshare ESP32-S3-Relay-6CH
+- ESP32-S3-N16R8 + 4-Channel Relay Module
 - Page size: 11.5 x 8 inches (landscape)
 - Orthogonal wire routing only (no diagonals)
 - Wire labels BELOW the wire lines with clear spacing
@@ -60,19 +60,19 @@ def create_ssr_diagram():
     # Title
     label(ax, 11.5, 15.5, 'SSR-25DA COMPRESSOR WIRING DIAGRAM',
           fontsize=16, weight='bold', va='center')
-    label(ax, 11.5, 14.9, 'Waveshare CH2 Relay  →  SSR-25DA  →  120VAC  →  Compressor',
+    label(ax, 11.5, 14.9, 'Relay CH2 (GPIO 5)  →  SSR-25DA  →  120VAC  →  Compressor',
           fontsize=10, color='#666', va='center')
 
     # --- Row layout: components at y~9 band, left to right ---
 
-    # 1. Waveshare Module  (left)
+    # 1. ESP32 + Relay Module  (left)
     box(ax, 0.5, 7, 3.5, 4.5, '#0066cc', '#e6f3ff')
-    label(ax, 2.25, 11.2, 'Waveshare', fontsize=12, weight='bold', va='center')
-    label(ax, 2.25, 10.7, 'ESP32-S3-Relay-6CH', fontsize=9, va='center')
+    label(ax, 2.25, 11.2, 'ESP32-S3-N16R8', fontsize=11, weight='bold', va='center')
+    label(ax, 2.25, 10.7, '+ 4-Ch Relay Module', fontsize=9, va='center')
 
     # Pins on right edge
     pin(ax, 4.0, 10.0, '#ff6600')
-    label(ax, 4.2, 10.0, 'CH2 (GPIO 2)', fontsize=8, ha='left', va='center')
+    label(ax, 4.2, 10.0, 'CH2 (GPIO 5)', fontsize=8, ha='left', va='center')
     pin(ax, 4.0, 9.0, '#cc0000')
     label(ax, 4.2, 9.0, '12V+', fontsize=8, ha='left', va='center')
     pin(ax, 4.0, 8.0, 'black')
@@ -81,7 +81,7 @@ def create_ssr_diagram():
     # 2. Relay CH2 block
     box(ax, 6.5, 7, 3.5, 4.5, '#ff6600', '#fff3e0')
     label(ax, 8.25, 11.2, 'Relay CH2 Output', fontsize=11, weight='bold', va='center')
-    label(ax, 8.25, 10.7, '(Onboard to Waveshare)', fontsize=8, va='center', color='#666')
+    label(ax, 8.25, 10.7, '(External Relay Module)', fontsize=8, va='center', color='#666')
 
     # Relay pins
     pin(ax, 6.5, 10.0, '#ff6600')  # IN (left side)
@@ -214,18 +214,18 @@ def create_i2c_diagram():
 
     label(ax, 11.5, 15.5, 'OLED & BME280 I2C WIRING DIAGRAM',
           fontsize=16, weight='bold', va='center')
-    label(ax, 11.5, 14.9, '3-Meter Cable: Waveshare Module  →  Thermostat Location',
+    label(ax, 11.5, 14.9, '3-Meter Cable: ESP32-S3 Module  →  Thermostat Location',
           fontsize=10, color='#666', va='center')
 
-    # --- LEFT: Waveshare Module ---
+    # --- LEFT: ESP32 Module ---
     box(ax, 0.5, 6.0, 4.0, 6.0, '#0066cc', '#e6f3ff', 3)
-    label(ax, 2.5, 11.7, 'WAVESHARE MODULE', fontsize=12, weight='bold', va='center')
-    label(ax, 2.5, 11.2, 'ESP32-S3-Relay-6CH', fontsize=9, va='center', color='#666')
-    label(ax, 2.5, 10.7, 'IP65 Enclosure', fontsize=8, va='center', color='#888')
+    label(ax, 2.5, 11.7, 'ESP32-S3-N16R8', fontsize=12, weight='bold', va='center')
+    label(ax, 2.5, 11.2, '+ 4-Ch Relay Module', fontsize=9, va='center', color='#666')
+    label(ax, 2.5, 10.7, '44-Pin Dev Board', fontsize=8, va='center', color='#888')
 
     # Power info
     box(ax, 1.0, 6.3, 3.0, 1.2, '#ff6600', '#fff3e0', 1.5)
-    label(ax, 2.5, 7.2, 'Power: 7-36V DC', fontsize=8, weight='bold', va='center')
+    label(ax, 2.5, 7.2, 'Power: 5V USB-C', fontsize=8, weight='bold', va='center')
     label(ax, 2.5, 6.7, 'Onboard 3.3V regulator', fontsize=7, va='center', color='#666')
 
     # Output pins (right side) — wide spacing for labels
@@ -526,38 +526,40 @@ def create_esp32_main_wiring():
 def create_relay_splice_comprehensive():
     fig, ax = new_page(28, 20)
 
-    label(ax, 14, 19.5, 'WAVESHARE ESP32-S3 — DIRECT 120VAC WIRING TO DOMETIC BRISK II',
+    label(ax, 14, 19.5, 'ESP32-S3-N16R8 — DIRECT 120VAC WIRING TO DOMETIC BRISK II',
           fontsize=18, weight='bold', va='center')
     label(ax, 14, 18.9, 'SSR-25DA for Compressor  |  Relay Channels for Fans + Furnace  |  Dual Freeze Protection',
           fontsize=11, color='#666', va='center')
 
     # =====================================================
-    # LEFT: Waveshare Module
+    # LEFT: ESP32 + Relay Module
     # =====================================================
     box(ax, 0.5, 7.0, 6.0, 11.0, '#0066cc', '#e6f3ff', 3)
-    label(ax, 3.5, 17.7, 'WAVESHARE ESP32-S3-RELAY-6CH', fontsize=13, weight='bold', va='center')
-    label(ax, 3.5, 17.2, 'IP65 Enclosure  |  7-36V DC', fontsize=9, va='center', color='#666')
-    label(ax, 3.5, 16.7, 'Relay: 10A @ 250VAC per channel', fontsize=8, va='center', color='#888')
+    label(ax, 3.5, 17.7, 'ESP32-S3-N16R8 + 4-CH RELAY', fontsize=13, weight='bold', va='center')
+    label(ax, 3.5, 17.2, '44-Pin Dev Board  |  5V USB-C', fontsize=9, va='center', color='#666')
+    label(ax, 3.5, 16.7, 'Relay: 10A, Active HIGH (jumper)', fontsize=8, va='center', color='#888')
 
     # Channel pins — right side of box
     ch_x = 6.5
     channels = [
-        (16.0, 'CH1 (GPIO 1): Furnace',       '#ff6600'),
-        (15.2, 'CH2 (GPIO 2): Compressor→SSR', '#cc0000'),
-        (14.4, 'CH3 (GPIO 41): Fan Low',       '#ff0000'),
-        (13.6, 'CH4 (GPIO 42): Fan High',      '#333333'),
-        (12.8, 'CH5 (GPIO 45): Available',      '#aaa'),
-        (12.0, 'CH6 (GPIO 46): Available',      '#aaa'),
+        (16.0, 'CH1 (GPIO 4): Furnace',       '#ff6600'),
+        (15.2, 'CH2 (GPIO 5): Compressor→SSR', '#cc0000'),
+        (14.4, 'CH3 (GPIO 6): Fan Low',       '#ff0000'),
+        (13.6, 'CH4 (GPIO 15): Fan High',     '#333333'),
     ]
     for cy, cl, cc in channels:
         pin(ax, ch_x, cy, cc, 9)
         label(ax, ch_x - 0.2, cy, cl, fontsize=9, ha='right', va='center', color=cc)
 
     # Other pins
+    pin(ax, ch_x, 12.8, '#9900cc', 7)
+    label(ax, ch_x - 0.2, 12.8, 'Reset Btn: GPIO 2', fontsize=8, ha='right', va='center', color='#9900cc')
+    pin(ax, ch_x, 12.0, '#00cc00', 7)
+    label(ax, ch_x - 0.2, 12.0, 'RGB LED: GPIO 48', fontsize=8, ha='right', va='center', color='#00cc00')
     pin(ax, ch_x, 11.0, '#2196F3', 7)
-    label(ax, ch_x - 0.2, 11.0, 'I2C: GPIO 8/9', fontsize=8, ha='right', va='center', color='#2196F3')
+    label(ax, ch_x - 0.2, 11.0, 'I2C: GPIO 41/40', fontsize=8, ha='right', va='center', color='#2196F3')
     pin(ax, ch_x, 10.2, '#00cccc', 7)
-    label(ax, ch_x - 0.2, 10.2, 'DS18B20: GPIO 10', fontsize=8, ha='right', va='center', color='#00cccc')
+    label(ax, ch_x - 0.2, 10.2, 'DS18B20: GPIO 42', fontsize=8, ha='right', va='center', color='#00cccc')
     pin(ax, ch_x, 9.4, 'black', 7)
     label(ax, ch_x - 0.2, 9.4, 'GND', fontsize=8, ha='right', va='center')
     pin(ax, ch_x, 8.6, '#cc0000', 7)
@@ -685,7 +687,7 @@ def create_relay_splice_comprehensive():
 
     # --- CH1 → Furnace ---
     # From CH1 pin straight DOWN (at x=6.5) to furnace box
-    # Route LEFT of the waveshare box to avoid crossing other channel pins
+    # Route LEFT of the module box to avoid crossing other channel pins
     wire(ax, (ch_x, 16.0), (8.0, 16.0), color='#ff6600', lw=2.5)
     wire(ax, (8.0, 16.0), (8.0, 5.5), color='#ff6600', lw=2.5)
     wire(ax, (8.0, 5.5), (5.5, 5.5), color='#ff6600', lw=2.5)
@@ -723,13 +725,13 @@ def create_relay_splice_comprehensive():
     pin(ax, ds_px, 4.8, 'black', 7)
     label(ax, ds_px + 0.15, 4.8, 'GND', fontsize=7, ha='left', va='center')
 
-    # --- DS18B20 wiring: 3 leads from Waveshare ---
+    # --- DS18B20 wiring: 3 leads from ESP32 ---
     # VCC (3.3V): from 3.3V pin, right to riser, down to sensor VCC
     wire(ax, (ch_x, 7.8), (8.7, 7.8), color='#ff0000', lw=2)
     wire(ax, (8.7, 7.8), (8.7, 5.8), color='#ff0000', lw=2)
     wire(ax, (8.7, 5.8), (ds_px, 5.8), color='#ff0000', lw=2)
 
-    # Data (GPIO 10): from GPIO 10 pin, right to riser, down to sensor Data
+    # Data (GPIO 15): from GPIO 15 pin, right to riser, down to sensor Data
     wire(ax, (ch_x, 10.2), (8.5, 10.2), color='#00cccc', lw=2)
     wire(ax, (8.5, 10.2), (8.5, 5.3), color='#00cccc', lw=2)
     wire(ax, (8.5, 5.3), (ds_px, 5.3), color='#00cccc', lw=2)
@@ -763,12 +765,13 @@ def create_relay_splice_comprehensive():
     label(ax, 20.75, 3.2, 'COMPONENT SPECIFICATIONS', fontsize=11, weight='bold',
           va='center', color='#0066cc')
     specs = [
-        "WAVESHARE ESP32-S3-RELAY-6CH:",
-        "  Power: 7-36V DC (or 5V USB-C) | IP65 (6.3\" x 4.33\" x 3.54\")",
-        "  Relay: 10A @ 250VAC/30VDC per channel (6 channels)",
+        "ESP32-S3-N16R8 + 4-CHANNEL RELAY MODULE:",
+        "  ESP32: 16MB Flash, 8MB PSRAM | 5V USB-C",
+        "  Relay: 10A per channel, Active HIGH (4 channels)",
         "GPIO ASSIGNMENTS:",
-        "  CH1=GPIO1  CH2=GPIO2  CH3=GPIO41  CH4=GPIO42  CH5=GPIO45  CH6=GPIO46",
-        "  I2C: SDA=GPIO8, SCL=GPIO9 | 1-Wire: GPIO10 | Buzzer: GPIO21 | LED: GPIO38",
+        "  CH1=GPIO4  CH2=GPIO5  CH3=GPIO6  CH4=GPIO15",
+        "  I2C: SDA=GPIO41, SCL=GPIO40 | 1-Wire: GPIO42",
+        "  RGB LED: GPIO48 | Reset Button: GPIO2 (NO to GND)",
     ]
     y = 2.8
     for s in specs:

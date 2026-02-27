@@ -23,17 +23,17 @@ class RGBStatusLED:
     - Orange: Communication failure
     """
 
-    # Color definitions (R, G, B) - brightness scaled down to 30% to avoid blinding
+    # Color definitions (R, G, B) - brightness scaled to ~15%
     COLORS = {
         'off': (0, 0, 0),
-        'red': (75, 0, 0),          # Heating
-        'blue': (0, 0, 75),         # Cooling
-        'green': (0, 75, 0),        # Fan-only
-        'yellow': (75, 75, 0),      # Auto mode
-        'white': (75, 75, 75),      # Idle
-        'purple': (75, 0, 75),      # Error
-        'orange': (75, 35, 0),      # Communication failure
-        'cyan': (0, 75, 75),        # Dehumidifier
+        'red': (38, 0, 0),          # Heating
+        'blue': (0, 0, 38),         # Cooling
+        'green': (0, 38, 0),        # Fan-only
+        'yellow': (38, 38, 0),      # Auto mode
+        'white': (38, 38, 38),      # Idle
+        'purple': (38, 0, 38),      # Error
+        'orange': (38, 18, 0),      # Communication failure
+        'cyan': (0, 38, 38),        # Dehumidifier
     }
 
     def __init__(self, pin=None):
@@ -58,8 +58,8 @@ class RGBStatusLED:
 
     def set_rgb(self, r, g, b):
         """Set LED to custom RGB values (0-255 each)"""
-        # Scale down to 30% brightness
-        self.pixel[0] = (int(r * 0.3), int(g * 0.3), int(b * 0.3))
+        # Scale down to 15% brightness
+        self.pixel[0] = (int(r * 0.15), int(g * 0.15), int(b * 0.15))
         self.pixel.write()
 
     def blink(self, color_name):
@@ -82,11 +82,8 @@ class RGBStatusLED:
         """
         Update LED based on thermostat status
 
-        Args:
-            thermostat_status: dict with keys: mode, heating_active, cooling_active,
-                             fan_only, dehum_active
-            freeze_warning: bool - if True, blink red regardless of other status
-            comm_error: bool - if True, show orange (communication failure)
+        Colors: red=heating, blue=cooling, green=fan, yellow=auto,
+                white=idle, purple=error, orange=comm failure, cyan=dehum
         """
         if freeze_warning:
             self.blink('red')
@@ -102,7 +99,6 @@ class RGBStatusLED:
         fan_only = thermostat_status.get('fan_only', False)
         dehum_active = thermostat_status.get('dehum_active', False)
 
-        # Priority order: heating > cooling > dehumidifier > fan-only > auto > idle
         if heating:
             self.set_color('red')
         elif cooling:
@@ -113,10 +109,8 @@ class RGBStatusLED:
             self.set_color('green')
         elif mode == config.MODE_AUTO:
             self.set_color('yellow')
-        elif mode == config.MODE_OFF:
-            self.set_color('off')
         else:
-            self.set_color('white')  # Idle in heat/cool mode
+            self.set_color('white')
 
     def off(self):
         """Turn off LED"""

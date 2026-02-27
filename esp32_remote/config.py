@@ -66,42 +66,35 @@ DEBUG = False
 DRY_RUN = False
 
 # ============================================================
-# HARDWARE CONFIGURATION - Waveshare ESP32-S3-Relay-6CH
+# HARDWARE CONFIGURATION - ESP32-S3-N16R8 + 4-Channel Relay Module
 # ============================================================
 # GPIO 22-25 don't exist on ESP32-S3
 # GPIO 26-37 reserved for Flash/PSRAM
 # GPIO 19/20 reserved for native USB
 
-# I2C for BME280 and OLED (3-meter cable run to thermostat location)
-I2C_SDA_PIN = 8
-I2C_SCL_PIN = 9
+# I2C for BME280 and OLED
+I2C_SDA_PIN = 41
+I2C_SCL_PIN = 40
 I2C_FREQ = 400000
 
-# Waveshare Relay Channels (10A @ 250VAC/30VDC per channel)
-# CH1-4: HVAC control, CH5-6: Expansion features
-RELAY_FURNACE_PIN = 1           # CH1 (GPIO 1) - Furnace dry contact closure
-RELAY_COMPRESSOR_PIN = 2        # CH2 (GPIO 2) - Compressor triggers SSR-25DA
-RELAY_FAN_LOW_PIN = 41          # CH3 (GPIO 41) - Rooftop AC fan low speed
-RELAY_FAN_HIGH_PIN = 42         # CH4 (GPIO 42) - Rooftop AC fan high speed
-RELAY_DEHUMIDIFIER_PIN = 45     # CH5 (GPIO 45) - Dehumidifier (Phase 1 expansion)
-RELAY_VENT_FAN_PIN = 46         # CH6 (GPIO 46) - Powered vent fan (Phase 1 expansion)
+# 4-Channel Relay Module (active HIGH, set via jumper)
+RELAY_FURNACE_PIN = 4           # Furnace dry contact closure
+RELAY_COMPRESSOR_PIN = 5        # Compressor triggers SSR-25DA via 12VDC
+RELAY_FAN_LOW_PIN = 6           # Rooftop AC fan low speed
+RELAY_FAN_HIGH_PIN = 15         # Rooftop AC fan high speed
 
-# Relay polarity: All relays are active HIGH (value=1 = ON, value=0 = OFF)
-# CH2 switches 12VDC to SSR-25DA (milliamp trigger), SSR switches 120VAC to compressor
-# CH1/3/4/5/6 switch 120VAC directly (2-3A loads, 10A relay rating)
+# Relay polarity: Active HIGH (value=1 = ON, value=0 = OFF)
+RELAY_ACTIVE_LOW = False
+# Compressor relay switches 12VDC to SSR-25DA (milliamp trigger), SSR switches 120VAC
 
 # DS18B20 evaporator freeze sensor (1-Wire)
-# NOTE: Moved from GPIO 42 (now used by Fan High relay) to GPIO 10
-FREEZE_SENSOR_PIN = 10          # DS18B20 data pin (needs 4.7K pull-up to 3.3V)
+FREEZE_SENSOR_PIN = 42          # DS18B20 data pin (needs 4.7K pull-up to 3.3V)
 FREEZE_THRESHOLD = 32.0         # °F — cut compressor if evaporator drops below this
 FREEZE_RECOVERY = 45.0          # °F — allow compressor restart above this temp
 FREEZE_CHECK_INTERVAL = 5       # seconds between freeze sensor reads
 
-# Waveshare Onboard Features (Phase 1 enhancements)
-RGB_LED_PIN = 38                # WS2812 RGB LED for status indication
-BUZZER_PIN = 21                 # Passive buzzer for audio alerts
-RS485_TX_PIN = 17               # RS485 interface (future use)
-RS485_RX_PIN = 18               # RS485 interface (future use)
+# Onboard WS2812 RGB LED
+RGB_LED_PIN = 48                # WS2812 NeoPixel for status indication
 
 # Broadlink RM4 Mini (WiFi IR blaster - replaces direct IR hardware)
 BROADLINK_IP = None       # Set after discovery, or static IP in config_local.py

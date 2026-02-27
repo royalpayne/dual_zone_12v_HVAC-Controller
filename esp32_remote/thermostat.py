@@ -1,14 +1,13 @@
 # ESP32 Remote - Thermostat Controller
 # Handles heating/cooling with fan speed control for Dometic Brisk II rooftop AC
 # Furnace: relay contact closure (dry contact)
-# Rooftop AC: HL-52S relays switch 120VAC directly to compressor + fan (no Dometic control box)
+# Rooftop AC: 4-ch relay module switches 120VAC directly to compressor + fan (no Dometic control box)
 # Freeze protection: DS18B20 on evaporator coil + bimetal thermal cutout (hardware backup)
 
 from machine import Pin
 import time
 import config
 from rgb_led import RGBStatusLED
-from buzzer import Buzzer
 
 
 class ThermostatController:
@@ -51,17 +50,19 @@ class ThermostatController:
         self.evap_temp = None          # Evaporator coil temperature (°F)
         self.freeze_lockout = False    # True = compressor locked out due to freeze
 
-        # Initialize relay pins — all active HIGH (value=0 = OFF, value=1 = ON)
-        self.relay_furnace = Pin(config.RELAY_FURNACE_PIN, Pin.OUT, value=0)
-        self.relay_compressor = Pin(config.RELAY_COMPRESSOR_PIN, Pin.OUT, value=0)
-        self.relay_fan_low = Pin(config.RELAY_FAN_LOW_PIN, Pin.OUT, value=0)
-        self.relay_fan_high = Pin(config.RELAY_FAN_HIGH_PIN, Pin.OUT, value=0)
+        # Relay polarity: Active LOW (0=ON, 1=OFF) or Active HIGH (1=ON, 0=OFF)
+        self._relay_invert = getattr(config, 'RELAY_ACTIVE_LOW', False)
+        off_val = 1 if self._relay_invert else 0
+        self.relay_furnace = Pin(config.RELAY_FURNACE_PIN, Pin.OUT, value=off_val)
+        self.relay_compressor = Pin(config.RELAY_COMPRESSOR_PIN, Pin.OUT, value=off_val)
+        self.relay_fan_low = Pin(config.RELAY_FAN_LOW_PIN, Pin.OUT, value=off_val)
+        self.relay_fan_high = Pin(config.RELAY_FAN_HIGH_PIN, Pin.OUT, value=off_val)
 
         # IR controllers (set later if available)
         self.whynter = None  # Whynter portable AC (via Broadlink)
         self.heater = None   # Dr. Heater (via Broadlink)
 
-        # Phase 1 enhancements: RGB LED and Buzzer
+        # RGB LED for status indication
         try:
             self.rgb_led = RGBStatusLED()
             print("RGB LED initialized")
@@ -69,12 +70,17 @@ class ThermostatController:
             print(f"RGB LED init failed: {e}")
             self.rgb_led = None
 
-        try:
-            self.buzzer = Buzzer()
-            print("Buzzer initialized")
-        except Exception as e:
-            print(f"Buzzer init failed: {e}")
-            self.buzzer = None
+    def _relay_on(self, pin):
+        """Set relay ON (handles Active LOW inversion)"""
+        pin.value(0 if self._relay_invert else 1)
+
+    def _relay_off(self, pin):
+        """Set relay OFF (handles Active LOW inversion)"""
+        pin.value(1 if self._relay_invert else 0)
+
+    def _relay_is_on(self, pin):
+        """Check if relay is ON (handles Active LOW inversion)"""
+        return pin.value() == (0 if self._relay_invert else 1)
 
     def set_ir_transmitter(self, whynter_ir):
         """Attach Whynter IR controller"""
@@ -100,9 +106,6 @@ class ThermostatController:
             if not self.freeze_lockout:
                 self.freeze_lockout = True
                 print(f"FREEZE LOCKOUT: evap {temp_f:.1f}F <= {config.FREEZE_THRESHOLD}F")
-                # Sound freeze alert
-                if self.buzzer:
-                    self.buzzer.freeze_alert()
                 if self.cooling_active:
                     self._cool_off()
         # Recovery: clear lockout when evaporator warms up
@@ -268,20 +271,20 @@ class ThermostatController:
             return
 
         # Deactivate all fan relays first (mutual exclusion)
-        self.relay_fan_low.value(0)
-        self.relay_fan_high.value(0)
+        self._relay_off(self.relay_fan_low)
+        self._relay_off(self.relay_fan_high)
 
         # Activate the requested speed
         if speed == config.FAN_LOW:
-            self.relay_fan_low.value(1)
+            self._relay_on(self.relay_fan_low)
         elif speed == config.FAN_HIGH:
-            self.relay_fan_high.value(1)
+            self._relay_on(self.relay_fan_high)
 
     def _fan_off(self):
         """Turn off all fan relays"""
         if not config.DRY_RUN:
-            self.relay_fan_low.value(0)
-            self.relay_fan_high.value(0)
+            self._relay_off(self.relay_fan_low)
+            self._relay_off(self.relay_fan_high)
 
     def _auto_fan_speed(self):
         """Determine fan speed based on temp delta from setpoint"""
@@ -305,6 +308,8 @@ class ThermostatController:
     def run_control_loop(self):
         """Main control logic - call periodically"""
         if self.current_temp is None:
+            if self.rgb_led:
+                self._update_led_status()
             return
 
         if self.mode == config.MODE_OFF:
@@ -315,6 +320,8 @@ class ThermostatController:
                 self._heat_off()
             if self.cooling_active:
                 self._cool_off()
+            if self.rgb_led:
+                self._update_led_status()
             return
 
         if self.mode == config.MODE_HEAT:
@@ -482,7 +489,7 @@ class ThermostatController:
         temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
         print(f"{dry_run}HEAT ON (temp: {temp_str}F, setpoint: {self.heat_setpoint}F)")
         if not config.DRY_RUN:
-            self.relay_furnace.value(1)  # Active HIGH = ON
+            self._relay_on(self.relay_furnace)
         self.heating_active = True
         self.last_heat_change = time.time()
         # Auto-trigger IR heater when furnace turns on
@@ -495,7 +502,7 @@ class ThermostatController:
         temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
         print(f"{dry_run}HEAT OFF (temp: {temp_str}F, setpoint: {self.heat_setpoint}F)")
         if not config.DRY_RUN:
-            self.relay_furnace.value(0)  # Active HIGH = OFF
+            self._relay_off(self.relay_furnace)
         self.heating_active = False
         self.last_heat_change = time.time()
         # Auto-turn off IR heater when furnace turns off
@@ -520,7 +527,7 @@ class ThermostatController:
         if not config.DRY_RUN:
             # Fan pre-run delay before compressor
             time.sleep(config.FAN_PRE_RUN)
-            self.relay_compressor.value(1)  # Active HIGH = ON
+            self._relay_on(self.relay_compressor)
 
         self.cooling_active = True
         self.fan_post_run_until = 0  # Cancel any post-run timer
@@ -537,7 +544,7 @@ class ThermostatController:
         print(f"{dry_run}COOL OFF (temp: {temp_str}F{apparent_str}, setpoint: {self.cool_setpoint}F)")
 
         if not config.DRY_RUN:
-            self.relay_compressor.value(0)  # Active HIGH = OFF
+            self._relay_off(self.relay_compressor)
 
         self.cooling_active = False
         self.last_compressor_off = time.time()
@@ -556,10 +563,10 @@ class ThermostatController:
         """Turn off all systems"""
         if self.heating_active or self.cooling_active or self.fan_only or self.whynter_mode != 0 or self.heater_mode != 0:
             if not config.DRY_RUN:
-                self.relay_furnace.value(0)
-                self.relay_compressor.value(0)
-                self.relay_fan_low.value(0)
-                self.relay_fan_high.value(0)
+                self._relay_off(self.relay_furnace)
+                self._relay_off(self.relay_compressor)
+                self._relay_off(self.relay_fan_low)
+                self._relay_off(self.relay_fan_high)
                 if self.whynter and self.whynter_mode != 0:
                     self.whynter.send_off()
                 if self.heater and self.heater_mode != 0:
@@ -585,10 +592,10 @@ class ThermostatController:
         print("FORCE ALL OFF - unconditional shutdown")
         if not config.DRY_RUN:
             # Turn off all relays
-            self.relay_furnace.value(0)
-            self.relay_compressor.value(0)
-            self.relay_fan_low.value(0)
-            self.relay_fan_high.value(0)
+            self._relay_off(self.relay_furnace)
+            self._relay_off(self.relay_compressor)
+            self._relay_off(self.relay_fan_low)
+            self._relay_off(self.relay_fan_high)
             # Force IR off - send regardless of tracked state
             if self.whynter:
                 self.whynter.send_off()
@@ -613,7 +620,7 @@ class ThermostatController:
     def _furnace_relay(self, on):
         """Direct furnace relay control"""
         if not config.DRY_RUN:
-            self.relay_furnace.value(1 if on else 0)
+            self._relay_on(self.relay_furnace) if on else self._relay_off(self.relay_furnace)
 
     def get_status(self):
         """Get current status as dict"""
@@ -644,24 +651,8 @@ class ThermostatController:
             'bl_temp': self.bl_temp,
             'bl_humidity': self.bl_humidity,
             'dry_run': config.DRY_RUN,
-            'debug': config.DEBUG,
-            'buzzer_enabled': self.buzzer.is_enabled() if self.buzzer else None
+            'debug': config.DEBUG
         }
-
-    def set_buzzer_enabled(self, enabled):
-        """Enable or disable buzzer alerts"""
-        if self.buzzer:
-            if enabled:
-                self.buzzer.enable()
-                print("Buzzer enabled")
-            else:
-                self.buzzer.disable()
-                print("Buzzer disabled")
-
-    def test_buzzer(self):
-        """Test buzzer with a confirmation beep"""
-        if self.buzzer:
-            self.buzzer.confirmation_beep()
 
     def set_led_color(self, color_name):
         """Manually set LED color (for testing)"""

@@ -75,10 +75,14 @@ class RemoteAPI:
             return self._api_broadlink_status()
         elif 'GET /api/force_all_off' in request:
             return self._api_force_all_off()
-        elif 'GET /api/buzzer' in request:
-            return self._api_buzzer(request)
         elif 'GET /api/led' in request:
             return self._api_led(request)
+        elif 'GET /api/i2c_scan' in request:
+            return self._api_i2c_scan(request)
+        elif 'GET /api/onewire_scan' in request:
+            return self._api_onewire_scan(request)
+        elif 'GET /api/gpio_test' in request:
+            return self._api_gpio_test()
         else:
             return "HTTP/1.1 404 Not Found\r\n\r\n"
 
@@ -152,26 +156,38 @@ class RemoteAPI:
         return self._api_status()
 
     def _api_relay_test(self, request):
-        """Direct relay test using thermostat's pin objects"""
+        """Direct relay test: /api/relay/test?ch=1&on=1 or ?ch=furnace&on=0"""
         params = self._parse_query(request)
-        gpio = int(params.get('gpio', '0'))
         on = params.get('on', '1') == '1'
-        pin_map = {
-            38: self.thermostat.relay_furnace,
-            39: self.thermostat.relay_compressor,
-            40: self.thermostat.relay_fan_low,
-            41: self.thermostat.relay_fan_high,
+        ch = params.get('ch', '')
+        relay_map = {
+            '1': ('furnace', self.thermostat.relay_furnace, config.RELAY_FURNACE_PIN),
+            'furnace': ('furnace', self.thermostat.relay_furnace, config.RELAY_FURNACE_PIN),
+            '2': ('compressor', self.thermostat.relay_compressor, config.RELAY_COMPRESSOR_PIN),
+            'compressor': ('compressor', self.thermostat.relay_compressor, config.RELAY_COMPRESSOR_PIN),
+            '3': ('fan_low', self.thermostat.relay_fan_low, config.RELAY_FAN_LOW_PIN),
+            'fan_low': ('fan_low', self.thermostat.relay_fan_low, config.RELAY_FAN_LOW_PIN),
+            '4': ('fan_high', self.thermostat.relay_fan_high, config.RELAY_FAN_HIGH_PIN),
+            'fan_high': ('fan_high', self.thermostat.relay_fan_high, config.RELAY_FAN_HIGH_PIN),
         }
-        # All relays are active HIGH: value(1) = ON, value(0) = OFF
-        if gpio in pin_map:
-            p = pin_map[gpio]
-            p.value(1 if on else 0)
-            actual = p.value()
+        inv = self.thermostat._relay_invert
+        if ch in relay_map:
+            name, pin, gpio = relay_map[ch]
+            self.thermostat._relay_on(pin) if on else self.thermostat._relay_off(pin)
+            is_on = self.thermostat._relay_is_on(pin)
             return self._json_response({
-                'gpio': gpio, 'requested': 'ON' if on else 'OFF',
-                'pin_value': actual, 'relay_state': 'ON' if actual == 1 else 'OFF'
+                'relay': name, 'gpio': gpio,
+                'requested': 'ON' if on else 'OFF',
+                'actual': 'ON' if is_on else 'OFF'
             })
-        return self._json_response({'error': f'Invalid GPIO: {gpio}'})
+        # No ch param — return all relay states
+        t = self.thermostat
+        return self._json_response({
+            'furnace': {'gpio': config.RELAY_FURNACE_PIN, 'state': 'ON' if t._relay_is_on(t.relay_furnace) else 'OFF'},
+            'compressor': {'gpio': config.RELAY_COMPRESSOR_PIN, 'state': 'ON' if t._relay_is_on(t.relay_compressor) else 'OFF'},
+            'fan_low': {'gpio': config.RELAY_FAN_LOW_PIN, 'state': 'ON' if t._relay_is_on(t.relay_fan_low) else 'OFF'},
+            'fan_high': {'gpio': config.RELAY_FAN_HIGH_PIN, 'state': 'ON' if t._relay_is_on(t.relay_fan_high) else 'OFF'},
+        })
 
     def _api_furnace(self, request):
         params = self._parse_query(request)
@@ -259,19 +275,6 @@ class RemoteAPI:
         self.thermostat.force_all_off()
         return self._api_status()
 
-    def _api_buzzer(self, request):
-        """Control buzzer - enable/disable/test"""
-        params = self._parse_query(request)
-        # /api/buzzer?enable=1|0  (enable or disable buzzer)
-        # /api/buzzer?test=1      (test buzzer with confirmation beep)
-        # /api/buzzer             (get status)
-        if 'enable' in params:
-            enabled = params['enable'] == '1'
-            self.thermostat.set_buzzer_enabled(enabled)
-        elif 'test' in params:
-            self.thermostat.test_buzzer()
-        return self._api_status()
-
     def _api_led(self, request):
         """Control RGB LED - set color or get status"""
         params = self._parse_query(request)
@@ -281,3 +284,120 @@ class RemoteAPI:
             self.thermostat.set_led_color(params['color'])
             return self._json_response({'color': params['color'], 'status': 'ok'})
         return self._json_response({'status': 'LED controlled by thermostat state'})
+
+    def _api_i2c_scan(self, request=''):
+        """Scan I2C bus and return found devices. Optional ?sda=N&scl=N to test other pins."""
+        from machine import Pin, SoftI2C
+        params = self._parse_query(request)
+        sda_pin = int(params['sda']) if 'sda' in params else config.I2C_SDA_PIN
+        scl_pin = int(params['scl']) if 'scl' in params else config.I2C_SCL_PIN
+        freq = int(params.get('freq', str(config.I2C_FREQ)))
+        try:
+            i2c = SoftI2C(sda=Pin(sda_pin), scl=Pin(scl_pin), freq=freq, timeout=50000)
+            devices = i2c.scan()
+        except Exception as e:
+            return self._json_response({
+                'sda_pin': sda_pin, 'scl_pin': scl_pin,
+                'error': str(e), 'device_count': 0, 'devices': []
+            })
+        known = {0x76: 'BME280', 0x77: 'BME280/BMP280', 0x3C: 'SSD1306 OLED', 0x3D: 'SSD1306 OLED'}
+        result = []
+        for addr in devices:
+            result.append({
+                'address': hex(addr),
+                'decimal': addr,
+                'device': known.get(addr, 'Unknown')
+            })
+        return self._json_response({
+            'sda_pin': sda_pin,
+            'scl_pin': scl_pin,
+            'freq': freq,
+            'device_count': len(devices),
+            'devices': result
+        })
+
+    def _api_onewire_scan(self, request=''):
+        """Scan 1-Wire bus for DS18B20 sensors. Optional ?pin=N to test other pins."""
+        from machine import Pin
+        params = self._parse_query(request)
+        data_pin = int(params['pin']) if 'pin' in params else config.FREEZE_SENSOR_PIN
+        try:
+            import onewire
+            import ds18x20
+            ow = onewire.OneWire(Pin(data_pin))
+            ds = ds18x20.DS18X20(ow)
+            roms = ds.scan()
+            devices = [rom.hex() for rom in roms]
+            # Try a temp read if devices found
+            temp = None
+            if roms:
+                import time
+                ds.convert_temp()
+                time.sleep_ms(750)
+                temp_c = ds.read_temp(roms[0])
+                temp = round(temp_c * 9.0 / 5.0 + 32.0, 1)
+            return self._json_response({
+                'pin': data_pin, 'device_count': len(roms),
+                'devices': devices, 'temp_f': temp
+            })
+        except Exception as e:
+            return self._json_response({
+                'pin': data_pin, 'error': str(e),
+                'device_count': 0, 'devices': []
+            })
+
+    def _api_gpio_test(self):
+        """Run GPIO pin test live and return results"""
+        from machine import Pin
+        import time as t
+
+        RESERVED = {
+            0: "Strapping", 3: "Strapping", 45: "Strapping", 46: "Strapping",
+            19: "USB D-", 20: "USB D+",
+            22: "N/A", 23: "N/A", 24: "N/A", 25: "N/A",
+            26: "Flash", 27: "Flash", 28: "Flash", 29: "Flash",
+            30: "Flash", 31: "Flash", 32: "Flash", 33: "Flash",
+            34: "Flash", 35: "Flash", 36: "Flash", 37: "Flash",
+        }
+        # Skip pins currently in use (would crash I2C, relays, etc)
+        in_use = {
+            config.I2C_SDA_PIN, config.I2C_SCL_PIN,
+            config.RELAY_FURNACE_PIN, config.RELAY_COMPRESSOR_PIN,
+            config.RELAY_FAN_LOW_PIN, config.RELAY_FAN_HIGH_PIN,
+            config.FREEZE_SENSOR_PIN, config.RGB_LED_PIN,
+            config.RESET_BUTTON_PIN,
+        }
+        usable = []
+        failed = []
+        for gpio in range(0, 49):
+            if gpio in RESERVED:
+                continue
+            if gpio in in_use:
+                usable.append(gpio)  # Known good, skip toggle
+                continue
+            try:
+                p = Pin(gpio, Pin.OUT)
+                p.value(1); t.sleep_ms(5)
+                h = p.value() == 1
+                p.value(0); t.sleep_ms(5)
+                l = p.value() == 0
+                p.value(0)
+                if h and l:
+                    usable.append(gpio)
+                else:
+                    failed.append({'gpio': gpio, 'reason': f'readback H={h} L={l}'})
+            except Exception as e:
+                failed.append({'gpio': gpio, 'reason': str(e)})
+
+        # Re-init relay pins to LOW (test may have toggled them)
+        for rpin in [config.RELAY_FURNACE_PIN, config.RELAY_COMPRESSOR_PIN,
+                     config.RELAY_FAN_LOW_PIN, config.RELAY_FAN_HIGH_PIN]:
+            Pin(rpin, Pin.OUT).value(0)
+
+        return self._json_response({
+            'usable': usable,
+            'usable_count': len(usable),
+            'failed': failed,
+            'failed_count': len(failed),
+            'reserved_count': len(RESERVED),
+        })

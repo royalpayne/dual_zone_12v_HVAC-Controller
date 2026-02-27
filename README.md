@@ -11,8 +11,8 @@ A DIY RV thermostat using two ESP32-S3 microcontrollers to control three HVAC sy
 - Web interface with dual-zone control
 - Auto-syncs settings to Remote
 
-**Remote: Waveshare ESP32-S3-Relay-6CH** (Living Room, 192.168.71.153):
-- HVAC hardware control via 6 built-in 10A relays
+**Remote ESP32-S3 N16R8** (Living Room, 192.168.71.153):
+- HVAC hardware control via external 4-channel relay module
 - BME280 sensor (temperature/humidity/pressure)
 - SSD1306 OLED display
 - DS18B20 evaporator freeze sensor
@@ -23,26 +23,23 @@ A DIY RV thermostat using two ESP32-S3 microcontrollers to control three HVAC sy
 - Protocol-based Whynter commands (no learned codes needed)
 - Raw captured codes for Dr. Heater
 
-## Relay Wiring (Waveshare Remote)
+## Relay Wiring (4-Channel Module, Active HIGH)
 
-| Channel | GPIO | Function |
-|---------|------|----------|
-| CH1 | 1 | Furnace (dry contact closure) |
-| CH2 | 2 | Compressor (triggers SSR-25DA) |
-| CH3 | 41 | Rooftop AC fan low speed |
-| CH4 | 42 | Rooftop AC fan high speed |
-| CH5 | 45 | Expansion (dehumidifier, disabled) |
-| CH6 | 46 | Expansion (vent fan, disabled) |
+| Relay | GPIO | Function |
+|-------|------|----------|
+| 1 | 4 | Furnace (dry contact closure) |
+| 2 | 5 | Compressor (triggers SSR-25DA) |
+| 3 | 6 | Rooftop AC fan low speed |
+| 4 | 15 | Rooftop AC fan high speed |
 
-## Sensor Wiring (via expansion header)
+## Sensor Wiring
 
-| Component | GPIO | Header Pin |
-|-----------|------|------------|
-| BME280 SDA | 8 | Pin 32 |
-| BME280 SCL | 9 | Pin 34 |
-| DS18B20 data | 10 | — (4.7K pull-up to 3.3V) |
-| 3.3V | — | Pin 36 |
-| GND | — | Pin 3/8/13 |
+| Component | GPIO | Notes |
+|-----------|------|-------|
+| BME280 SDA | 41 | I2C bus |
+| BME280 SCL | 40 | I2C bus |
+| DS18B20 data | 42 | 4.7K pull-up to 3.3V |
+| RGB LED | 48 | WS2812 NeoPixel (onboard) |
 
 ## Deployment
 
@@ -92,4 +89,4 @@ Features:
 ## MicroPython Firmware
 
 - **Main**: ESP32-S3 SPIRAM-OCT v1.27.0 (has 8MB PSRAM)
-- **Remote (Waveshare)**: ESP32-S3 Standard v1.27.0 (no PSRAM)
+- **Remote (N16R8)**: ESP32-S3 SPIRAM-OCT v1.27.0 (has 8MB PSRAM)
