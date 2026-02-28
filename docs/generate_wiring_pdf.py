@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate ESP32 Direct 120VAC Wiring Instruction PDF.
 
-SSR-25DA approach: ESP32-S3-N16R8 with external 4-channel relay module.
-Relay CH2 switches 12VDC to trigger an SSR-25DA solid state relay for the
+SSR-40DA approach: ESP32-S3-N16R8 with external 4-channel relay module.
+Relay CH2 switches 12VDC to trigger an SSR-40DA solid state relay for the
 compressor. CH3/CH4 switch 120VAC directly for fans. The Dometic Etratech
 control box is eliminated.
 """
@@ -14,7 +14,7 @@ class WiringPDF(FPDF):
     def header(self):
         self.set_font('Helvetica', 'B', 10)
         self.set_text_color(100, 100, 100)
-        self.cell(0, 8, 'ESP32-S3-N16R8 + 4-Channel Relay - SSR-25DA Wiring Instructions',
+        self.cell(0, 8, 'ESP32-S3-N16R8 + 4-Channel Relay - SSR-40DA Wiring Instructions',
                   align='C', new_x="LMARGIN", new_y="NEXT")
         self.line(10, self.get_y(), 200, self.get_y())
         self.ln(4)
@@ -103,7 +103,7 @@ def build_pdf():
     pdf.cell(0, 8, 'Dometic Brisk II Direct Wiring (No Control Box)',
              align='C', new_x="LMARGIN", new_y="NEXT")
     pdf.set_font('Helvetica', '', 11)
-    pdf.cell(0, 7, 'SSR-25DA Compressor + Direct Fan Relay Switching',
+    pdf.cell(0, 7, 'SSR-40DA Compressor + Direct Fan Relay Switching',
              align='C', new_x="LMARGIN", new_y="NEXT")
     pdf.ln(6)
 
@@ -119,7 +119,7 @@ def build_pdf():
         'via jumper) and controls all loads via two switching stages:'
     )
     pdf.bullet(
-        'SSR-25DA solid state relay for the compressor (25A capacity, handles '
+        'SSR-40DA solid state relay for the compressor (25A capacity, handles '
         '~12A running current and inrush). Triggered by CH2 relay via 12VDC.')
     pdf.bullet(
         'Relay CH3/CH4 for fans (10A contacts, adequate for ~2-3A fan motors). '
@@ -129,17 +129,17 @@ def build_pdf():
         'its own blower).')
     pdf.body_text(
         'CH2 does NOT switch 120VAC for the compressor. Instead, it switches '
-        '12VDC from the RV battery to the SSR-25DA DC input, which then '
+        '12VDC from the RV battery to the SSR-40DA DC input, which then '
         'switches 120VAC to the compressor. This keeps all high-current '
         'switching on the SSR while CH2 handles only milliamp-level 12VDC '
         'trigger current.'
     )
 
     pdf.warning_box(
-        'WARNING: This system switches 120VAC through the SSR-25DA and '
+        'WARNING: This system switches 120VAC through the SSR-40DA and '
         'relay module contacts. All 120VAC wiring must be in a proper '
         'junction box with 14 AWG wire (minimum for 15A circuit). The '
-        'SSR-25DA must be mounted on a heatsink. Disconnect shore power '
+        'SSR-40DA must be mounted on a heatsink. Disconnect shore power '
         'before all wiring work.')
 
     # =================================================================
@@ -150,17 +150,17 @@ def build_pdf():
     pdf.sub_title('Compressor Signal Path')
     pdf.body_text(
         'ESP32 GPIO 5 HIGH -> Relay CH2 closes -> 12VDC from RV '
-        'battery reaches SSR-25DA DC+ input -> SSR turns ON -> 120VAC LINE '
+        'battery reaches SSR-40DA DC+ input -> SSR turns ON -> 120VAC LINE '
         'flows through SSR AC output -> Supco SFPC freeze stat (NC) -> '
         '6-pin Blue wire -> Compressor motor')
     pdf.info_box(
-        'The SSR-25DA handles the full compressor load current (25A rating vs '
+        'The SSR-40DA handles the full compressor load current (25A rating vs '
         '~12A running). The CH2 relay only switches 12VDC at milliamps to '
         'trigger the SSR. This eliminates relay contact wear and welding risk.')
 
     pdf.sub_title('Fan Signal Path')
     pdf.body_text(
-        'ESP32 GPIO 6/7 HIGH -> Relay CH3/CH4 closes -> 120VAC '
+        'ESP32 GPIO 6/15 HIGH -> Relay CH3/CH4 closes -> 120VAC '
         'LINE flows directly through relay NO contact -> 6-pin Red/Black wire '
         '-> Fan motor. Fan motors draw ~2-3A, well within the relay 10A '
         'contact rating.')
@@ -203,16 +203,16 @@ def build_pdf():
     pdf.ln(2)
     pdf.body_text('Relay channel assignments:')
     pdf.bullet('CH1 (GPIO 4): Furnace dry contact closure')
-    pdf.bullet('CH2 (GPIO 5): Compressor -- switches 12VDC to SSR-25DA DC+ trigger')
+    pdf.bullet('CH2 (GPIO 5): Compressor -- switches 12VDC to SSR-40DA DC+ trigger')
     pdf.bullet('CH3 (GPIO 6): Fan Low -- switches 120VAC directly')
     pdf.bullet('CH4 (GPIO 15): Fan High -- switches 120VAC directly')
     pdf.ln(2)
 
-    pdf.sub_title('SSR-25DA Solid State Relay')
+    pdf.sub_title('SSR-40DA Solid State Relay')
     w_ssr = [40, 150]
     pdf.table_row(['Spec', 'Value'], w_ssr, bold=True, fill=True)
-    pdf.table_row(['Model', 'Twtade SSR-25DA'], w_ssr)
-    pdf.table_row(['Output', '24-380VAC, 25A'], w_ssr)
+    pdf.table_row(['Model', 'Twtade SSR-40DA'], w_ssr)
+    pdf.table_row(['Output', '24-380VAC, 40A'], w_ssr)
     pdf.table_row(['Input', '3-32VDC (triggered with 12VDC from RV battery)'], w_ssr)
     pdf.table_row(['Heatsink', 'Required (~15W dissipation at 12A load)'], w_ssr)
     pdf.ln(2)
@@ -224,7 +224,7 @@ def build_pdf():
     pdf.ln(2)
 
     pdf.info_box(
-        'Why not trigger the SSR directly from 3.3V GPIO? The SSR-25DA needs '
+        'Why not trigger the SSR directly from 3.3V GPIO? The SSR-40DA needs '
         '~5mA minimum to trigger reliably. At 3.3V through its internal resistor '
         'and LED, only ~1.5mA is available. Using the relay module CH2 to '
         'switch 12VDC provides ~15mA -- well above the minimum threshold.')
@@ -301,9 +301,9 @@ def build_pdf():
     pdf.ln(2)
 
     # Step 2
-    pdf.sub_title('Step 2: Mount and Wire the SSR-25DA')
+    pdf.sub_title('Step 2: Mount and Wire the SSR-40DA')
     pdf.bullet(
-        'Mount the SSR-25DA on a metal heatsink (aluminum, at least 4"x4"). '
+        'Mount the SSR-40DA on a metal heatsink (aluminum, at least 4"x4"). '
         'Use thermal paste between SSR and heatsink. Mount heatsink inside or '
         'adjacent to the junction box with adequate airflow.')
     pdf.bullet(
@@ -460,7 +460,7 @@ def build_pdf():
 
     pdf.body_text(
         'The system is fail-safe: any single point of failure results in HVAC OFF. '
-        'The relay module and SSR-25DA are normally open, so power loss to the '
+        'The relay module and SSR-40DA are normally open, so power loss to the '
         'ESP32 disconnects all loads.')
 
     w6 = [60, 130]
@@ -493,11 +493,10 @@ def build_pdf():
     pdf.table_row(['4', 'Furnace', 'CH1 NO/COM', 'Dry contact closure'], w7)
     pdf.table_row(['5', 'Compressor', 'CH2 -> SSR', '12VDC trigger -> SSR 120VAC'], w7)
     pdf.table_row(['6', 'Fan Low', 'CH3 NO', '120VAC -> Pin 4 Red'], w7)
-    pdf.table_row(['7', 'Fan High', 'CH4 NO', '120VAC -> Pin 2 Black'], w7)
+    pdf.table_row(['15', 'Fan High', 'CH4 NO', '120VAC -> Pin 2 Black'], w7)
     pdf.table_row(['41', 'I2C SDA', 'Dev board', 'BME280 + OLED'], w7)
     pdf.table_row(['40', 'I2C SCL', 'Dev board', 'BME280 + OLED'], w7)
-    pdf.table_row(['15', 'Freeze Sensor', 'Dev board', '1-Wire DS18B20, 4.7K pull-up'], w7)
-    pdf.table_row(['2', 'Reset Button', 'Dev board', 'Momentary NO to GND, pull-up'], w7)
+    pdf.table_row(['42', 'Freeze Sensor', 'Dev board', '1-Wire DS18B20, 4.7K pull-up'], w7)
     pdf.table_row(['48', 'RGB LED', 'Onboard', 'WS2812 NeoPixel status indicator'], w7)
     pdf.ln(4)
 
@@ -508,11 +507,7 @@ def build_pdf():
     pdf.bullet(
         'Load side: 120VAC shore power through SSR and relay contacts. '
         'Completely isolated from control side via relay contacts.')
-    pdf.bullet('boot.py sets CH1-CH4 GPIOs (4, 5, 6, 7) LOW (OFF) on startup.')
-    pdf.bullet(
-        'Reset button: GPIO 2, momentary NO to GND with internal pull-up. '
-        'Press triggers machine.reset() (hard reboot). IRQ-based with '
-        '500ms debounce -- responds instantly regardless of main loop state.')
+    pdf.bullet('boot.py sets CH1-CH4 GPIOs (4, 5, 6, 15) LOW (OFF) on startup.')
 
     # =================================================================
     # Section 10: Pre-Installation Checklist
@@ -533,7 +528,7 @@ def build_pdf():
 
     pdf.sub_title('Materials')
     pdf.bullet('ESP32-S3-N16R8 dev board + 4-channel relay module')
-    pdf.bullet('Twtade SSR-25DA solid state relay')
+    pdf.bullet('Twtade SSR-40DA solid state relay')
     pdf.bullet('Aluminum heatsink for SSR (at least 4"x4")')
     pdf.bullet('Thermal paste (for SSR-to-heatsink and DS18B20 mounting)')
     pdf.bullet('Supco SFPC freeze protection control (clamp-on)')
@@ -553,7 +548,7 @@ def build_pdf():
     checks = [
         'Shore power DISCONNECTED and verified with NCVT',
         'Etratech control box fully removed from circuit',
-        'SSR-25DA mounted on heatsink with thermal paste',
+        'SSR-40DA mounted on heatsink with thermal paste',
         'SSR AC1 (pin 1) connected to 120VAC LINE (14 AWG)',
         'SSR AC2 (pin 2) -> Supco SFPC -> 6-pin Blue (compressor)',
         'SSR DC+ (pin 3) connected to relay module CH2 NO terminal',
@@ -582,8 +577,6 @@ def build_pdf():
         'SSR trigger verified: GPIO 5 HIGH -> compressor runs',
         'DS18B20 reading verified in web UI (reasonable temperature)',
         'Freeze protection tested: sensor below 32F -> compressor cuts',
-        'Reset button (GPIO 2) wired: momentary NO between GPIO 2 and GND',
-        'Reset button tested: press triggers hard reboot, board comes back online',
     ]
     for check in checks:
         pdf.bullet(f'[ ]  {check}')

@@ -69,9 +69,10 @@
   - Decoded proprietary digital protocol from Dometic CT thermostat via 4-wire data cable
   - 4-wire connector: +12V from supply, +12V to stat, -12V ground, orange (digital data)
   - Board relays (HF3FF 012-1ZS1): K1 (freeze safety), K2/K3/K4 (switching), K5 (empty, reversing valve)
-- **4-ch relay module + SSR-25DA switch 120VAC** to Brisk II via 6-pin cable
-  - Compressor: Relay 2 (GPIO 5) → switches 12VDC → SSR-25DA DC+ → SSR AC out → bimetal cutout → Pin 1 Blue
-  - SSR-25DA (Twtade): 25A/380VAC solid state relay, 3-32VDC input, needs heatsink (~15W @ 12A)
+- **4-ch relay module + SSR-40DA switch 120VAC** to Brisk II via 6-pin cable
+  - Compressor: Relay 2 (GPIO 5) → switches 12VDC → SSR-40DA DC+ → SSR AC out → bimetal cutout → Pin 1 Blue
+  - SSR-40DA (Twtade): 40A/380VAC solid state relay, 3-32VDC input, needs heatsink
+  - Upgraded from SSR-25DA (first unit failed shorted — triac stuck closed, 120V passed through even with DC control off)
   - SSR AC1 = 120VAC LINE (hot), SSR AC2 = compressor load output
   - Compressor relay COM = 12VDC (NOT on 120VAC bus), only triggers SSR at milliamp current
   - Fan relay COM bus = 120VAC LINE (fans only, ~2-3A each)

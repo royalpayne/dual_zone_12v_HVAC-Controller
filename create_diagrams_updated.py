@@ -52,15 +52,15 @@ def new_page(coord_w, coord_h):
 
 
 # =============================================================================
-# DIAGRAM 1: SSR-25DA COMPRESSOR WIRING
+# DIAGRAM 1: SSR-40DA COMPRESSOR WIRING
 # =============================================================================
 def create_ssr_diagram():
     fig, ax = new_page(23, 16)
 
     # Title
-    label(ax, 11.5, 15.5, 'SSR-25DA COMPRESSOR WIRING DIAGRAM',
+    label(ax, 11.5, 15.5, 'SSR-40DA COMPRESSOR WIRING DIAGRAM',
           fontsize=16, weight='bold', va='center')
-    label(ax, 11.5, 14.9, 'Relay CH2 (GPIO 5)  →  SSR-25DA  →  120VAC  →  Compressor',
+    label(ax, 11.5, 14.9, 'Relay CH2 (GPIO 5)  →  SSR-40DA  →  120VAC  →  Compressor',
           fontsize=10, color='#666', va='center')
 
     # --- Row layout: components at y~9 band, left to right ---
@@ -93,9 +93,9 @@ def create_ssr_diagram():
     pin(ax, 10.0, 8.0, 'gray')  # NC
     label(ax, 10.2, 8.0, 'NC (unused)', fontsize=8, ha='left', va='center', color='gray')
 
-    # 3. SSR-25DA
+    # 3. SSR-40DA
     box(ax, 12.5, 7, 3.5, 4.5, '#cc0000', '#fff5f5')
-    label(ax, 14.25, 11.2, 'SSR-25DA', fontsize=12, weight='bold', va='center', color='#cc0000')
+    label(ax, 14.25, 11.2, 'SSR-40DA', fontsize=12, weight='bold', va='center', color='#cc0000')
     label(ax, 14.25, 10.7, 'Solid State Relay', fontsize=9, va='center')
     label(ax, 14.25, 10.2, '3-32VDC → 25A/380VAC', fontsize=8, va='center', color='#666')
 
@@ -186,7 +186,7 @@ def create_ssr_diagram():
     notes = [
         "KEY POINTS:",
         "  CH2 relay NO terminal switches 12VDC milliamp trigger to SSR DC+",
-        "  SSR-25DA switches high-current 120VAC to compressor load",
+        "  SSR-40DA switches high-current 120VAC to compressor load",
         "  SSR needs heatsink (~15W dissipation @ 12A compressor load)",
         "  Supco SFPC: normally closed, opens at 35F, recloses at 50F",
         "  Bimetal cutout: thermal overload protection, in series",
@@ -528,7 +528,7 @@ def create_relay_splice_comprehensive():
 
     label(ax, 14, 19.5, 'ESP32-S3-N16R8 — DIRECT 120VAC WIRING TO DOMETIC BRISK II',
           fontsize=18, weight='bold', va='center')
-    label(ax, 14, 18.9, 'SSR-25DA for Compressor  |  Relay Channels for Fans + Furnace  |  Dual Freeze Protection',
+    label(ax, 14, 18.9, 'SSR-40DA for Compressor  |  Relay Channels for Fans + Furnace  |  Dual Freeze Protection',
           fontsize=11, color='#666', va='center')
 
     # =====================================================
@@ -568,10 +568,10 @@ def create_relay_splice_comprehensive():
     label(ax, ch_x - 0.2, 7.8, '3.3V', fontsize=8, ha='right', va='center', color='#ff0000')
 
     # =====================================================
-    # TOP CENTER: SSR-25DA
+    # TOP CENTER: SSR-40DA
     # =====================================================
     box(ax, 9.0, 15.5, 5.0, 3.0, '#cc0000', '#ffebee', 3)
-    label(ax, 11.5, 18.2, 'SSR-25DA', fontsize=14, weight='bold', va='center', color='#cc0000')
+    label(ax, 11.5, 18.2, 'SSR-40DA', fontsize=14, weight='bold', va='center', color='#cc0000')
     label(ax, 11.5, 17.6, 'Solid State Relay', fontsize=10, va='center')
     label(ax, 11.5, 17.1, '3-32VDC → 25A/380VAC', fontsize=9, va='center', color='#666')
 
@@ -750,7 +750,7 @@ def create_relay_splice_comprehensive():
           va='center', color='#ff0000')
     notes = [
         "  CH2 relay NO switches 12VDC milliamp trigger to SSR DC+",
-        "  SSR-25DA switches 120VAC to compressor (heatsink required ~15W @ 12A)",
+        "  SSR-40DA switches 120VAC to compressor (heatsink required ~15W @ 12A)",
         "  CH3/CH4 switch 120VAC directly to fans (2-3A, 10A relay rating)",
         "  CH1 = dry contact for furnace (separate unit)",
         "  Dual freeze protection: DS18B20 software (32F) + Supco SFPC hardware (35F)",
