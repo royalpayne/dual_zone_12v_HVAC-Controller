@@ -35,6 +35,9 @@ class ThermostatController:
         self.fan_speed = config.FAN_AUTO
         self.whynter_mode = 0  # 0=off, 1=cool
         self.dehum_active = False  # True when Whynter running for dehumidification
+        self.dehum_trigger_time = 0   # When humidity first exceeded setpoint (sustained check)
+        self.dehum_start_time = 0     # When dehum actually started (min run time)
+        self.dehum_stop_time = 0      # When dehum stopped (min off time)
         self.humidity_setpoint = config.HUMIDITY_SETPOINT
         self.heater_mode = 0  # 0=off, 1=on (IR heater)
         self.last_heat_change = 0
@@ -115,12 +118,18 @@ class ThermostatController:
                 print(f"Freeze lockout cleared: evap {temp_f:.1f}F >= {config.FREEZE_RECOVERY}F")
 
     def update_bl_readings(self, temp_c, humidity):
-        """Update Broadlink HTS2 sensor readings"""
+        """Update Broadlink HTS2 sensor readings (with calibration offsets)"""
         if temp_c is not None:
-            self.bl_temp = round(temp_c * 9.0 / 5.0 + 32.0, 1)  # Convert C to F
+            temp_f = temp_c * 9.0 / 5.0 + 32.0
+            temp_f += getattr(config, 'BL_TEMP_OFFSET', 0.0)
+            self.bl_temp = round(temp_f, 1)
         else:
             self.bl_temp = None
-        self.bl_humidity = round(humidity, 1) if humidity is not None else None
+        if humidity is not None:
+            humidity += getattr(config, 'BL_HUMIDITY_OFFSET', 0.0)
+            self.bl_humidity = round(humidity, 1)
+        else:
+            self.bl_humidity = None
 
     def set_mode(self, mode):
         """Set operating mode"""
@@ -391,10 +400,14 @@ class ThermostatController:
 
     def _control_dehum(self):
         """Dehumidification control — triggers Whynter dehum mode based on humidity.
+        Anti-cycling: sustained threshold (humidity must stay high for DEHUM_SUSTAINED_TIME
+        before activating) + minimum run/off times.
         Guards: won't run while heating is active or if temp is near heat setpoint,
         to prevent dehum cold air from fighting the furnace."""
         if self.current_humidity is None or not self.whynter:
             return
+
+        now = time.time()
 
         # Never dehumidify while furnace is heating — they fight each other
         if self.heating_active:
@@ -403,20 +416,46 @@ class ThermostatController:
                     print(f"Dehum OFF: heating active, temp {self.current_temp:.1f}F")
                     self.set_whynter_mode(0)
                     self.dehum_active = False
+                    self.dehum_stop_time = now
+                    self.dehum_trigger_time = 0
             return
 
         if not self.dehum_active and self.whynter_mode == 0:
             # Don't start dehum if temp is near heat setpoint (would trigger furnace)
             if self.current_temp is not None and self.current_temp <= (self.heat_setpoint + config.HYSTERESIS):
+                self.dehum_trigger_time = 0
                 return
-            # Enable: humidity exceeds setpoint
+
             if self.current_humidity > self.humidity_setpoint:
+                # Start sustained threshold timer on first reading above setpoint
+                if self.dehum_trigger_time == 0:
+                    self.dehum_trigger_time = now
+                    print(f"Dehum trigger: humidity {self.current_humidity:.1f}% > {self.humidity_setpoint}%, waiting {config.DEHUM_SUSTAINED_TIME}s")
+                    return
+
+                # Check sustained threshold — humidity must stay above setpoint for full duration
+                elapsed = now - self.dehum_trigger_time
+                if elapsed < config.DEHUM_SUSTAINED_TIME:
+                    return  # Still waiting
+
+                # Check minimum off time — don't restart too soon
+                if self.dehum_stop_time > 0 and (now - self.dehum_stop_time) < config.DEHUM_MIN_OFF_TIME:
+                    return  # Still in off-time cooldown
+
+                # Sustained threshold met + off-time elapsed — activate dehum
                 if self._can_change_whynter():
-                    print(f"Dehum ON: humidity {self.current_humidity:.1f}% > {self.humidity_setpoint}%")
+                    print(f"Dehum ON: humidity {self.current_humidity:.1f}% > {self.humidity_setpoint}% for {int(elapsed)}s")
                     self.set_whynter_mode(2)  # 2 = dehum mode
-                    # Only mark dehum active if IR send succeeded
                     if self.whynter_mode == 2:
                         self.dehum_active = True
+                        self.dehum_start_time = now
+                        self.dehum_trigger_time = 0
+            else:
+                # Humidity dropped below setpoint — reset sustained timer (spike passed)
+                if self.dehum_trigger_time > 0:
+                    print(f"Dehum trigger reset: humidity {self.current_humidity:.1f}% < {self.humidity_setpoint}%")
+                    self.dehum_trigger_time = 0
+
         elif self.dehum_active:
             # Stop if temp drops near heat setpoint (prevent triggering furnace)
             if self.current_temp is not None and self.current_temp <= (self.heat_setpoint + config.HYSTERESIS):
@@ -424,14 +463,22 @@ class ThermostatController:
                     print(f"Dehum OFF: temp {self.current_temp:.1f}F near heat setpoint {self.heat_setpoint}F")
                     self.set_whynter_mode(0)
                     self.dehum_active = False
+                    self.dehum_stop_time = now
                     return
-            # Disable: humidity dropped below setpoint minus hysteresis
+
+            # Check if humidity dropped below target
             target = self.humidity_setpoint - config.HUMIDITY_HYSTERESIS
             if self.current_humidity < target:
+                # Enforce minimum run time before stopping
+                run_time = now - self.dehum_start_time
+                if run_time < config.DEHUM_MIN_RUN_TIME:
+                    return  # Still in minimum run period
+
                 if self._can_change_whynter():
-                    print(f"Dehum OFF: humidity {self.current_humidity:.1f}% < {target}%")
+                    print(f"Dehum OFF: humidity {self.current_humidity:.1f}% < {target}% (ran {int(run_time)}s)")
                     self.set_whynter_mode(0)
                     self.dehum_active = False
+                    self.dehum_stop_time = now
 
     def _control_heat(self):
         """Heating control with hysteresis"""
@@ -577,6 +624,8 @@ class ThermostatController:
             self.cooling_active = False
             self.fan_only = False
             self.dehum_active = False
+            self.dehum_trigger_time = 0
+            self.dehum_stop_time = time.time()
             self.fan_post_run_until = 0
             if self.whynter_mode != 0:
                 self.whynter_mode = 0
@@ -609,6 +658,8 @@ class ThermostatController:
         self.cooling_active = False
         self.fan_only = False
         self.dehum_active = False
+        self.dehum_trigger_time = 0
+        self.dehum_stop_time = time.time()
         self.fan_post_run_until = 0
         self.whynter_mode = 0
         self.heater_mode = 0
@@ -642,6 +693,7 @@ class ThermostatController:
             'fan_only': self.fan_only,
             'humidity_setpoint': self.humidity_setpoint,
             'dehum_active': self.dehum_active,
+            'dehum_waiting': self.dehum_trigger_time > 0,
             'whynter_mode': self.whynter_mode,
             'whynter_mode_name': self.WHYNTER_MODE_NAMES.get(self.whynter_mode, '?'),
             'heater_mode': self.heater_mode,

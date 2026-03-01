@@ -22,9 +22,13 @@ MIN_SETPOINT = 50
 MAX_SETPOINT = 90
 
 # Sensor calibration offsets (added to raw readings)
-TEMP_OFFSET = 0.0       # degrees F
-HUMIDITY_OFFSET = 0.0   # percent
+TEMP_OFFSET = 0.7       # degrees F (split-the-difference vs HTS2)
+HUMIDITY_OFFSET = -1.7   # percent (split-the-difference vs HTS2)
 PRESSURE_OFFSET = 0.0   # hPa
+
+# Broadlink HTS2 calibration offsets
+BL_TEMP_OFFSET = -0.7   # degrees F (split-the-difference vs BME280)
+BL_HUMIDITY_OFFSET = 1.7  # percent (split-the-difference vs BME280)
 
 # Hysteresis (prevents rapid cycling)
 HYSTERESIS = 1.5
@@ -36,6 +40,9 @@ BOOST_STALL_TIME = 600  # seconds (10 min) - boost if rooftop AC runs this long 
 # Dehumidification (via Whynter cool mode - evaporates condensate out exhaust)
 HUMIDITY_SETPOINT = 55      # % RH — trigger Whynter when exceeded
 HUMIDITY_HYSTERESIS = 5     # % RH — turn off at setpoint minus this
+DEHUM_SUSTAINED_TIME = 300  # seconds (5 min) — humidity must stay above setpoint this long before activating
+DEHUM_MIN_RUN_TIME = 900    # seconds (15 min) — minimum dehum run time once started
+DEHUM_MIN_OFF_TIME = 600    # seconds (10 min) — minimum off time before restarting dehum
 
 # Apparent temperature: adjust cooling decisions based on humidity for comfort + efficiency
 # Each 10% RH above 50% feels ~1°F warmer; below 50% feels ~1°F cooler
@@ -79,13 +86,13 @@ I2C_FREQ = 400000
 
 # 4-Channel Relay Module (active HIGH, set via jumper)
 RELAY_FURNACE_PIN = 4           # Furnace dry contact closure
-RELAY_COMPRESSOR_PIN = 5        # Compressor triggers SSR-25DA via 12VDC
+RELAY_COMPRESSOR_PIN = 5        # Compressor triggers SSR-40DA via 12VDC
 RELAY_FAN_LOW_PIN = 6           # Rooftop AC fan low speed
 RELAY_FAN_HIGH_PIN = 15         # Rooftop AC fan high speed
 
 # Relay polarity: Active HIGH (value=1 = ON, value=0 = OFF)
 RELAY_ACTIVE_LOW = False
-# Compressor relay switches 12VDC to SSR-25DA (milliamp trigger), SSR switches 120VAC
+# Compressor relay switches 12VDC to SSR-40DA (milliamp trigger), SSR switches 120VAC
 
 # DS18B20 evaporator freeze sensor (1-Wire)
 FREEZE_SENSOR_PIN = 42          # DS18B20 data pin (needs 4.7K pull-up to 3.3V)
