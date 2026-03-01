@@ -111,7 +111,9 @@
   - Even if humidity drops below target, Whynter keeps running until min time met
 - **Minimum off time**: After dehum stops, won't restart for DEHUM_MIN_OFF_TIME (10 min)
   - Prevents rapid on/off cycling when humidity hovers near setpoint
-- **Heating guard**: Dehum won't activate if temp is near heat setpoint (prevents fighting furnace)
+- **Temperature guards**: Dehum won't activate (or will stop) if:
+  - Temp is near heat setpoint (prevents fighting furnace)
+  - Temp is 5°F below cool setpoint (RV is already cold enough)
 - Status API: `dehum_active` (bool), `dehum_waiting` (bool — sustained timer counting)
 
 ## Sensor Calibration

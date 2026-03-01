@@ -420,9 +420,15 @@ class ThermostatController:
                     self.dehum_trigger_time = 0
             return
 
+        # Don't run dehum if temp is too cold (near heat setpoint or 5°F below cool setpoint)
+        if self.current_temp is not None:
+            too_cold = (self.current_temp <= (self.heat_setpoint + config.HYSTERESIS)
+                        or self.current_temp <= (self.cool_setpoint - 5))
+        else:
+            too_cold = False
+
         if not self.dehum_active and self.whynter_mode == 0:
-            # Don't start dehum if temp is near heat setpoint (would trigger furnace)
-            if self.current_temp is not None and self.current_temp <= (self.heat_setpoint + config.HYSTERESIS):
+            if too_cold:
                 self.dehum_trigger_time = 0
                 return
 
@@ -457,10 +463,10 @@ class ThermostatController:
                     self.dehum_trigger_time = 0
 
         elif self.dehum_active:
-            # Stop if temp drops near heat setpoint (prevent triggering furnace)
-            if self.current_temp is not None and self.current_temp <= (self.heat_setpoint + config.HYSTERESIS):
+            # Stop if temp is too cold (near heat setpoint or 5°F below cool setpoint)
+            if too_cold:
                 if self._can_change_whynter():
-                    print(f"Dehum OFF: temp {self.current_temp:.1f}F near heat setpoint {self.heat_setpoint}F")
+                    print(f"Dehum OFF: temp {self.current_temp:.1f}F too cold (heat={self.heat_setpoint}F, cool={self.cool_setpoint}F)")
                     self.set_whynter_mode(0)
                     self.dehum_active = False
                     self.dehum_stop_time = now
