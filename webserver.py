@@ -322,6 +322,22 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <div style="margin-top:8px;font-size:12px;color:#888">Kitchen settings &rarr; Living Room</div>
 </div>
 
+<div class="card" style="text-align:center">
+<h3>SCHEDULE OVERRIDE</h3>
+<div id="schmode" style="font-size:24px;font-weight:bold;margin:8px 0;color:#2ecc71">HOME</div>
+<div id="schhold" style="font-size:12px;color:#888;margin-bottom:10px"></div>
+<div style="margin-bottom:6px"><span style="font-size:12px;color:#888">Hold Home: </span>
+<button class="btn home" onclick="schHold('home',4)" style="padding:8px 12px;font-size:13px">4h</button>
+<button class="btn home" onclick="schHold('home',8)" style="padding:8px 12px;font-size:13px">8h</button>
+<button class="btn home" onclick="schHold('home',12)" style="padding:8px 12px;font-size:13px">12h</button></div>
+<div style="margin-bottom:6px"><span style="font-size:12px;color:#888">Hold Away: </span>
+<button class="btn" onclick="schHold('away',4)" style="padding:8px 12px;font-size:13px;background:#e67e22">4h</button>
+<button class="btn" onclick="schHold('away',8)" style="padding:8px 12px;font-size:13px;background:#e67e22">8h</button>
+<button class="btn" onclick="schHold('away',12)" style="padding:8px 12px;font-size:13px;background:#e67e22">12h</button>
+<button class="btn" onclick="schHold('away',24)" style="padding:8px 12px;font-size:13px;background:#e67e22">24h</button></div>
+<button class="btn" onclick="schCancel()" style="padding:8px 16px;font-size:13px;background:#555">Cancel Hold</button>
+</div>
+
 <div class="card">
 <div class="zone-title remote-title">Living Room (Remote)</div>
 <div class="temp-small"><span id="ptemp">--</span>&deg;F <span id="pfeels" style="font-size:16px;color:#888"></span></div>
@@ -467,7 +483,20 @@ var btn=document.getElementById('syncbtn');
 btn.textContent=syncOn?'ON':'OFF';
 btn.className=syncOn?'btn sync on':'btn sync';
 }
-get();setInterval(get,3000);
+function schHold(m,h){fetch('/api/schedule/mode',{method:'POST',body:JSON.stringify({mode:m,hours:h})}).then(r=>r.json()).then(updSch);fetch('/api/schedule/enable',{method:'POST',body:JSON.stringify({enabled:true})});}
+function schCancel(){fetch('/api/schedule/mode',{method:'POST',body:JSON.stringify({mode:'home',hours:0})}).then(r=>r.json()).then(updSch);}
+function updSch(d){
+if(!d)return;
+var el=document.getElementById('schmode');
+var m=d.current_mode||'home';
+var colors={home:'#2ecc71',away:'#e67e22',sleep:'#9b59b6'};
+el.textContent=m.toUpperCase();el.style.color=colors[m]||'#eee';
+var hi=document.getElementById('schhold');
+if(d.hold_until){var r=Math.max(0,d.hold_until-(Date.now()/1000-946684800));var rh=Math.floor(r/3600),rm=Math.floor((r%3600)/60);hi.textContent='Hold: '+(rh>0?rh+'h ':'')+rm+'m remaining';}
+else{hi.textContent=d.enabled?'Schedule active':'Schedule off';}
+}
+function getSch(){fetch('/api/schedule').then(r=>r.json()).then(updSch).catch(e=>{});}
+get();getSch();setInterval(get,3000);setInterval(getSch,30000);
 </script>
 </body>
 </html>"""

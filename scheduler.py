@@ -13,11 +13,11 @@ MODE_HOME = "home"
 MODE_AWAY = "away"
 MODE_SLEEP = "sleep"
 
-# Default mode temperatures (heat, cool)
+# Default mode temperatures (heat, cool) and humidity threshold
 DEFAULT_PRESETS = {
-    MODE_HOME: {"heat": 70, "cool": 74},
-    MODE_AWAY: {"heat": 62, "cool": 80},
-    MODE_SLEEP: {"heat": 66, "cool": 72}
+    MODE_HOME: {"heat": 70, "cool": 74, "humidity": 55},
+    MODE_AWAY: {"heat": 62, "cool": 80, "humidity": 70},
+    MODE_SLEEP: {"heat": 66, "cool": 72, "humidity": 55}
 }
 
 # Default schedule (weekday Mon-Fri, weekend Sat-Sun)
@@ -155,8 +155,10 @@ class Scheduler:
             self._apply_mode(new_mode)
 
     def _apply_mode(self, mode):
-        """Apply preset temperatures to thermostat"""
+        """Apply preset temperatures and humidity to thermostat"""
         preset = self.presets.get(mode, self.presets[MODE_HOME])
         self.thermostat.set_heat_setpoint(preset["heat"])
         self.thermostat.set_cool_setpoint(preset["cool"])
-        print(f"[scheduler] Applied {mode}: heat={preset['heat']}, cool={preset['cool']}")
+        if "humidity" in preset:
+            self.thermostat.set_humidity_setpoint(preset["humidity"])
+        print(f"[scheduler] Applied {mode}: heat={preset['heat']}, cool={preset['cool']}, humidity={preset.get('humidity', '?')}")
