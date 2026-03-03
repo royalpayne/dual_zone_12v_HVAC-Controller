@@ -791,26 +791,29 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
 def run_dashboard(port=8080):
     """Start the dashboard web server with background data logging."""
+    # Main thread connection — for initial pull only
     conn = init_db()
 
-    # Start data logger in background thread
+    # Pull initial data before starting server
+    print(f"Pulling initial data from {MAIN_ESP32_IP}...")
+    try:
+        pull_once(conn)
+    except Exception:
+        pass
+    conn.close()
+
+    # Background logger gets its own connection (SQLite is not thread-safe)
     def logger_thread():
+        logger_conn = init_db()
         while True:
             try:
-                pull_once(conn)
+                pull_once(logger_conn)
             except Exception as e:
                 print(f"  Logger error: {e}")
             time.sleep(POLL_INTERVAL)
 
     t = threading.Thread(target=logger_thread, daemon=True)
     t.start()
-
-    # Pull initial data
-    print(f"Pulling initial data from {MAIN_ESP32_IP}...")
-    try:
-        pull_once(conn)
-    except Exception:
-        pass
 
     server = HTTPServer(('0.0.0.0', port), DashboardHandler)
     print(f"Dashboard: http://localhost:{port}")
@@ -821,7 +824,6 @@ def run_dashboard(port=8080):
     except KeyboardInterrupt:
         print("\nStopping dashboard.")
         server.shutdown()
-        conn.close()
 
 
 def main():
