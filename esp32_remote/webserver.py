@@ -59,6 +59,8 @@ class RemoteAPI:
             return self._api_fan_only(request)
         elif 'GET /api/humidity_setpoint' in request:
             return self._api_humidity_setpoint(request)
+        elif 'GET /api/remote_temp' in request:
+            return self._api_remote_temp(request)
         elif 'GET /api/relay/test' in request:
             return self._api_relay_test(request)
         elif 'GET /api/relay/furnace' in request:
@@ -153,6 +155,13 @@ class RemoteAPI:
         params = self._parse_query(request)
         if 'value' in params:
             self.thermostat.set_humidity_setpoint(float(params['value']))
+        return self._api_status()
+
+    def _api_remote_temp(self, request):
+        """Accept Main ESP32 temperature for multi-zone control"""
+        params = self._parse_query(request)
+        if 'temp' in params:
+            self.thermostat.set_remote_temp(float(params['temp']))
         return self._api_status()
 
     def _api_relay_test(self, request):

@@ -49,6 +49,10 @@ class ThermostatController:
         self.cooling_start_time = 0   # When rooftop AC started cooling
         self.cooling_start_temp = None  # Temp when rooftop AC started
 
+        # Multi-zone: Main ESP32 sends its temperature for either-area control
+        self.remote_temp = None        # Main ESP32 temperature reading (°F)
+        self.remote_temp_time = 0      # Timestamp of last remote temp update
+
         # Evaporator freeze protection (DS18B20 sensor)
         self.evap_temp = None          # Evaporator coil temperature (°F)
         self.freeze_lockout = False    # True = compressor locked out due to freeze
@@ -269,6 +273,45 @@ class ThermostatController:
             return self.current_temp
         return self.current_temp + (self.current_humidity - 50) * config.HUMIDITY_COMFORT_FACTOR
 
+    # ---- Multi-zone temperature ----
+
+    def set_remote_temp(self, temp_f):
+        """Store Main ESP32's temperature reading for multi-zone control"""
+        self.remote_temp = temp_f
+        self.remote_temp_time = time.time()
+
+    def _remote_temp_if_fresh(self):
+        """Return remote temp if fresh (within 120s), else None"""
+        if self.remote_temp is None:
+            return None
+        if time.time() - self.remote_temp_time > 120:
+            return None
+        return self.remote_temp
+
+    def _effective_cool_temp(self):
+        """Worst-case (hottest) temperature across zones for cooling decisions"""
+        local = self._apparent_temp()
+        remote = self._remote_temp_if_fresh()
+        if local is None and remote is None:
+            return None
+        if local is None:
+            return remote
+        if remote is None:
+            return local
+        return max(local, remote)
+
+    def _effective_heat_temp(self):
+        """Worst-case (coldest) temperature across zones for heating decisions"""
+        local = self.current_temp
+        remote = self._remote_temp_if_fresh()
+        if local is None and remote is None:
+            return None
+        if local is None:
+            return remote
+        if remote is None:
+            return local
+        return min(local, remote)
+
     # ---- Fan relay control ----
 
     def _set_fan(self, speed):
@@ -487,50 +530,55 @@ class ThermostatController:
                     self.dehum_stop_time = now
 
     def _control_heat(self):
-        """Heating control with hysteresis"""
+        """Heating control with hysteresis, using worst-case (coldest) zone temp"""
+        effective = self._effective_heat_temp()
+        if effective is None:
+            return
         if self.heating_active:
-            if self.current_temp >= self.heat_setpoint:
+            if effective >= self.heat_setpoint:
                 if self._can_change_heat():
                     self._heat_off()
         else:
-            if self.current_temp <= (self.heat_setpoint - config.HYSTERESIS):
+            if effective <= (self.heat_setpoint - config.HYSTERESIS):
                 if self._can_change_heat():
                     self._heat_on()
 
     def _control_cool(self):
-        """Cooling control with hysteresis, using apparent temp for comfort"""
-        apparent = self._apparent_temp()
-        if apparent is None:
+        """Cooling control with hysteresis, using worst-case (hottest) zone temp"""
+        effective = self._effective_cool_temp()
+        if effective is None:
             return
         if self.cooling_active:
-            if apparent <= self.cool_setpoint:
+            if effective <= self.cool_setpoint:
                 if self._can_change_cool():
                     self._cool_off()
         else:
-            if apparent >= (self.cool_setpoint + config.HYSTERESIS):
+            if effective >= (self.cool_setpoint + config.HYSTERESIS):
                 if self._can_change_cool() and self._can_start_compressor():
                     self._cool_on()
 
     def _control_auto(self):
-        """Auto mode - heat or cool as needed"""
-        # Heating logic uses actual temp (furnace is independent, no delay needed vs A/C)
-        if self.current_temp <= (self.heat_setpoint - config.HYSTERESIS):
-            if not self.heating_active and self._can_change_heat():
-                self._cool_off()
-                self._heat_on()
-        elif self.current_temp >= self.heat_setpoint and self.heating_active:
-            if self._can_change_heat():
-                self._heat_off()
+        """Auto mode - heat or cool as needed, using worst-case zone temps"""
+        # Heating: use coldest zone temp
+        heat_temp = self._effective_heat_temp()
+        if heat_temp is not None:
+            if heat_temp <= (self.heat_setpoint - config.HYSTERESIS):
+                if not self.heating_active and self._can_change_heat():
+                    self._cool_off()
+                    self._heat_on()
+            elif heat_temp >= self.heat_setpoint and self.heating_active:
+                if self._can_change_heat():
+                    self._heat_off()
 
-        # Cooling logic uses apparent temp for humidity-aware comfort
-        apparent = self._apparent_temp()
-        if apparent is None:
+        # Cooling: use hottest zone temp
+        cool_temp = self._effective_cool_temp()
+        if cool_temp is None:
             return
-        if apparent >= (self.cool_setpoint + config.HYSTERESIS):
+        if cool_temp >= (self.cool_setpoint + config.HYSTERESIS):
             if not self.cooling_active and self._can_change_cool() and self._can_start_compressor():
                 self._heat_off()
                 self._cool_on()
-        elif apparent <= self.cool_setpoint and self.cooling_active:
+        elif cool_temp <= self.cool_setpoint and self.cooling_active:
             if self._can_change_cool():
                 self._cool_off()
 
@@ -540,7 +588,8 @@ class ThermostatController:
         """Turn on furnace and IR heater"""
         dry_run = "(DRY RUN) " if config.DRY_RUN else ""
         temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
-        print(f"{dry_run}HEAT ON (temp: {temp_str}F, setpoint: {self.heat_setpoint}F)")
+        remote_str = f", kitchen: {self.remote_temp:.1f}" if self.remote_temp is not None else ""
+        print(f"{dry_run}HEAT ON (temp: {temp_str}F{remote_str}, setpoint: {self.heat_setpoint}F)")
         if not config.DRY_RUN:
             self._relay_on(self.relay_furnace)
         self.heating_active = True
@@ -553,7 +602,8 @@ class ThermostatController:
         """Turn off furnace and IR heater"""
         dry_run = "(DRY RUN) " if config.DRY_RUN else ""
         temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
-        print(f"{dry_run}HEAT OFF (temp: {temp_str}F, setpoint: {self.heat_setpoint}F)")
+        remote_str = f", kitchen: {self.remote_temp:.1f}" if self.remote_temp is not None else ""
+        print(f"{dry_run}HEAT OFF (temp: {temp_str}F{remote_str}, setpoint: {self.heat_setpoint}F)")
         if not config.DRY_RUN:
             self._relay_off(self.relay_furnace)
         self.heating_active = False
@@ -568,11 +618,12 @@ class ThermostatController:
         """Turn on rooftop AC: fan first, then compressor"""
         dry_run = "(DRY RUN) " if config.DRY_RUN else ""
         temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
+        remote_str = f", kitchen: {self.remote_temp:.1f}" if self.remote_temp is not None else ""
         speed = self.fan_speed if self.fan_speed != config.FAN_OFF else config.FAN_HIGH
         speed_name = config.FAN_NAMES.get(speed, '?')
         apparent = self._apparent_temp()
         apparent_str = f", feels: {apparent:.1f}" if apparent is not None and self.current_humidity is not None else ""
-        print(f"{dry_run}COOL ON (temp: {temp_str}F{apparent_str}, setpoint: {self.cool_setpoint}F, fan: {speed_name})")
+        print(f"{dry_run}COOL ON (temp: {temp_str}F{apparent_str}{remote_str}, setpoint: {self.cool_setpoint}F, fan: {speed_name})")
 
         # Start fan before compressor
         self._set_fan(speed)
@@ -592,9 +643,10 @@ class ThermostatController:
         """Turn off rooftop AC: compressor first, fan continues for post-run"""
         dry_run = "(DRY RUN) " if config.DRY_RUN else ""
         temp_str = f"{self.current_temp:.1f}" if self.current_temp is not None else "None"
+        remote_str = f", kitchen: {self.remote_temp:.1f}" if self.remote_temp is not None else ""
         apparent = self._apparent_temp()
         apparent_str = f", feels: {apparent:.1f}" if apparent is not None and self.current_humidity is not None else ""
-        print(f"{dry_run}COOL OFF (temp: {temp_str}F{apparent_str}, setpoint: {self.cool_setpoint}F)")
+        print(f"{dry_run}COOL OFF (temp: {temp_str}F{apparent_str}{remote_str}, setpoint: {self.cool_setpoint}F)")
 
         if not config.DRY_RUN:
             self._relay_off(self.relay_compressor)
@@ -708,6 +760,7 @@ class ThermostatController:
             'freeze_lockout': self.freeze_lockout,
             'bl_temp': self.bl_temp,
             'bl_humidity': self.bl_humidity,
+            'remote_temp': self.remote_temp,
             'dry_run': config.DRY_RUN,
             'debug': config.DEBUG
         }

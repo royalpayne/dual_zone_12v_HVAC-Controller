@@ -118,6 +118,10 @@ class RemoteClient:
         """Set humidity setpoint for auto-dehumidification (% RH)"""
         return self._request('/api/humidity_setpoint', {'value': value})
 
+    def set_remote_temp(self, temp_f):
+        """Send Main ESP32 temperature for multi-zone control (returns status)"""
+        return self._request('/api/remote_temp', {'temp': round(temp_f, 1)})
+
     def is_connected(self):
         """Check if remote is reachable"""
         status = self.get_status()

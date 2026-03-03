@@ -1,14 +1,15 @@
 # Remote Thermostat Controller (ESP32)
 # =====================================
-# Controls remote device's relays/IR remotely via API
-# ESP32 is the brain, remote ESP32 is the actuator
+# Main ESP32 sends sensor readings + settings to Remote ESP32.
+# Remote ESP32 handles all relay control using worst-case temp across zones.
+# Main polls Remote for actual relay state (heating/cooling active).
 
 import time
 import config
 
 
 class RemoteThermostatController:
-    """ESP32 thermostat that controls Remote ESP32 via API"""
+    """ESP32 thermostat that sends readings to Remote ESP32 for multi-zone control"""
 
     def __init__(self, remote_client):
         self.remote = remote_client
@@ -28,11 +29,11 @@ class RemoteThermostatController:
         self.current_humidity = None
         self.current_pressure = None
 
-        # State tracking
+        # State tracking (updated from Remote's status)
         self.heating_active = False
         self.cooling_active = False
-        self.last_state_change = 0
         self.last_remote_sync = 0
+        self.last_temp_send = 0
         self.sync_enabled = True  # Auto-sync Kitchen → Living Room
 
     def update_readings(self, temp_f, humidity, pressure):
@@ -67,10 +68,6 @@ class RemoteThermostatController:
         self.humidity_setpoint = max(30, min(80, value))
         self._sync_to_remote()
 
-    def _can_change_state(self):
-        """Check if enough time has passed since last state change"""
-        return (time.time() - self.last_state_change) >= config.MIN_CYCLE_TIME
-
     def set_sync_enabled(self, enabled):
         """Enable/disable auto-sync of Kitchen settings to Living Room"""
         self.sync_enabled = enabled
@@ -96,127 +93,43 @@ class RemoteThermostatController:
             print(f"Remote sync error: {e}")
 
     def run_control_loop(self):
-        """Main control logic - monitors and sends commands to Remote"""
+        """Send kitchen temp to Remote and poll relay state.
+        Remote uses worst-case temp across zones for all relay decisions."""
         if self.current_temp is None:
             return
 
-        # Periodic re-sync to Remote (handles Remote reboots, ensures settings stay consistent)
         now = time.time()
+
+        # Send kitchen temperature to Remote every 15 seconds
+        # Response includes full status — update heating/cooling state from it
+        if now - self.last_temp_send >= 15:
+            try:
+                status = self.remote.set_remote_temp(self.current_temp)
+                if status:
+                    self.heating_active = status.get('heating_active', False)
+                    self.cooling_active = status.get('cooling_active', False)
+            except Exception as e:
+                print(f"Remote temp send error: {e}")
+            self.last_temp_send = now
+
+        # Periodic re-sync to Remote (handles Remote reboots)
         if now - self.last_remote_sync >= 60:
             self._sync_to_remote()
 
+        # MODE_OFF: ensure Remote is off
         if self.mode == config.MODE_OFF:
             if self.heating_active or self.cooling_active:
                 self._all_off()
-            return
-
-        if self.mode == config.MODE_HEAT:
-            self._control_heat()
-        elif self.mode == config.MODE_COOL:
-            self._control_cool()
-        elif self.mode == config.MODE_AUTO:
-            self._control_auto()
-
-    def _control_heat(self):
-        """Heating control with hysteresis"""
-        if self.heating_active:
-            if self.current_temp >= self.heat_setpoint:
-                if self._can_change_state():
-                    self._heat_off()
-        else:
-            if self.current_temp <= (self.heat_setpoint - config.HYSTERESIS):
-                if self._can_change_state():
-                    self._heat_on()
-
-    def _control_cool(self):
-        """Cooling control with hysteresis"""
-        if self.cooling_active:
-            if self.current_temp <= self.cool_setpoint:
-                if self._can_change_state():
-                    self._cool_off()
-        else:
-            if self.current_temp >= (self.cool_setpoint + config.HYSTERESIS):
-                if self._can_change_state():
-                    self._cool_on()
-
-    def _control_auto(self):
-        """Auto mode - heat or cool as needed"""
-        if self.current_temp <= (self.heat_setpoint - config.HYSTERESIS):
-            if not self.heating_active and self._can_change_state():
-                self._cool_off()
-                self._heat_on()
-        elif self.current_temp >= self.heat_setpoint and self.heating_active:
-            if self._can_change_state():
-                self._heat_off()
-
-        if self.current_temp >= (self.cool_setpoint + config.HYSTERESIS):
-            if not self.cooling_active and self._can_change_state():
-                self._heat_off()
-                self._cool_on()
-        elif self.current_temp <= self.cool_setpoint and self.cooling_active:
-            if self._can_change_state():
-                self._cool_off()
-
-    def _heat_on(self):
-        """Turn on heating via Remote"""
-        dry_run = "(DRY RUN) " if config.DRY_RUN else ""
-        print(f"{dry_run}HEAT ON (temp: {self.current_temp:.1f}F, setpoint: {self.heat_setpoint}F)")
-        if not config.DRY_RUN:
-            try:
-                self.remote.set_furnace(True)
-            except Exception as e:
-                print(f"Remote furnace error: {e}")
-        self.heating_active = True
-        self.last_state_change = time.time()
-
-    def _heat_off(self):
-        """Turn off heating via Remote"""
-        dry_run = "(DRY RUN) " if config.DRY_RUN else ""
-        print(f"{dry_run}HEAT OFF (temp: {self.current_temp:.1f}F, setpoint: {self.heat_setpoint}F)")
-        if not config.DRY_RUN:
-            try:
-                self.remote.set_furnace(False)
-            except Exception as e:
-                print(f"Remote furnace error: {e}")
-        self.heating_active = False
-        self.last_state_change = time.time()
-
-    def _cool_on(self):
-        """Turn on cooling via Remote"""
-        dry_run = "(DRY RUN) " if config.DRY_RUN else ""
-        print(f"{dry_run}COOL ON (temp: {self.current_temp:.1f}F, setpoint: {self.cool_setpoint}F)")
-        if not config.DRY_RUN:
-            try:
-                self.remote.set_mode(config.MODE_COOL)
-            except Exception as e:
-                print(f"Remote cool error: {e}")
-        self.cooling_active = True
-        self.last_state_change = time.time()
-
-    def _cool_off(self):
-        """Turn off cooling via Remote"""
-        dry_run = "(DRY RUN) " if config.DRY_RUN else ""
-        print(f"{dry_run}COOL OFF (temp: {self.current_temp:.1f}F, setpoint: {self.cool_setpoint}F)")
-        if not config.DRY_RUN:
-            try:
-                self.remote.set_mode(config.MODE_OFF)
-            except Exception as e:
-                print(f"Remote cool error: {e}")
-        self.cooling_active = False
-        self.last_state_change = time.time()
 
     def _all_off(self):
         """Turn off all systems via Remote"""
-        if self.heating_active or self.cooling_active:
-            if not config.DRY_RUN:
-                try:
-                    self.remote.set_furnace(False)
-                    self.remote.set_mode(config.MODE_OFF)
-                except Exception as e:
-                    print(f"Remote all-off error: {e}")
-            self.heating_active = False
-            self.cooling_active = False
-            self.last_state_change = time.time()
+        try:
+            self.remote.set_furnace(False)
+            self.remote.set_mode(config.MODE_OFF)
+        except Exception as e:
+            print(f"Remote all-off error: {e}")
+        self.heating_active = False
+        self.cooling_active = False
 
     def get_status(self):
         """Get current status as dict"""
