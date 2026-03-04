@@ -4,6 +4,7 @@
 
 import json
 import time
+import config
 
 # Default schedule file
 SCHEDULE_FILE = "schedule.json"
@@ -35,6 +36,26 @@ DEFAULT_SCHEDULE = {
 }
 
 DAY_TYPES = ["weekday", "weekend"]
+
+
+def _is_us_dst(month, mday, wday):
+    """Check if US Daylight Saving Time is active.
+    DST: 2nd Sunday of March through 1st Sunday of November.
+    wday: 0=Monday, 6=Sunday (MicroPython convention)."""
+    if month < 3 or month > 11:
+        return False
+    if month > 3 and month < 11:
+        return True
+    # March: DST starts 2nd Sunday (day 8-14 that's a Sunday)
+    if month == 3:
+        days_since_sun = (wday + 1) % 7  # Sun=0, Mon=1, ..., Sat=6
+        last_sun = mday - days_since_sun
+        return last_sun >= 8  # 2nd Sunday is day 8-14
+    # November: DST ends 1st Sunday (day 1-7 that's a Sunday)
+    if month == 11:
+        days_since_sun = (wday + 1) % 7
+        last_sun = mday - days_since_sun
+        return last_sun < 1  # Before 1st Sunday
 
 
 class Scheduler:
@@ -122,9 +143,15 @@ class Scheduler:
             else:
                 return  # Still holding
 
-        # Get current time
+        # Get current local time (RTC is UTC, apply timezone + DST)
         try:
-            t = time.localtime()
+            offset = config.TIMEZONE_OFFSET
+            # Auto-detect US DST (2nd Sunday Mar 2am → 1st Sunday Nov 2am)
+            utc = time.localtime()
+            month, mday, wday = utc[1], utc[2], utc[6]  # wday: 0=Mon, 6=Sun
+            if _is_us_dst(month, mday, wday):
+                offset += 1
+            t = time.localtime(time.time() + offset * 3600)
             current_minute = t[3] * 60 + t[4]  # hours * 60 + minutes
             weekday_num = t[6]  # 0=Monday, 6=Sunday
             # Determine if weekday (Mon-Fri: 0-4) or weekend (Sat-Sun: 5-6)
