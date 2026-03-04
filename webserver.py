@@ -391,6 +391,10 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 </div>
 </div>
 
+<div style="text-align:center;margin-bottom:16px">
+<a href="http://192.168.71.151:8080" style="color:#00b4d8;font-size:16px">Energy Dashboard &amp; Stats</a>
+</div>
+
 <script>
 var hs=68,cs=75,rhs=68,rcs=75,rwhynter=0,rheater=0;
 var adjustingHeat=false,adjustingCool=false,adjustingRHeat=false,adjustingRCool=false,adjustingRHum=false;
