@@ -2,6 +2,7 @@
 import socket
 import json
 import time
+import btree
 import config
 from remote_client import RemoteClient
 
@@ -16,6 +17,96 @@ class ThermostatWebServer:
         # History buffer for data logging
         self.history = []
         self.history_max = getattr(config, 'HISTORY_MAX', 1440)
+        # Persistent history via btree
+        self._db = None
+        self._db_file = None
+        self._writes_since_flush = 0
+        self._init_history_db()
+
+    def _init_history_db(self):
+        """Open/create btree file and reload recent history into RAM"""
+        import os
+        db_file = getattr(config, 'HISTORY_DB_FILE', 'history.db')
+        try:
+            # Check if file exists and its size
+            file_exists = False
+            try:
+                stat = os.stat(db_file)
+                file_exists = True
+                print(f"History DB: file exists, {stat[6]} bytes")
+                # If file is 0 bytes, it's invalid — remove and recreate
+                if stat[6] == 0:
+                    os.remove(db_file)
+                    file_exists = False
+                    print("History DB: removed empty file")
+            except OSError:
+                print("History DB: creating new file")
+
+            if file_exists:
+                self._db_file = open(db_file, 'r+b')
+            else:
+                self._db_file = open(db_file, 'w+b')
+            self._db = btree.open(self._db_file)
+            self._prune_history_db()
+            # Reload recent entries into RAM history
+            count = 0
+            for key in self._db:
+                entry = json.loads(self._db[key])
+                self.history.append(entry)
+                count += 1
+            # Trim to max if btree had more than HISTORY_MAX
+            if len(self.history) > self.history_max:
+                self.history = self.history[-self.history_max:]
+            print(f"History DB: loaded {count} entries from flash")
+        except Exception as e:
+            print(f"History DB init error: {e}")
+            # If btree open failed on existing file, try fresh start
+            try:
+                if self._db_file:
+                    self._db_file.close()
+                try:
+                    os.remove(db_file)
+                except:
+                    pass
+                self._db_file = open(db_file, 'w+b')
+                self._db = btree.open(self._db_file)
+                print("History DB: created fresh after error")
+            except Exception as e2:
+                print(f"History DB fresh start failed: {e2}")
+                self._db = None
+
+    def _prune_history_db(self):
+        """Delete entries older than HISTORY_PERSIST_DAYS"""
+        if not self._db:
+            return
+        max_age = getattr(config, 'HISTORY_PERSIST_DAYS', 7) * 86400
+        cutoff = time.time() - max_age
+        cutoff_key = ("%010d" % int(cutoff)).encode()
+        pruned = 0
+        keys_to_delete = []
+        for key in self._db:
+            if key < cutoff_key:
+                keys_to_delete.append(key)
+            else:
+                break  # Keys are sorted, no need to continue
+        for key in keys_to_delete:
+            del self._db[key]
+            pruned += 1
+        if pruned:
+            self._db.flush()
+            print(f"History DB: pruned {pruned} old entries")
+
+    def _db_write(self, entry):
+        """Write entry to btree and flush to flash"""
+        if not self._db:
+            return
+        try:
+            key = ("%010d" % int(entry['ts'])).encode()
+            self._db[key] = json.dumps(entry).encode()
+            self._writes_since_flush += 1
+            self._db.flush()
+        except Exception as e:
+            print(f"History DB write error: {e}")
 
     def start(self, port=80):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -132,9 +223,11 @@ class ThermostatWebServer:
         self.history.append(entry)
         if len(self.history) > self.history_max:
             self.history = self.history[-self.history_max:]
+        self._db_write(entry)
 
     def _api_history(self, request):
-        """Return history buffer, optionally filtered by ?since=<timestamp>"""
+        """Return history buffer, optionally filtered by ?since=<timestamp>.
+        Queries btree directly for data older than RAM buffer."""
         since = 0
         if '?since=' in request:
             try:
@@ -146,10 +239,29 @@ class ThermostatWebServer:
             except (ValueError, IndexError):
                 pass
 
-        if since > 0:
+        # Check if btree has older data than RAM buffer
+        ram_oldest = self.history[0]['ts'] if self.history else 0
+        if self._db and since > 0 and since < ram_oldest:
+            # Query btree for entries between since and RAM start
+            data = []
+            since_key = ("%010d" % int(since)).encode()
+            for key in self._db:
+                if key <= since_key:
+                    continue
+                entry = json.loads(self._db[key])
+                if entry['ts'] > since:
+                    data.append(entry)
+            # btree already includes current entries, no need to merge
+        elif since > 0:
             data = [e for e in self.history if e['ts'] > since]
         else:
-            data = self.history
+            # Return all — query btree if available for full history
+            if self._db:
+                data = []
+                for key in self._db:
+                    data.append(json.loads(self._db[key]))
+            else:
+                data = self.history
 
         body = json.dumps({'count': len(data), 'entries': data})
         return f"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n\r\n{body}"

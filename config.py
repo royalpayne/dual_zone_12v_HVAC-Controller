@@ -83,6 +83,9 @@ TIMEZONE_OFFSET = -6  # US Central Standard Time (UTC-6)
 # Data logging (history buffer)
 HISTORY_INTERVAL = 60  # seconds between history snapshots
 HISTORY_MAX = 1440     # max entries (24 hours at 60s intervals)
+HISTORY_DB_FILE = "history.db"  # btree file for persistent history
+HISTORY_PERSIST_DAYS = 7        # max age before pruning on boot
+HISTORY_FLUSH_INTERVAL = 1      # flush btree to flash every N writes (1 = every snapshot)
 
 # USB Battery Pack Keep-Alive (prevents auto-shutoff)
 # Note: Most USB packs need 50-100mA to stay awake - use LiPo + TP4056 instead
