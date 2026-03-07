@@ -48,6 +48,7 @@ class ThermostatController:
         self.fan_post_run_until = 0   # Fan post-run timer
         self.cooling_start_time = 0   # When rooftop AC started cooling
         self.cooling_start_temp = None  # Temp when rooftop AC started
+        self.boost_off_time = 0        # When Whynter boost last turned off (cooldown)
 
         # Multi-zone: Main ESP32 sends its temperature for either-area control
         self.remote_temp = None        # Main ESP32 temperature reading (°F)
@@ -273,6 +274,17 @@ class ThermostatController:
             return self.current_temp
         return self.current_temp + (self.current_humidity - 50) * config.HUMIDITY_COMFORT_FACTOR
 
+    def _effective_humidity(self):
+        """Average humidity across available sensors for more stable readings."""
+        readings = []
+        if self.current_humidity is not None:
+            readings.append(self.current_humidity)
+        if self.bl_humidity is not None:
+            readings.append(self.bl_humidity)
+        if not readings:
+            return None
+        return sum(readings) / len(readings)
+
     # ---- Multi-zone temperature ----
 
     def set_remote_temp(self, temp_f):
@@ -397,14 +409,18 @@ class ThermostatController:
         # Whynter boost: auto-enable portable AC when needed
         if self.cooling_active and self.whynter and self.whynter_mode == 0:
             boost_reason = None
-            # Trigger 1: temp far exceeds setpoint
-            if self.current_temp >= (self.cool_setpoint + config.BOOST_THRESHOLD):
-                boost_reason = f"temp {self.current_temp:.1f}F > setpoint+{config.BOOST_THRESHOLD}"
-            # Trigger 2: rooftop AC stalled (running 10+ min with no temp drop)
-            elif (self.cooling_start_temp is not None
-                  and now - self.cooling_start_time >= config.BOOST_STALL_TIME
-                  and self.current_temp >= self.cooling_start_temp):
-                boost_reason = f"stall: {self.current_temp:.1f}F after {int((now - self.cooling_start_time) / 60)}min (started at {self.cooling_start_temp:.1f}F)"
+            # Cooldown: don't re-boost within 10 minutes of last boost-off
+            if self.boost_off_time > 0 and (now - self.boost_off_time) < config.DEHUM_MIN_OFF_TIME:
+                pass  # In cooldown period
+            else:
+                # Trigger 1: temp far exceeds setpoint
+                if self.current_temp >= (self.cool_setpoint + config.BOOST_THRESHOLD):
+                    boost_reason = f"temp {self.current_temp:.1f}F > setpoint+{config.BOOST_THRESHOLD}"
+                # Trigger 2: rooftop AC stalled (running 10+ min with no temp drop)
+                elif (self.cooling_start_temp is not None
+                      and now - self.cooling_start_time >= config.BOOST_STALL_TIME
+                      and self.current_temp >= self.cooling_start_temp):
+                    boost_reason = f"stall: {self.current_temp:.1f}F after {int((now - self.cooling_start_time) / 60)}min (started at {self.cooling_start_temp:.1f}F)"
             if boost_reason and self._can_change_whynter():
                 print(f"Whynter boost: {boost_reason}")
                 self.set_whynter_mode(1)
@@ -413,7 +429,12 @@ class ThermostatController:
             apparent = self._apparent_temp()
             if apparent is not None and apparent <= (self.cool_setpoint + config.HYSTERESIS):
                 if self._can_change_whynter():
+                    print(f"Whynter boost off: apparent {apparent:.1f}F <= {self.cool_setpoint + config.HYSTERESIS:.1f}F")
                     self.set_whynter_mode(0)
+                    # Reset stall baseline so it doesn't immediately re-trigger
+                    self.cooling_start_time = now
+                    self.cooling_start_temp = self.current_temp
+                    self.boost_off_time = now
 
         # Dehumidification: run Whynter in dehum mode when humidity is high
         self._control_dehum()
@@ -447,7 +468,8 @@ class ThermostatController:
         before activating) + minimum run/off times.
         Guards: won't run while heating is active or if temp is near heat setpoint,
         to prevent dehum cold air from fighting the furnace."""
-        if self.current_humidity is None or not self.whynter:
+        humidity = self._effective_humidity()
+        if humidity is None or not self.whynter:
             return
 
         now = time.time()
@@ -475,11 +497,11 @@ class ThermostatController:
                 self.dehum_trigger_time = 0
                 return
 
-            if self.current_humidity > self.humidity_setpoint:
+            if humidity > self.humidity_setpoint:
                 # Start sustained threshold timer on first reading above setpoint
                 if self.dehum_trigger_time == 0:
                     self.dehum_trigger_time = now
-                    print(f"Dehum trigger: humidity {self.current_humidity:.1f}% > {self.humidity_setpoint}%, waiting {config.DEHUM_SUSTAINED_TIME}s")
+                    print(f"Dehum trigger: avg humidity {humidity:.1f}% > {self.humidity_setpoint}%, waiting {config.DEHUM_SUSTAINED_TIME}s")
                     return
 
                 # Check sustained threshold — humidity must stay above setpoint for full duration
@@ -493,7 +515,7 @@ class ThermostatController:
 
                 # Sustained threshold met + off-time elapsed — activate dehum
                 if self._can_change_whynter():
-                    print(f"Dehum ON: humidity {self.current_humidity:.1f}% > {self.humidity_setpoint}% for {int(elapsed)}s")
+                    print(f"Dehum ON: avg humidity {humidity:.1f}% > {self.humidity_setpoint}% for {int(elapsed)}s")
                     self.set_whynter_mode(2)  # 2 = dehum mode
                     if self.whynter_mode == 2:
                         self.dehum_active = True
@@ -502,7 +524,7 @@ class ThermostatController:
             else:
                 # Humidity dropped below setpoint — reset sustained timer (spike passed)
                 if self.dehum_trigger_time > 0:
-                    print(f"Dehum trigger reset: humidity {self.current_humidity:.1f}% < {self.humidity_setpoint}%")
+                    print(f"Dehum trigger reset: avg humidity {humidity:.1f}% < {self.humidity_setpoint}%")
                     self.dehum_trigger_time = 0
 
         elif self.dehum_active:
@@ -517,14 +539,14 @@ class ThermostatController:
 
             # Check if humidity dropped below target
             target = self.humidity_setpoint - config.HUMIDITY_HYSTERESIS
-            if self.current_humidity < target:
+            if humidity < target:
                 # Enforce minimum run time before stopping
                 run_time = now - self.dehum_start_time
                 if run_time < config.DEHUM_MIN_RUN_TIME:
                     return  # Still in minimum run period
 
                 if self._can_change_whynter():
-                    print(f"Dehum OFF: humidity {self.current_humidity:.1f}% < {target}% (ran {int(run_time)}s)")
+                    print(f"Dehum OFF: avg humidity {humidity:.1f}% < {target}% (ran {int(run_time)}s)")
                     self.set_whynter_mode(0)
                     self.dehum_active = False
                     self.dehum_stop_time = now
