@@ -463,11 +463,12 @@ class ThermostatController:
         self.rgb_led.update_status(status, freeze_warning, comm_error)
 
     def _control_dehum(self):
-        """Dehumidification control — triggers Whynter dehum mode based on humidity.
-        Anti-cycling: sustained threshold (humidity must stay high for DEHUM_SUSTAINED_TIME
-        before activating) + minimum run/off times.
-        Guards: won't run while heating is active or if temp is near heat setpoint,
-        to prevent dehum cold air from fighting the furnace."""
+        """Dehumidification control — turns Whynter on in dehum mode and lets
+        the Whynter's built-in humidity sensor manage compressor cycling.
+        ESP32 only decides when to enable/disable dehum mode based on:
+        - Sustained humidity above setpoint (avoids reacting to brief spikes)
+        - Temperature guards (too cold, heating active)
+        Whynter has a drain hose so no tank-full shutoff concerns."""
         humidity = self._effective_humidity()
         if humidity is None or not self.whynter:
             return
@@ -481,7 +482,6 @@ class ThermostatController:
                     print(f"Dehum OFF: heating active, temp {self.current_temp:.1f}F")
                     self.set_whynter_mode(0)
                     self.dehum_active = False
-                    self.dehum_stop_time = now
                     self.dehum_trigger_time = 0
             return
 
@@ -498,58 +498,45 @@ class ThermostatController:
                 return
 
             if humidity > self.humidity_setpoint:
-                # Start sustained threshold timer on first reading above setpoint
+                # Sustained threshold — humidity must stay above setpoint to avoid reacting to spikes
                 if self.dehum_trigger_time == 0:
                     self.dehum_trigger_time = now
                     print(f"Dehum trigger: avg humidity {humidity:.1f}% > {self.humidity_setpoint}%, waiting {config.DEHUM_SUSTAINED_TIME}s")
                     return
 
-                # Check sustained threshold — humidity must stay above setpoint for full duration
                 elapsed = now - self.dehum_trigger_time
                 if elapsed < config.DEHUM_SUSTAINED_TIME:
                     return  # Still waiting
 
-                # Check minimum off time — don't restart too soon
-                if self.dehum_stop_time > 0 and (now - self.dehum_stop_time) < config.DEHUM_MIN_OFF_TIME:
-                    return  # Still in off-time cooldown
-
-                # Sustained threshold met + off-time elapsed — activate dehum
+                # Sustained threshold met — turn on Whynter dehum mode and leave it running
                 if self._can_change_whynter():
-                    print(f"Dehum ON: avg humidity {humidity:.1f}% > {self.humidity_setpoint}% for {int(elapsed)}s")
+                    print(f"Dehum ON: avg humidity {humidity:.1f}% > {self.humidity_setpoint}% for {int(elapsed)}s — Whynter manages cycling")
                     self.set_whynter_mode(2)  # 2 = dehum mode
                     if self.whynter_mode == 2:
                         self.dehum_active = True
-                        self.dehum_start_time = now
                         self.dehum_trigger_time = 0
             else:
-                # Humidity dropped below setpoint — reset sustained timer (spike passed)
+                # Humidity dropped below setpoint before sustained time — spike passed
                 if self.dehum_trigger_time > 0:
                     print(f"Dehum trigger reset: avg humidity {humidity:.1f}% < {self.humidity_setpoint}%")
                     self.dehum_trigger_time = 0
 
         elif self.dehum_active:
-            # Stop if temp is too cold (near heat setpoint or 5°F below cool setpoint)
+            # Guard: stop if temp is too cold
             if too_cold:
                 if self._can_change_whynter():
                     print(f"Dehum OFF: temp {self.current_temp:.1f}F too cold (heat={self.heat_setpoint}F, cool={self.cool_setpoint}F)")
                     self.set_whynter_mode(0)
                     self.dehum_active = False
-                    self.dehum_stop_time = now
                     return
 
-            # Check if humidity dropped below target
+            # Turn off only when humidity is well below setpoint — Whynter handles cycling in between
             target = self.humidity_setpoint - config.HUMIDITY_HYSTERESIS
             if humidity < target:
-                # Enforce minimum run time before stopping
-                run_time = now - self.dehum_start_time
-                if run_time < config.DEHUM_MIN_RUN_TIME:
-                    return  # Still in minimum run period
-
                 if self._can_change_whynter():
-                    print(f"Dehum OFF: avg humidity {humidity:.1f}% < {target}% (ran {int(run_time)}s)")
+                    print(f"Dehum OFF: avg humidity {humidity:.1f}% < {target}% — target reached")
                     self.set_whynter_mode(0)
                     self.dehum_active = False
-                    self.dehum_stop_time = now
 
     def _control_heat(self):
         """Heating control with hysteresis, using worst-case (coldest) zone temp"""
