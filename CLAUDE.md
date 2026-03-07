@@ -123,8 +123,18 @@
 - Broadlink HTS2 calibration offsets in `config.py`: BL_TEMP_OFFSET, BL_HUMIDITY_OFFSET
   - Applied in `thermostat.py` `update_bl_readings()` after C→F conversion
 - Current offsets (split-the-difference between BME280 and HTS2):
-  - Remote BME280: TEMP_OFFSET=+0.7°F, HUMIDITY_OFFSET=-1.7%
-  - HTS2: BL_TEMP_OFFSET=-0.7°F, BL_HUMIDITY_OFFSET=+1.7%
+  - Remote BME280: TEMP_OFFSET=-0.6°F, HUMIDITY_OFFSET=-3.3%
+  - HTS2: BL_TEMP_OFFSET=+0.6°F, BL_HUMIDITY_OFFSET=+3.3%
+
+## Multi-Zone Temperature Awareness
+- Remote ESP32 is the sole relay controller for all HVAC equipment
+- Main ESP32 sends kitchen temperature to Remote every 15 seconds via `/api/remote_temp`
+- Remote uses worst-case temperature across zones:
+  - **Cooling**: `max(local, kitchen)` — AC runs if either zone is too hot
+  - **Heating**: `min(local, kitchen)` — furnace runs if either zone is too cold
+- Remote temperature expires after 120 seconds (falls back to local-only)
+- Main polls relay state from Remote's response (heating_active, cooling_active)
+- `thermostat_remote.py` is simplified: temp-send + status-poll only, no local control logic
 
 ## Auto-Sync (Main → Remote)
 - `thermostat_remote.py` auto-syncs mode, heat/cool setpoints to Remote every 60 seconds
@@ -133,6 +143,12 @@
 - Web UI has AUTO-SYNC ZONES toggle (ON/OFF) to enable/disable sync
 - `sync_enabled` flag gates both immediate sync and 60-second periodic sync
 - Toggle ON immediately syncs current Kitchen settings to Living Room
+
+## Scheduler Timezone & DST
+- ESP32 RTC is set to UTC via NTP (`ntptime.settime()`)
+- `scheduler.py` applies `config.TIMEZONE_OFFSET` (-6 for CST) to convert UTC → local time
+- Automatic US DST detection: `_is_us_dst()` checks 2nd Sunday of March through 1st Sunday of November
+- DST adds +1 to timezone offset (CST -6 → CDT -5)
 
 ## Deployment
 - Use `mpremote connect /dev/ttyACM0` for Main
@@ -175,3 +191,36 @@
 - Design rules: orthogonal (Manhattan-style) wire routing only, wire labels below lines with clear spacing, colored wires per signal type
 - Run `python3 create_diagrams_updated.py` to regenerate all diagrams
 - Old SVG diagrams archived in `docs/archive_svg/`
+
+## History Persistence (btree on Flash)
+- Main ESP32 persists history snapshots to flash via MicroPython `btree` module
+- File: `history.db` (btree key-value store)
+- Key: zero-padded timestamp bytes (`b"0825984035"`) — sorted chronological order
+- Value: JSON-encoded history entry
+- Flushed after every write (`HISTORY_FLUSH_INTERVAL = 1`)
+- 7-day retention, pruned on boot (`HISTORY_PERSIST_DAYS = 7`)
+- On boot: reloads entries from btree into RAM history buffer
+- `/api/history?since=N` queries btree directly for data older than RAM buffer
+- Handles corrupt/empty files: auto-removes 0-byte files, fresh-starts on btree errors
+- MicroPython note: `str.zfill()` not available — use `"%010d" %` format instead
+
+## PC Data Logger & Dashboard
+- `data_logger.py` on PC pulls from Main ESP32 `/api/history?since=N` into SQLite (`thermostat_log.db`)
+- Modes: `--once` (pull and exit), `--dashboard` (web UI on port 8080), `--export` (CSV), `--tail N`
+- Dashboard: Chart.js graphs, energy estimation, schedule override controls
+- SQLite thread safety: each thread gets its own connection (logger thread + HTTP server thread)
+- PC IP: 192.168.71.151, dashboard port: 8080
+
+## Auto-Sync (PC ↔ ESP32)
+- **systemd user timer**: `thermostat-sync.timer` fires every 2 hours, runs `data_logger.py --once`
+  - `Persistent=true` — catches up immediately on wake from sleep
+  - Service/timer files: `~/.config/systemd/user/thermostat-sync.{service,timer}`
+- **rtcwake sleep hook**: `/usr/lib/systemd/system-sleep/thermostat-rtcwake.sh`
+  - Sets RTC alarm to wake laptop from sleep every 2 hours
+  - On wake, systemd timer fires and syncs data
+- Management: `systemctl --user status thermostat-sync.timer`
+
+## Git Remotes
+- `origin` → `git@github.com:royalpayne/dual_zone_12v_HVAC-Controller.git`
+- `processlogic` → `git@github.com:ProcessLogicLabs/RV_Multizone_HVAC_Controller.git`
+- Push to both: `git push origin master && git push processlogic master`

@@ -99,16 +99,26 @@ def get_last_timestamp(conn):
 
 
 def fetch_history(since=0):
-    """Fetch history entries from the ESP32."""
-    url = f"{HISTORY_URL}?since={since}" if since else HISTORY_URL
-    try:
-        req = urllib.request.Request(url, headers={'Accept': 'application/json'})
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            data = json.loads(resp.read().decode())
-            return data.get('entries', [])
-    except Exception as e:
-        print(f"  Fetch error: {e}")
-        return []
+    """Fetch history entries from the ESP32, paginating if needed."""
+    all_entries = []
+    current_since = since
+    while True:
+        url = f"{HISTORY_URL}?since={current_since}&limit=500" if current_since else f"{HISTORY_URL}?limit=500"
+        try:
+            req = urllib.request.Request(url, headers={'Accept': 'application/json'})
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                data = json.loads(resp.read().decode())
+                entries = data.get('entries', [])
+                all_entries.extend(entries)
+                if not data.get('more', False) or not entries:
+                    break
+                # Next page starts after the last entry
+                current_since = max(e.get('ts', 0) for e in entries)
+                print(f"  Fetched {len(all_entries)} entries so far, getting more...")
+        except Exception as e:
+            print(f"  Fetch error: {e}")
+            break
+    return all_entries
 
 
 def store_entries(conn, entries):

@@ -100,11 +100,14 @@ class Scheduler:
         self.enabled = enabled
         self.save()
 
-    def set_preset(self, mode, heat, cool):
-        """Set temperatures for a preset mode"""
+    def set_preset(self, mode, heat, cool, humidity=None):
+        """Set temperatures for a preset mode (preserves humidity if not given)"""
         if mode in self.presets:
-            self.presets[mode] = {"heat": heat, "cool": cool}
+            old_hum = self.presets[mode].get("humidity", 55)
+            self.presets[mode] = {"heat": heat, "cool": cool, "humidity": humidity if humidity is not None else old_hum}
             self.save()
+            if mode == self.current_mode:
+                self._apply_mode(mode)
 
     def set_hold(self, mode, hours=0):
         """Hold a mode temporarily (0 = cancel hold)"""

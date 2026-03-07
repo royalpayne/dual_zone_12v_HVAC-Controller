@@ -227,43 +227,64 @@ class ThermostatWebServer:
 
     def _api_history(self, request):
         """Return history buffer, optionally filtered by ?since=<timestamp>.
-        Queries btree directly for data older than RAM buffer."""
+        Queries btree directly for data older than RAM buffer.
+        Supports ?limit=N to cap results (default 500)."""
         since = 0
-        if '?since=' in request:
+        limit = 500
+        if '?since=' in request or '&since=' in request:
             try:
-                idx = request.index('?since=') + 7
+                sep = '?since=' if '?since=' in request else '&since='
+                idx = request.index(sep) + len(sep)
                 end = idx
                 while end < len(request) and request[end] in '0123456789.':
                     end += 1
                 since = float(request[idx:end])
             except (ValueError, IndexError):
                 pass
+        if 'limit=' in request:
+            try:
+                sep = '?limit=' if '?limit=' in request else '&limit='
+                idx = request.index(sep) + len(sep)
+                end = idx
+                while end < len(request) and request[end] in '0123456789':
+                    end += 1
+                limit = min(int(request[idx:end]), 2000)
+            except (ValueError, IndexError):
+                pass
 
-        # Check if btree has older data than RAM buffer
-        ram_oldest = self.history[0]['ts'] if self.history else 0
-        if self._db and since > 0 and since < ram_oldest:
-            # Query btree for entries between since and RAM start
-            data = []
+        data = []
+        if self._db and since > 0:
+            # Use btree range query starting just after since
             since_key = ("%010d" % int(since)).encode()
-            for key in self._db:
-                if key <= since_key:
-                    continue
-                entry = json.loads(self._db[key])
-                if entry['ts'] > since:
-                    data.append(entry)
-            # btree already includes current entries, no need to merge
+            try:
+                for key in self._db.keys(since_key):
+                    if key <= since_key:
+                        continue
+                    data.append(json.loads(self._db[key]))
+                    if len(data) >= limit:
+                        break
+            except Exception:
+                # Fallback: iterate from start
+                for key in self._db:
+                    if key <= since_key:
+                        continue
+                    data.append(json.loads(self._db[key]))
+                    if len(data) >= limit:
+                        break
         elif since > 0:
             data = [e for e in self.history if e['ts'] > since]
+            data = data[:limit]
         else:
-            # Return all — query btree if available for full history
             if self._db:
-                data = []
                 for key in self._db:
                     data.append(json.loads(self._db[key]))
+                    if len(data) >= limit:
+                        break
             else:
-                data = self.history
+                data = self.history[:limit]
 
-        body = json.dumps({'count': len(data), 'entries': data})
+        more = len(data) >= limit
+        body = json.dumps({'count': len(data), 'entries': data, 'more': more})
         return f"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n\r\n{body}"
 
     def _api_schedule(self):
@@ -294,7 +315,8 @@ class ThermostatWebServer:
                 mode = data.get('mode', 'home')
                 heat = data.get('heat', 70)
                 cool = data.get('cool', 74)
-                self.scheduler.set_preset(mode, heat, cool)
+                humidity = data.get('humidity', None)
+                self.scheduler.set_preset(mode, heat, cool, humidity)
             elif 'POST /api/schedule/day' in request:
                 day = data.get('day', 'mon')
                 entries = data.get('entries', [])
@@ -403,6 +425,13 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 .btn.sync{background:#38b000;padding:16px 32px;font-size:18px}
 .btn.sync.on{background:#2a9d8f}
 .btn.home{background:#38b000}
+.preset-row{display:flex;align-items:center;justify-content:space-between;margin:6px 0;padding:8px;background:#0f3460;border-radius:8px}
+.preset-row label{font-size:13px;min-width:50px}
+.preset-row input[type=number]{width:50px;background:#1a1a2e;color:#eee;border:1px solid #444;border-radius:4px;padding:4px;text-align:center;font-size:14px}
+.sch-entry{display:flex;align-items:center;gap:8px;margin:4px 0;padding:6px 8px;background:#0f3460;border-radius:8px}
+.sch-entry input[type=time]{background:#1a1a2e;color:#eee;border:1px solid #444;border-radius:4px;padding:4px;font-size:14px}
+.sch-entry select{background:#1a1a2e;color:#eee;border:1px solid #444;border-radius:4px;padding:4px;font-size:14px}
+.sch-entry .del{background:#e94560;border:none;color:#fff;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:14px}
 </style>
 </head>
 <body>
@@ -448,6 +477,25 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <button class="btn" onclick="schHold('away',12)" style="padding:8px 12px;font-size:13px;background:#e67e22">12h</button>
 <button class="btn" onclick="schHold('away',24)" style="padding:8px 12px;font-size:13px;background:#e67e22">24h</button></div>
 <button class="btn" onclick="schCancel()" style="padding:8px 16px;font-size:13px;background:#555">Cancel Hold</button>
+</div>
+
+<div class="card" id="schedit" style="display:none">
+<h3 style="text-align:center">SCHEDULE SETTINGS</h3>
+<div style="text-align:center;margin:8px 0">
+<button class="btn" id="schenbtn" onclick="toggleSchEn()" style="padding:8px 16px;font-size:13px">Enabled</button>
+</div>
+<h3 style="margin-top:12px">PRESET TEMPERATURES</h3>
+<div id="presets"></div>
+<h3 style="margin-top:16px">WEEKDAY SCHEDULE</h3>
+<div id="sch_weekday"></div>
+<button class="btn" onclick="addEntry('weekday')" style="padding:6px 12px;font-size:12px;margin-top:6px;background:#2a9d8f">+ Add</button>
+<h3 style="margin-top:16px">WEEKEND SCHEDULE</h3>
+<div id="sch_weekend"></div>
+<button class="btn" onclick="addEntry('weekend')" style="padding:6px 12px;font-size:12px;margin-top:6px;background:#2a9d8f">+ Add</button>
+</div>
+
+<div class="card" style="text-align:center">
+<button class="btn" onclick="toggleSchEdit()" style="padding:8px 16px;font-size:13px;background:#2a9d8f" id="scheditbtn">Edit Schedule</button>
 </div>
 
 <div class="card">
@@ -611,7 +659,86 @@ var hi=document.getElementById('schhold');
 if(d.hold_until){var r=Math.max(0,d.hold_until-(Date.now()/1000-946684800));var rh=Math.floor(r/3600),rm=Math.floor((r%3600)/60);hi.textContent='Hold: '+(rh>0?rh+'h ':'')+rm+'m remaining';}
 else{hi.textContent=d.enabled?'Schedule active':'Schedule off';}
 }
-function getSch(){fetch('/api/schedule').then(r=>r.json()).then(updSch).catch(e=>{});}
+function getSch(){fetch('/api/schedule').then(r=>r.json()).then(function(d){updSch(d);updSchEdit(d);}).catch(e=>{});}
+var schData=null;
+var schEditOpen=false;
+function toggleSchEdit(){
+var el=document.getElementById('schedit');
+schEditOpen=!schEditOpen;
+el.style.display=schEditOpen?'block':'none';
+document.getElementById('scheditbtn').textContent=schEditOpen?'Close Schedule':'Edit Schedule';
+if(schEditOpen)getSch();
+}
+function toggleSchEn(){
+if(!schData)return;
+var en=!schData.enabled;
+fetch('/api/schedule/enable',{method:'POST',body:JSON.stringify({enabled:en})}).then(r=>r.json()).then(function(d){updSch(d);updSchEdit(d);});
+}
+function updSchEdit(d){
+if(!d)return;
+schData=d;
+var btn=document.getElementById('schenbtn');
+btn.textContent=d.enabled?'Enabled':'Disabled';
+btn.style.background=d.enabled?'#38b000':'#555';
+var ph=document.getElementById('presets');
+var h='';
+var modes=['home','away','sleep'];
+var colors={home:'#2ecc71',away:'#e67e22',sleep:'#9b59b6'};
+for(var i=0;i<modes.length;i++){
+var m=modes[i],p=d.presets[m];
+h+='<div class="preset-row"><label style="color:'+colors[m]+'">'+m.charAt(0).toUpperCase()+m.slice(1)+'</label>';
+h+='<span style="font-size:12px;color:#888">Heat</span><input type="number" min="55" max="85" value="'+p.heat+'" onchange="setPreset(\\''+m+'\\',this.value,null,null)">';
+h+='<span style="font-size:12px;color:#888">Cool</span><input type="number" min="60" max="90" value="'+p.cool+'" onchange="setPreset(\\''+m+'\\',null,this.value,null)">';
+if(p.humidity!==undefined){h+='<span style="font-size:12px;color:#888">Hum</span><input type="number" min="30" max="80" value="'+p.humidity+'" onchange="setPreset(\\''+m+'\\',null,null,this.value)">';}
+h+='</div>';
+}
+ph.innerHTML=h;
+renderSch('weekday',d.schedule.weekday||[]);
+renderSch('weekend',d.schedule.weekend||[]);
+}
+function renderSch(day,entries){
+var el=document.getElementById('sch_'+day);
+var h='';
+for(var i=0;i<entries.length;i++){
+var e=entries[i];
+h+='<div class="sch-entry">';
+h+='<input type="time" value="'+e.time+'" onchange="updEntry(\\''+day+'\\','+i+',\\'time\\',this.value)">';
+h+='<select onchange="updEntry(\\''+day+'\\','+i+',\\'mode\\',this.value)">';
+var opts=['home','away','sleep'];
+for(var j=0;j<opts.length;j++){h+='<option value="'+opts[j]+'"'+(e.mode==opts[j]?' selected':'')+'>'+opts[j].charAt(0).toUpperCase()+opts[j].slice(1)+'</option>';}
+h+='</select>';
+h+='<button class="del" onclick="delEntry(\\''+day+'\\','+i+')">x</button>';
+h+='</div>';
+}
+el.innerHTML=h;
+}
+function setPreset(m,heat,cool,hum){
+if(!schData)return;
+var p=schData.presets[m];
+var body={mode:m,heat:heat?parseInt(heat):p.heat,cool:cool?parseInt(cool):p.cool};
+if(hum!==null)body.humidity=parseInt(hum);
+fetch('/api/schedule/preset',{method:'POST',body:JSON.stringify(body)}).then(r=>r.json()).then(function(d){updSch(d);updSchEdit(d);});
+}
+function updEntry(day,idx,field,val){
+if(!schData)return;
+var entries=schData.schedule[day]||[];
+entries[idx][field]=val;
+entries.sort(function(a,b){return a.time<b.time?-1:a.time>b.time?1:0;});
+fetch('/api/schedule/day',{method:'POST',body:JSON.stringify({day:day,entries:entries})}).then(r=>r.json()).then(function(d){updSch(d);updSchEdit(d);});
+}
+function addEntry(day){
+if(!schData)return;
+var entries=schData.schedule[day]||[];
+entries.push({time:'12:00',mode:'home'});
+entries.sort(function(a,b){return a.time<b.time?-1:a.time>b.time?1:0;});
+fetch('/api/schedule/day',{method:'POST',body:JSON.stringify({day:day,entries:entries})}).then(r=>r.json()).then(function(d){updSch(d);updSchEdit(d);});
+}
+function delEntry(day,idx){
+if(!schData)return;
+var entries=schData.schedule[day]||[];
+entries.splice(idx,1);
+fetch('/api/schedule/day',{method:'POST',body:JSON.stringify({day:day,entries:entries})}).then(r=>r.json()).then(function(d){updSch(d);updSchEdit(d);});
+}
 get();getSch();setInterval(get,3000);setInterval(getSch,30000);
 </script>
 </body>

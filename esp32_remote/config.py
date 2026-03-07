@@ -22,13 +22,13 @@ MIN_SETPOINT = 50
 MAX_SETPOINT = 90
 
 # Sensor calibration offsets (added to raw readings)
-TEMP_OFFSET = 0.7       # degrees F (split-the-difference vs HTS2)
-HUMIDITY_OFFSET = -1.7   # percent (split-the-difference vs HTS2)
+TEMP_OFFSET = -0.6      # degrees F (split-the-difference vs HTS2)
+HUMIDITY_OFFSET = -3.3   # percent (split-the-difference vs HTS2)
 PRESSURE_OFFSET = 0.0   # hPa
 
 # Broadlink HTS2 calibration offsets
-BL_TEMP_OFFSET = -0.7   # degrees F (split-the-difference vs BME280)
-BL_HUMIDITY_OFFSET = 1.7  # percent (split-the-difference vs BME280)
+BL_TEMP_OFFSET = 0.6    # degrees F (split-the-difference vs BME280)
+BL_HUMIDITY_OFFSET = 3.3  # percent (split-the-difference vs BME280)
 
 # Hysteresis (prevents rapid cycling)
 HYSTERESIS = 1.5
@@ -39,10 +39,10 @@ BOOST_STALL_TIME = 600  # seconds (10 min) - boost if rooftop AC runs this long 
 
 # Dehumidification (via Whynter cool mode - evaporates condensate out exhaust)
 HUMIDITY_SETPOINT = 55      # % RH — trigger Whynter when exceeded
-HUMIDITY_HYSTERESIS = 5     # % RH — turn off at setpoint minus this
+HUMIDITY_HYSTERESIS = 8     # % RH — turn off at setpoint minus this (e.g. 55-8=47%)
 DEHUM_SUSTAINED_TIME = 300  # seconds (5 min) — humidity must stay above setpoint this long before activating
-DEHUM_MIN_RUN_TIME = 900    # seconds (15 min) — minimum dehum run time once started
-DEHUM_MIN_OFF_TIME = 600    # seconds (10 min) — minimum off time before restarting dehum
+DEHUM_MIN_RUN_TIME = 1800   # seconds (30 min) — minimum dehum run time once started
+DEHUM_MIN_OFF_TIME = 1200   # seconds (20 min) — minimum off time before restarting dehum
 
 # Apparent temperature: adjust cooling decisions based on humidity for comfort + efficiency
 # Each 10% RH above 50% feels ~1°F warmer; below 50% feels ~1°F cooler
