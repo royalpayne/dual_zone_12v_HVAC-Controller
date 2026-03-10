@@ -103,17 +103,16 @@
 - **Auto-disable on cool-off**: Whynter shuts off when rooftop AC cycle ends
 - IR state only updated on successful Broadlink send (prevents phantom "on" state)
 
-## Dehumidification Anti-Cycling
+## Dehumidification Control (Simplified)
+- ESP32 only turns Whynter dehum mode on/off — Whynter manages its own compressor cycling internally
 - **Sustained threshold**: Humidity must stay above HUMIDITY_SETPOINT (55%) for DEHUM_SUSTAINED_TIME (5 min) before activating
   - Prevents reacting to brief humidity spikes (cooking, showers, doors)
   - Timer resets if humidity drops below setpoint before duration elapses
-- **Minimum run time**: Once dehum starts, runs for at least DEHUM_MIN_RUN_TIME (15 min)
-  - Even if humidity drops below target, Whynter keeps running until min time met
-- **Minimum off time**: After dehum stops, won't restart for DEHUM_MIN_OFF_TIME (10 min)
-  - Prevents rapid on/off cycling when humidity hovers near setpoint
+  - Uses `_effective_humidity()` averaging BME280 + HTS2 for stable readings
 - **Temperature guards**: Dehum won't activate (or will stop) if:
   - Temp is near heat setpoint (prevents fighting furnace)
   - Temp is 5°F below cool setpoint (RV is already cold enough)
+- No min-run-time or min-off-time anti-cycling (Whynter handles this internally)
 - Status API: `dehum_active` (bool), `dehum_waiting` (bool — sustained timer counting)
 
 ## Sensor Calibration
@@ -207,7 +206,8 @@
 ## PC Data Logger & Dashboard
 - `data_logger.py` on PC pulls from Main ESP32 `/api/history?since=N` into SQLite (`thermostat_log.db`)
 - Modes: `--once` (pull and exit), `--dashboard` (web UI on port 8080), `--export` (CSV), `--tail N`
-- Dashboard: Chart.js graphs, energy estimation, schedule override controls
+- Dashboard: Chart.js graphs, energy estimation, schedule override controls, schedule enable/disable toggle
+- Dashboard service: `systemctl --user restart thermostat-dashboard.service`
 - SQLite thread safety: each thread gets its own connection (logger thread + HTTP server thread)
 - PC IP: 192.168.71.151, dashboard port: 8080
 
