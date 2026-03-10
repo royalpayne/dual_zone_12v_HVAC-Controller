@@ -361,6 +361,7 @@ h1{text-align:center;color:#00b4d8;margin-bottom:8px;font-size:1.4em}
   </div>
   <div class="away-btns">
     <button class="btn-home" onclick="cancelHold()" style="background:#16213e;color:#e0e0e0;border-color:#666">Cancel Hold</button>
+    <button class="btn-home" id="sch-toggle-btn" onclick="toggleSchedule()" style="background:#2a9d8f;color:#fff;border-color:#2a9d8f;display:none">Enable Schedule</button>
   </div>
   <div class="away-summary" id="away-summary"></div>
 </div>
@@ -406,6 +407,8 @@ function setRange(h){
   hours=h;
   document.querySelectorAll('#range-btns button').forEach(b=>b.classList.remove('active'));
   event.target.classList.add('active');
+  var fmt=h>24?{minute:'EEE h:mm a',hour:'EEE h a',day:'EEE MMM d'}:{minute:'h:mm a',hour:'h a',day:'MMM d'};
+  [tempChart,humChart,stateChart].forEach(c=>{c.options.scales.x.time.displayFormats=fmt;});
   fetchData();fetchEnergy();
 }
 function fetchData(){
@@ -473,6 +476,14 @@ function cancelHold(){
     if(d.ok)fetchScheduler();
   }).catch(e=>{});
 }
+function toggleSchedule(){
+  const btn=document.getElementById('sch-toggle-btn');
+  const en=btn.dataset.enabled==='true';
+  fetch('/api/schedule_enable',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({enabled:!en})}).then(r=>r.json()).then(d=>{
+    if(d.ok)fetchScheduler();
+  }).catch(e=>{});
+}
 function fetchScheduler(){
   fetch('/api/scheduler_status').then(r=>r.json()).then(d=>{
     if(d.error){document.getElementById('away-summary').textContent='Scheduler unavailable';return;}
@@ -486,6 +497,10 @@ function fetchScheduler(){
       const rh=Math.floor(remain/3600),rm=Math.floor((remain%3600)/60);
       info.textContent=rh>0?'Hold: '+rh+'h '+rm+'m remaining':'Hold: '+rm+'m remaining';
     }else{info.textContent=d.enabled?'Schedule active':'Schedule disabled';}
+    const tb=document.getElementById('sch-toggle-btn');
+    tb.style.display='inline-block';tb.dataset.enabled=d.enabled?'true':'false';
+    tb.textContent=d.enabled?'Disable Schedule':'Enable Schedule';
+    tb.style.background=d.enabled?'#16213e':'#2a9d8f';tb.style.borderColor=d.enabled?'#666':'#2a9d8f';
     const p=d.presets||{};
     const ap=p[mode]||{};
     const summary='Current: Heat '+( ap.heat||'?')+'°F | Cool '+(ap.cool||'?')+'°F | Humidity '+(ap.humidity||'?')+'%';
@@ -678,6 +693,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._api_hold_home(body)
         elif parsed.path == '/api/home':
             self._api_home(body)
+        elif parsed.path == '/api/schedule_enable':
+            self._api_schedule_enable(body)
         else:
             self.send_error(404)
 
@@ -733,6 +750,16 @@ class DashboardHandler(BaseHTTPRequestHandler):
         try:
             esp32_post('/api/schedule/mode', {'mode': 'home', 'hours': 0})
             data = {'ok': True, 'mode': 'home'}
+        except Exception as e:
+            data = {'ok': False, 'error': str(e)}
+        self._json_response(data)
+
+    def _api_schedule_enable(self, body):
+        """Enable or disable the schedule."""
+        enabled = body.get('enabled', True)
+        try:
+            esp32_post('/api/schedule/enable', {'enabled': enabled})
+            data = {'ok': True, 'enabled': enabled}
         except Exception as e:
             data = {'ok': False, 'error': str(e)}
         self._json_response(data)

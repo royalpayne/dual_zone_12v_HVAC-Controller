@@ -467,6 +467,7 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 <h3>SCHEDULE OVERRIDE</h3>
 <div id="schmode" style="font-size:24px;font-weight:bold;margin:8px 0;color:#2ecc71">HOME</div>
 <div id="schhold" style="font-size:12px;color:#888;margin-bottom:10px"></div>
+<button class="btn" id="schtoggle" onclick="toggleSchEn()" style="padding:6px 14px;font-size:12px;background:#555;display:none">Enable Schedule</button>
 <div style="margin-bottom:6px"><span style="font-size:12px;color:#888">Hold Home: </span>
 <button class="btn home" onclick="schHold('home',4)" style="padding:8px 12px;font-size:13px">4h</button>
 <button class="btn home" onclick="schHold('home',8)" style="padding:8px 12px;font-size:13px">8h</button>
@@ -658,6 +659,7 @@ el.textContent=m.toUpperCase();el.style.color=colors[m]||'#eee';
 var hi=document.getElementById('schhold');
 if(d.hold_until){var r=Math.max(0,d.hold_until-(Date.now()/1000-946684800));var rh=Math.floor(r/3600),rm=Math.floor((r%3600)/60);hi.textContent='Hold: '+(rh>0?rh+'h ':'')+rm+'m remaining';}
 else{hi.textContent=d.enabled?'Schedule active':'Schedule off';}
+var tb=document.getElementById('schtoggle');if(tb){tb.style.display='inline-block';tb.textContent=d.enabled?'Disable Schedule':'Enable Schedule';tb.style.background=d.enabled?'#555':'#2a9d8f';}
 }
 function getSch(){fetch('/api/schedule').then(r=>r.json()).then(function(d){updSch(d);updSchEdit(d);}).catch(e=>{});}
 var schData=null;
