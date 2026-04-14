@@ -491,6 +491,7 @@ class ThermostatController:
                     self.set_whynter_mode(0)
                     self.dehum_active = False
                     self.dehum_trigger_time = 0
+                    self._stop_dehum_fan()
             return
 
         # Never dehumidify while furnace is heating — they fight each other
@@ -533,6 +534,11 @@ class ThermostatController:
                     if self.whynter_mode == 2:
                         self.dehum_active = True
                         self.dehum_trigger_time = 0
+                        # Run rooftop fan low to circulate air and equalize zone temps
+                        if not self.cooling_active:
+                            print("Dehum ON: starting rooftop fan low for air circulation")
+                            self.set_fan_speed(config.FAN_LOW)
+                            self.fan_only = True
             else:
                 # Humidity dropped below setpoint before sustained time — spike passed
                 if self.dehum_trigger_time > 0:
@@ -546,6 +552,7 @@ class ThermostatController:
                     print(f"Dehum OFF: temp {self.current_temp:.1f}F too cold (heat={self.heat_setpoint}F, cool={self.cool_setpoint}F)")
                     self.set_whynter_mode(0)
                     self.dehum_active = False
+                    self._stop_dehum_fan()
                     return
 
             # Turn off only when humidity is well below setpoint — Whynter handles cycling in between
@@ -555,6 +562,15 @@ class ThermostatController:
                     print(f"Dehum OFF: avg humidity {humidity:.1f}% < {target}% — target reached")
                     self.set_whynter_mode(0)
                     self.dehum_active = False
+                    self._stop_dehum_fan()
+
+    def _stop_dehum_fan(self):
+        """Stop rooftop fan that was started for dehum air circulation.
+        Only stops if we started it (fan_only=True) and cooling is not active."""
+        if self.fan_only and not self.cooling_active:
+            print("Dehum fan OFF: stopping rooftop circulation fan")
+            self.set_fan_speed(config.FAN_OFF)
+            self.fan_only = False
 
     def _control_heat(self):
         """Heating control with hysteresis, using worst-case (coldest) zone temp"""

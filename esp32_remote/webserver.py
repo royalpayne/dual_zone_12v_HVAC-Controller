@@ -59,6 +59,8 @@ class RemoteAPI:
             return self._api_fan_only(request)
         elif 'GET /api/humidity_setpoint' in request:
             return self._api_humidity_setpoint(request)
+        elif '/api/schedule_mode' in request:
+            return self._api_schedule_mode(request)
         elif 'GET /api/remote_temp' in request:
             return self._api_remote_temp(request)
         elif 'GET /api/relay/test' in request:
@@ -155,6 +157,13 @@ class RemoteAPI:
         params = self._parse_query(request)
         if 'value' in params:
             self.thermostat.set_humidity_setpoint(float(params['value']))
+        return self._api_status()
+
+    def _api_schedule_mode(self, request):
+        """Accept schedule mode from Main ESP32 ('home', 'away', 'sleep')"""
+        params = self._parse_query(request)
+        if 'mode' in params:
+            self.thermostat.set_schedule_mode(params['mode'])
         return self._api_status()
 
     def _api_remote_temp(self, request):

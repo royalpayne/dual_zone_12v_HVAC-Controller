@@ -118,6 +118,10 @@ class RemoteClient:
         """Set humidity setpoint for auto-dehumidification (% RH)"""
         return self._request('/api/humidity_setpoint', {'value': value})
 
+    def set_schedule_mode(self, mode):
+        """Sync schedule mode to remote ESP32 ('home', 'away', 'sleep')"""
+        return self._request('/api/schedule_mode', {'mode': mode})
+
     def set_remote_temp(self, temp_f):
         """Send Main ESP32 temperature for multi-zone control (returns status)"""
         return self._request('/api/remote_temp', {'temp': round(temp_f, 1)})

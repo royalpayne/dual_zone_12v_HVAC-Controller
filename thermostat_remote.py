@@ -71,7 +71,7 @@ class RemoteThermostatController:
     def set_schedule_mode(self, mode):
         """Sync scheduler mode to remote ESP32 so it can disable dehum during sleep"""
         try:
-            if self.remote and hasattr(self.remote, 'set_schedule_mode'):
+            if self.remote:
                 self.remote.set_schedule_mode(mode)
         except Exception as e:
             print(f"Remote schedule_mode sync error: {e}")
