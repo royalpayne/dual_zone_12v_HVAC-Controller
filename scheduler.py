@@ -191,4 +191,11 @@ class Scheduler:
         self.thermostat.set_cool_setpoint(preset["cool"])
         if "humidity" in preset:
             self.thermostat.set_humidity_setpoint(preset["humidity"])
+        # Sync schedule mode to remote so it can disable dehum during sleep
+        try:
+            if hasattr(self.thermostat, 'remote') and self.thermostat.remote is not None:
+                if hasattr(self.thermostat.remote, 'set_schedule_mode'):
+                    self.thermostat.remote.set_schedule_mode(mode)
+        except Exception as e:
+            print(f"[scheduler] Failed to sync schedule_mode to remote: {e}")
         print(f"[scheduler] Applied {mode}: heat={preset['heat']}, cool={preset['cool']}, humidity={preset.get('humidity', '?')}")

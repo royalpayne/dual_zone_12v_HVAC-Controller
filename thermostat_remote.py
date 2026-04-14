@@ -68,6 +68,14 @@ class RemoteThermostatController:
         self.humidity_setpoint = max(30, min(80, value))
         self._sync_to_remote()
 
+    def set_schedule_mode(self, mode):
+        """Sync scheduler mode to remote ESP32 so it can disable dehum during sleep"""
+        try:
+            if self.remote and hasattr(self.remote, 'set_schedule_mode'):
+                self.remote.set_schedule_mode(mode)
+        except Exception as e:
+            print(f"Remote schedule_mode sync error: {e}")
+
     def set_sync_enabled(self, enabled):
         """Enable/disable auto-sync of Kitchen settings to Living Room"""
         self.sync_enabled = enabled

@@ -39,6 +39,7 @@ class ThermostatController:
         self.dehum_start_time = 0     # When dehum actually started (min run time)
         self.dehum_stop_time = 0      # When dehum stopped (min off time)
         self.humidity_setpoint = config.HUMIDITY_SETPOINT
+        self.schedule_mode = 'home'  # 'home', 'away', 'sleep' — synced from main unit
         self.heater_mode = 0  # 0=off, 1=on (IR heater)
         self.last_heat_change = 0
         self.last_cool_change = 0
@@ -156,6 +157,13 @@ class ThermostatController:
     def set_humidity_setpoint(self, value):
         """Set humidity setpoint for dehumidification (% RH)"""
         self.humidity_setpoint = max(30, min(80, value))
+
+    def set_schedule_mode(self, mode):
+        """Set schedule mode synced from main unit ('home', 'away', 'sleep').
+        Dehumidification is disabled during sleep mode."""
+        if mode != self.schedule_mode:
+            print(f"[remote] Schedule mode: {self.schedule_mode} -> {mode}")
+        self.schedule_mode = mode
 
     def set_fan_speed(self, speed):
         """Set fan speed (0=off, 1=low, 2=med, 3=high, 4=auto)"""
@@ -475,6 +483,16 @@ class ThermostatController:
 
         now = time.time()
 
+        # Never dehumidify during sleep mode — avoid noise disturbance
+        if self.schedule_mode == 'sleep':
+            if self.dehum_active:
+                if self._can_change_whynter():
+                    print("Dehum OFF: sleep mode active")
+                    self.set_whynter_mode(0)
+                    self.dehum_active = False
+                    self.dehum_trigger_time = 0
+            return
+
         # Never dehumidify while furnace is heating — they fight each other
         if self.heating_active:
             if self.dehum_active:
@@ -759,6 +777,7 @@ class ThermostatController:
             'fan_speed_name': config.FAN_NAMES.get(self.fan_speed, '?'),
             'fan_only': self.fan_only,
             'humidity_setpoint': self.humidity_setpoint,
+            'schedule_mode': self.schedule_mode,
             'dehum_active': self.dehum_active,
             'dehum_waiting': self.dehum_trigger_time > 0,
             'whynter_mode': self.whynter_mode,
