@@ -177,9 +177,9 @@ class Scheduler:
             return
         self.last_check_minute = current_minute
 
-        # Find current mode based on schedule
+        # Find current mode based on schedule entries <= current time
         day_schedule = self.schedule.get(day_type, [])
-        new_mode = self.current_mode
+        new_mode = None
 
         for entry in day_schedule:
             entry_time = entry.get("time", "00:00")
@@ -187,6 +187,16 @@ class Scheduler:
             entry_minute = h * 60 + m
             if current_minute >= entry_minute:
                 new_mode = entry.get("mode", MODE_HOME)
+
+        # Before first entry of the day (e.g. 2am): carry over last entry from yesterday
+        if new_mode is None:
+            yesterday_wday = (weekday_num - 1) % 7
+            yesterday_type = "weekday" if yesterday_wday < 5 else "weekend"
+            yesterday_schedule = self.schedule.get(yesterday_type, [])
+            if yesterday_schedule:
+                new_mode = yesterday_schedule[-1].get("mode", MODE_HOME)
+            else:
+                new_mode = self.current_mode
 
         # Apply if changed
         if new_mode != self.current_mode:
@@ -212,12 +222,27 @@ class Scheduler:
         except:
             return
 
+        # Check today's schedule entries that are <= current time
         day_schedule = self.schedule.get(day_type, [])
-        correct_mode = MODE_HOME
+        correct_mode = None
         for entry in day_schedule:
             h, m = map(int, entry.get("time", "00:00").split(":"))
             if current_minute >= h * 60 + m:
                 correct_mode = entry.get("mode", MODE_HOME)
+
+        # If nothing matched today (e.g. 2:30am before first entry), check
+        # yesterday's schedule — the last entry carries over past midnight
+        if correct_mode is None:
+            # Determine yesterday's day type
+            yesterday_wday = (weekday_num - 1) % 7
+            yesterday_type = "weekday" if yesterday_wday < 5 else "weekend"
+            yesterday_schedule = self.schedule.get(yesterday_type, [])
+            if yesterday_schedule:
+                last = yesterday_schedule[-1]
+                correct_mode = last.get("mode", MODE_HOME)
+
+        if correct_mode is None:
+            correct_mode = MODE_HOME
 
         if correct_mode != self.current_mode:
             print(f"[scheduler] Boot correction: {self.current_mode} -> {correct_mode}")
