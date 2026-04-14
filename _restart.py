@@ -16,4 +16,7 @@ for _m in list(sys.modules):
 del _keep
 gc.collect()
 print('Purged', n, 'modules, free=', gc.mem_free())
-exec(open('main.py').read())
+# exec main.py then call main() — __name__ != '__main__' in exec context
+_ns = {}
+exec(open('main.py').read(), _ns)
+_ns['main']()

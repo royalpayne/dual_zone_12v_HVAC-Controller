@@ -192,12 +192,12 @@ def _warm_restart(ip):
         # Ctrl-C twice — interrupts running main() loop (caught by
         # KeyboardInterrupt handler which breaks out of while True).
         ws.write(b"\r\x03\x03", frame=FRAME_TXT)
-        time.sleep(2)
+        time.sleep(3)  # Give main loop time to fully exit
 
         # Execute _restart.py helper which purges module cache and
         # re-runs main.py.  Single REPL line avoids paste mode issues.
         ws.write(b"exec(open('_restart.py').read())\r\n", frame=FRAME_TXT)
-        time.sleep(1)
+        time.sleep(2)  # Give _restart.py time to start executing
 
         s.close()
         s = None
@@ -307,7 +307,7 @@ def deploy(target, specific_files=None, do_restart=True):
     # Warm restart: Ctrl+C → purge modules → re-exec main.py (WiFi stays up)
     if _warm_restart(ip):
         print(f"  Waiting for {target.upper()} to come back up...")
-        time.sleep(8)
+        time.sleep(12)  # main() needs time to re-init WiFi, sensors, webserver
         if _verify_http(ip):
             print(f"  ✓ {target.upper()} is back online with new code!")
             return True
