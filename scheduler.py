@@ -68,8 +68,8 @@ class Scheduler:
         self.schedule = dict(DEFAULT_SCHEDULE)
         self.last_check_minute = -1
         self.load()
-        # Immediately evaluate correct mode on boot (don't wait for a transition)
-        self._evaluate_current_mode()
+        # Defer boot evaluation to first run() call so thermostat is fully ready
+        self._boot_eval_done = False
 
     def load(self):
         """Load schedule from file"""
@@ -141,6 +141,12 @@ class Scheduler:
     def run(self):
         """Check schedule and apply mode - call periodically"""
         if not self.enabled:
+            return
+
+        # On first run after boot, evaluate correct mode immediately
+        if not self._boot_eval_done:
+            self._boot_eval_done = True
+            self._evaluate_current_mode()
             return
 
         # Check if hold is still active
