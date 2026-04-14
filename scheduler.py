@@ -68,6 +68,8 @@ class Scheduler:
         self.schedule = dict(DEFAULT_SCHEDULE)
         self.last_check_minute = -1
         self.load()
+        # Immediately evaluate correct mode on boot (don't wait for a transition)
+        self._evaluate_current_mode()
 
     def load(self):
         """Load schedule from file"""
@@ -77,7 +79,8 @@ class Scheduler:
                 self.enabled = data.get("enabled", False)
                 self.presets = data.get("presets", dict(DEFAULT_PRESETS))
                 self.schedule = data.get("schedule", dict(DEFAULT_SCHEDULE))
-                print(f"[scheduler] Loaded schedule, enabled={self.enabled}")
+                self.current_mode = data.get("current_mode", MODE_HOME)
+                print(f"[scheduler] Loaded schedule, enabled={self.enabled}, mode={self.current_mode}")
         except:
             print("[scheduler] No saved schedule, using defaults")
 
@@ -87,7 +90,8 @@ class Scheduler:
             data = {
                 "enabled": self.enabled,
                 "presets": self.presets,
-                "schedule": self.schedule
+                "schedule": self.schedule,
+                "current_mode": self.current_mode
             }
             with open(SCHEDULE_FILE, 'w') as f:
                 json.dump(data, f)
@@ -183,6 +187,38 @@ class Scheduler:
             print(f"[scheduler] Mode change: {self.current_mode} -> {new_mode}")
             self.current_mode = new_mode
             self._apply_mode(new_mode)
+
+    def _evaluate_current_mode(self):
+        """Evaluate and apply the correct schedule mode for the current time.
+        Called on boot so the correct mode is active immediately."""
+        if not self.enabled:
+            return
+        try:
+            offset = config.TIMEZONE_OFFSET
+            utc = time.localtime()
+            month, mday, wday = utc[1], utc[2], utc[6]
+            if _is_us_dst(month, mday, wday):
+                offset += 1
+            t = time.localtime(time.time() + offset * 3600)
+            current_minute = t[3] * 60 + t[4]
+            weekday_num = t[6]
+            day_type = "weekday" if weekday_num < 5 else "weekend"
+        except:
+            return
+
+        day_schedule = self.schedule.get(day_type, [])
+        correct_mode = MODE_HOME
+        for entry in day_schedule:
+            h, m = map(int, entry.get("time", "00:00").split(":"))
+            if current_minute >= h * 60 + m:
+                correct_mode = entry.get("mode", MODE_HOME)
+
+        if correct_mode != self.current_mode:
+            print(f"[scheduler] Boot correction: {self.current_mode} -> {correct_mode}")
+            self.current_mode = correct_mode
+            self._apply_mode(correct_mode)
+        else:
+            print(f"[scheduler] Boot mode confirmed: {self.current_mode}")
 
     def _apply_mode(self, mode):
         """Apply preset temperatures and humidity to thermostat"""
