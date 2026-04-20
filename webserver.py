@@ -140,6 +140,10 @@ class ThermostatWebServer:
             return self._api_schedule()
         elif 'GET /api/remote' in request:
             return self._api_remote_status()
+        elif 'GET /settings' in request:
+            return self._serve_settings()
+        elif 'POST /api/settings/network' in request:
+            return self._api_save_network(request)
         elif 'POST /api/schedule/' in request:
             return self._handle_schedule_post(request)
         elif 'POST /api/remote/' in request:
@@ -381,6 +385,194 @@ class ThermostatWebServer:
             print(f"Remote POST error: {e}")
         return self._api_remote_status()
 
+    def _serve_settings(self):
+        """Serve the network settings configuration page."""
+        import config
+        ip   = getattr(config, 'STATIC_IP',      '192.168.71.152')
+        mask = getattr(config, 'SUBNET_MASK',    '255.255.255.0')
+        gw   = getattr(config, 'GATEWAY',        '192.168.71.1')
+        dns  = getattr(config, 'DNS_SERVER',     '192.168.71.1')
+        ssid = getattr(config, 'WIFI_SSID',      '')
+        tz   = getattr(config, 'TIMEZONE_OFFSET', -6)
+        rem  = getattr(self.remote, 'ip', '192.168.71.153') if self.remote else '192.168.71.153'
+
+        html = """<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Network Settings</title>
+<style>
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{font-family:sans-serif;background:#1a1a2e;color:#eee;padding:20px}}
+.card{{background:#16213e;border-radius:16px;padding:20px;margin-bottom:16px;max-width:400px;margin-left:auto;margin-right:auto}}
+h1{{color:#e94560;text-align:center;margin-bottom:20px;font-size:22px}}
+h3{{color:#00b4d8;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;margin-top:16px}}
+label{{font-size:12px;color:#aaa;display:block;margin-bottom:4px}}
+input,select{{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #0f3460;background:#0d1b2a;color:#eee;font-size:15px;margin-bottom:4px}}
+input:focus,select:focus{{outline:none;border-color:#00b4d8}}
+.row{{display:flex;gap:8px}}
+.row input{{margin-bottom:0}}
+.pw-wrap{{position:relative}}
+.pw-wrap input{{padding-right:44px}}
+.pw-eye{{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;padding:0}}
+.btn-save{{width:100%;padding:14px;background:#e94560;border:none;color:#fff;font-size:16px;font-weight:bold;border-radius:10px;cursor:pointer;margin-top:20px}}
+.btn-save:active{{background:#c73652}}
+.back{{display:block;text-align:center;color:#00b4d8;text-decoration:none;margin-bottom:20px;font-size:14px}}
+.warn{{background:#2d1b00;border:1px solid #f59e0b;border-radius:8px;padding:10px 14px;font-size:12px;color:#f59e0b;margin-top:12px;text-align:center}}
+.saved{{display:none;background:#0d2b1a;border:1px solid #10b981;border-radius:8px;padding:10px;text-align:center;color:#10b981;margin-top:12px}}
+</style>
+</head>
+<body>
+<a class="back" href="/">&larr; Back to Dashboard</a>
+<h1>&#9881; Network Settings</h1>
+
+<div class="card">
+<h3>&#128246; WiFi</h3>
+<label>Network Name (SSID)</label>
+<input type="text" id="ssid" value="{ssid}" placeholder="Your WiFi network name">
+<label style="margin-top:8px">Password</label>
+<div class="pw-wrap">
+  <input type="password" id="pw" placeholder="WiFi password">
+  <button class="pw-eye" onclick="togglePw()" type="button">&#128065;</button>
+</div>
+</div>
+
+<div class="card">
+<h3>&#127760; IP Configuration</h3>
+<label>Static IP Address</label>
+<input type="text" id="ip" value="{ip}" placeholder="192.168.x.x">
+<label>Subnet Mask</label>
+<input type="text" id="mask" value="{mask}" placeholder="255.255.255.0">
+<div class="row">
+  <div style="flex:1">
+    <label>Gateway</label>
+    <input type="text" id="gw" value="{gw}" placeholder="192.168.x.1">
+  </div>
+  <div style="flex:1">
+    <label>DNS Server</label>
+    <input type="text" id="dns" value="{dns}" placeholder="192.168.x.1">
+  </div>
+</div>
+</div>
+
+<div class="card">
+<h3>&#128225; Remote ESP32</h3>
+<label>Remote Unit IP Address</label>
+<input type="text" id="rem" value="{rem}" placeholder="192.168.x.x">
+</div>
+
+<div class="card">
+<h3>&#128336; Timezone</h3>
+<label>UTC Offset</label>
+<select id="tz">
+  <option value="-5" {s5}>UTC-5 &nbsp; Eastern Standard / CDT</option>
+  <option value="-6" {s6}>UTC-6 &nbsp; Central Standard / MDT</option>
+  <option value="-7" {s7}>UTC-7 &nbsp; Mountain Standard / PDT</option>
+  <option value="-8" {s8}>UTC-8 &nbsp; Pacific Standard</option>
+</select>
+</div>
+
+<div class="card">
+<div class="warn">&#9888; Saving will reboot the thermostat.<br>WiFi will reconnect in ~15 seconds.</div>
+<button class="btn-save" onclick="save()">Save &amp; Reboot</button>
+<div class="saved" id="saved">&#10003; Saved! Rebooting...</div>
+</div>
+
+<script>
+function togglePw(){{var i=document.getElementById('pw');i.type=i.type==='password'?'text':'password';}}
+function save(){{
+  var d={{
+    ssid:document.getElementById('ssid').value,
+    pw:document.getElementById('pw').value,
+    ip:document.getElementById('ip').value,
+    mask:document.getElementById('mask').value,
+    gw:document.getElementById('gw').value,
+    dns:document.getElementById('dns').value,
+    rem:document.getElementById('rem').value,
+    tz:document.getElementById('tz').value
+  }};
+  fetch('/api/settings/network',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(d)}})
+    .then(r=>r.json())
+    .then(function(){{document.getElementById('saved').style.display='block';}})
+    .catch(function(){{document.getElementById('saved').style.display='block';}}); 
+}}
+</script>
+</body></html>""".format(
+            ssid=ssid, ip=ip, mask=mask, gw=gw, dns=dns, rem=rem,
+            s5='selected' if tz == -5 else '',
+            s6='selected' if tz == -6 else '',
+            s7='selected' if tz == -7 else '',
+            s8='selected' if tz == -8 else ''
+        )
+        return 'HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n' + html
+
+    def _api_save_network(self, request):
+        """Save network settings to config_local.py and reboot."""
+        import json, machine
+        try:
+            # Parse body
+            body_start = request.find('\r\n\r\n')
+            body = request[body_start + 4:] if body_start >= 0 else '{}'
+            d = json.loads(body)
+
+            ssid = d.get('ssid', '').strip()
+            pw   = d.get('pw',   '').strip()
+            ip   = d.get('ip',   '').strip()
+            mask = d.get('mask', '').strip()
+            gw   = d.get('gw',   '').strip()
+            dns  = d.get('dns',  '').strip()
+            rem  = d.get('rem',  '').strip()
+            tz   = int(d.get('tz', -6))
+
+            # Read existing config_local.py so we preserve ENV and other keys
+            existing = {}
+            try:
+                import config_local
+                existing = getattr(config_local, 'CONFIG', {})
+            except:
+                pass
+
+            # Build updated CONFIG dict
+            cfg = dict(existing)
+            if ssid:               cfg['WIFI_SSID']       = ssid
+            if pw:                 cfg['WIFI_PASSWORD']   = pw
+            if ip:                 cfg['STATIC_IP']       = ip
+            if mask:               cfg['SUBNET_MASK']     = mask
+            if gw:                 cfg['GATEWAY']         = gw
+            if dns:                cfg['DNS_SERVER']      = dns
+            if rem:                cfg['REMOTE_IP']       = rem
+            cfg['TIMEZONE_OFFSET'] = tz
+
+            # Serialise and write
+            lines = ['# Auto-generated by Network Settings UI\n',
+                     'ENV = "prod"\n',
+                     'CONFIG = {\n']
+            for k, v in cfg.items():
+                if isinstance(v, str):
+                    lines.append('    {}: {!r},\n'.format(k, v))
+                else:
+                    lines.append('    {}: {},\n'.format(k, v))
+            lines.append('}\n')
+
+            with open('config_local.py', 'w') as f:
+                f.writelines(lines)
+
+            print('[settings] config_local.py saved, rebooting...')
+            # Send response before reboot so browser gets confirmation
+            resp = 'HTTP/1.0 200 OK\r\nContent-Type: application/json\r\n\r\n{"ok":true}'
+            # Schedule reboot after brief delay
+            import _thread
+            def _reboot():
+                import time
+                time.sleep(2)
+                machine.reset()
+            _thread.start_new_thread(_reboot, ())
+            return resp
+        except Exception as e:
+            print(f'[settings] Save error: {e}')
+            return 'HTTP/1.0 500 OK\r\nContent-Type: application/json\r\n\r\n{"ok":false,"error":"' + str(e) + '"}'
+
     def _serve_html(self):
         html = """<!DOCTYPE html>
 <html>
@@ -554,6 +746,7 @@ h3{font-size:14px;color:#888;margin-bottom:8px}
 
 <div style="text-align:center;margin-bottom:16px">
 <a href="http://192.168.71.151:8080" style="color:#00b4d8;font-size:16px">Energy Dashboard &amp; Stats</a>
+<br><br><a href="/settings" style="color:#aaa;font-size:14px">&#9881; Network Settings</a>
 </div>
 
 <script>

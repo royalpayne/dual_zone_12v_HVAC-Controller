@@ -17,8 +17,8 @@ from thermostat_remote import RemoteThermostatController
 from webserver import ThermostatWebServer
 from scheduler import Scheduler
 
-# Remote ESP32 IP
-REMOTE_IP = "192.168.71.153"
+# Remote ESP32 IP (can be overridden in config_local.py)
+REMOTE_IP = getattr(config, 'REMOTE_IP', '192.168.71.153')
 
 
 def connect_wifi(display):
