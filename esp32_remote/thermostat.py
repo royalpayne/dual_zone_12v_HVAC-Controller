@@ -390,7 +390,8 @@ class ThermostatController:
 
     def run_control_loop(self):
         """Main control logic - call periodically"""
-        if self.current_temp is None:
+        # Allow control loop to run if we have kitchen temp as fallback
+        if self.current_temp is None and self._remote_temp_if_fresh() is None:
             if self.rgb_led:
                 self._update_led_status()
             return
