@@ -573,6 +573,12 @@ class ThermostatController:
                 self.dehum_trigger_time = 0
                 return
 
+            # Don't start dehum if rooftop AC is running and temp is well above setpoint
+            # Boost mode (cool) takes priority over dehum in this case
+            if self.cooling_active and self.boost_active:
+                self.dehum_trigger_time = 0
+                return
+
             if humidity > self.humidity_setpoint:
                 # Sustained threshold — humidity must stay above setpoint to avoid reacting to spikes
                 if self.dehum_trigger_time == 0:
