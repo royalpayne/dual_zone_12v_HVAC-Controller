@@ -460,14 +460,16 @@ class ThermostatController:
             if self.boost_off_time > 0 and (now - self.boost_off_time) < config.DEHUM_MIN_OFF_TIME:
                 pass  # In cooldown period
             else:
+                _boost_temp = self._local_or_remote_temp()
                 # Trigger 1: temp far exceeds setpoint
-                if self.current_temp >= (self.cool_setpoint + config.BOOST_THRESHOLD):
-                    boost_reason = f"temp {self.current_temp:.1f}F > setpoint+{config.BOOST_THRESHOLD}"
+                if _boost_temp is not None and _boost_temp >= (self.cool_setpoint + config.BOOST_THRESHOLD):
+                    boost_reason = f"temp {_boost_temp:.1f}F > setpoint+{config.BOOST_THRESHOLD}"
                 # Trigger 2: rooftop AC stalled (running 10+ min with no temp drop)
-                elif (self.cooling_start_temp is not None
+                elif (_boost_temp is not None
+                      and self.cooling_start_temp is not None
                       and now - self.cooling_start_time >= config.BOOST_STALL_TIME
-                      and self.current_temp >= self.cooling_start_temp):
-                    boost_reason = f"stall: {self.current_temp:.1f}F after {int((now - self.cooling_start_time) / 60)}min (started at {self.cooling_start_temp:.1f}F)"
+                      and _boost_temp >= self.cooling_start_temp):
+                    boost_reason = f"stall: {_boost_temp:.1f}F after {int((now - self.cooling_start_time) / 60)}min (started at {self.cooling_start_temp:.1f}F)"
             if boost_reason and self._can_change_whynter():
                 print(f"Whynter boost: {boost_reason}")
                 self.set_whynter_mode(1)
