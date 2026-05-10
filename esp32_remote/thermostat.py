@@ -50,6 +50,7 @@ class ThermostatController:
         self.cooling_start_time = 0   # When rooftop AC started cooling
         self.cooling_start_temp = None  # Temp when rooftop AC started
         self.boost_off_time = 0        # When Whynter boost last turned off (cooldown)
+        self.boost_active = False         # True when Whynter running specifically for cooling boost
 
         # Multi-zone: Main ESP32 sends its temperature for either-area control
         self.remote_temp = None        # Main ESP32 temperature reading (°F)
@@ -432,13 +433,16 @@ class ThermostatController:
             if boost_reason and self._can_change_whynter():
                 print(f"Whynter boost: {boost_reason}")
                 self.set_whynter_mode(1)
-        # Auto-disable Whynter boost when apparent temp comes back within range (but not if dehumidifying)
-        elif self.cooling_active and self.whynter and self.whynter_mode != 0 and not self.dehum_active:
+                self.boost_active = True
+        # Auto-disable Whynter boost when apparent temp comes back within range
+        # Only applies when boost_active — avoids killing dehum or manual Whynter use
+        elif self.cooling_active and self.whynter and self.boost_active and self.whynter_mode != 0 and not self.dehum_active:
             apparent = self._apparent_temp()
             if apparent is not None and apparent <= (self.cool_setpoint + config.HYSTERESIS):
                 if self._can_change_whynter():
                     print(f"Whynter boost off: apparent {apparent:.1f}F <= {self.cool_setpoint + config.HYSTERESIS:.1f}F")
                     self.set_whynter_mode(0)
+                    self.boost_active = False
                     # Reset stall baseline so it doesn't immediately re-trigger
                     self.cooling_start_time = now
                     self.cooling_start_temp = self.current_temp
@@ -700,6 +704,7 @@ class ThermostatController:
         # Auto-turn off Whynter boost when rooftop AC stops (but not if dehumidifying)
         if self.whynter_mode != 0 and not self.dehum_active:
             self.set_whynter_mode(0)
+            self.boost_active = False
 
         # Fan post-run: keep fan going to extract residual cooling
         if not self.fan_only:
