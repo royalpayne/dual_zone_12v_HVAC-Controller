@@ -249,7 +249,20 @@ class ThermostatController:
             self.whynter_mode = mode
             self.last_whynter_change = time.time()
         else:
-            print("Whynter IR send failed — state not updated")
+            # IR may have still fired — Broadlink sometimes returns False on timeout
+            # but the device still responds. Update state optimistically and retry once.
+            print("Whynter IR send returned False — retrying once")
+            try:
+                if mode == 0:
+                    success = self.whynter.send_off()
+                else:
+                    success = self.whynter.set_mode(mode_name)
+            except Exception:
+                pass
+            # Update state regardless — IR blast likely reached device
+            self.whynter_mode = mode
+            self.last_whynter_change = time.time()
+            print(f"Whynter state set to {mode_name} (retry success: {success})")
 
     def set_heater_mode(self, mode):
         """Set Dr. Heater mode (0=off, 1=on)"""
