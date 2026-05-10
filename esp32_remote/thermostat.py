@@ -101,9 +101,16 @@ class ThermostatController:
         self.heater = heater_ctrl
 
     def update_readings(self, temp_f, humidity, pressure):
-        """Update BME280 sensor readings"""
-        self.current_temp = temp_f
-        self.current_humidity = humidity
+        """Update BME280 sensor readings. Falls back to remote (kitchen) temp if local sensor is unavailable."""
+        if temp_f is not None:
+            self.current_temp = temp_f
+        elif self.remote_temp is not None:
+            # Local sensor dead — use kitchen temp as fallback so control loop keeps working
+            self.current_temp = self.remote_temp
+            print(f"Sensor fallback: using kitchen temp {self.remote_temp:.1f}F")
+        else:
+            self.current_temp = None
+        self.current_humidity = humidity  # humidity stays None if sensor dead
         self.current_pressure = pressure
 
     def update_evap_temp(self, temp_f):
