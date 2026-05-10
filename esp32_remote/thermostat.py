@@ -80,6 +80,9 @@ class ThermostatController:
             print(f"RGB LED init failed: {e}")
             self.rgb_led = None
 
+        # Restore mode from flash
+        self._load_saved_mode()
+
     def _relay_on(self, pin):
         """Set relay ON (handles Active LOW inversion)"""
         pin.value(0 if self._relay_invert else 1)
@@ -138,10 +141,34 @@ class ThermostatController:
         else:
             self.bl_humidity = None
 
+    def _load_saved_mode(self):
+        """Load mode from flash on boot."""
+        try:
+            import ujson
+            with open('thermostat_state.json', 'r') as f:
+                state = ujson.load(f)
+                saved = state.get('mode', config.MODE_AUTO)
+                if saved in config.MODE_NAMES:
+                    self.mode = saved
+                    print(f"Restored mode: {config.MODE_NAMES[saved]}")
+        except Exception:
+            self.mode = config.MODE_AUTO  # Default to AUTO on first boot
+            print("No saved state — defaulting to AUTO")
+
+    def _save_mode(self):
+        """Persist mode to flash so it survives reboots."""
+        try:
+            import ujson
+            with open('thermostat_state.json', 'w') as f:
+                ujson.dump({'mode': self.mode}, f)
+        except Exception as e:
+            print(f"Failed to save mode: {e}")
+
     def set_mode(self, mode):
         """Set operating mode"""
         if mode in config.MODE_NAMES:
             self.mode = mode
+            self._save_mode()
             if mode == config.MODE_OFF:
                 self._all_off()
 
