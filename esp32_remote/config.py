@@ -34,7 +34,7 @@ BL_HUMIDITY_OFFSET = 3.3  # percent (split-the-difference vs BME280)
 HYSTERESIS = 1.5
 
 # Boost mode - portable unit kicks in when temp exceeds setpoint by this amount
-BOOST_THRESHOLD = 5  # degrees F
+BOOST_THRESHOLD = 3  # degrees F
 BOOST_STALL_TIME = 600  # seconds (10 min) - boost if rooftop AC runs this long with no temp drop
 
 # Dehumidification (via Whynter cool mode - evaporates condensate out exhaust)
