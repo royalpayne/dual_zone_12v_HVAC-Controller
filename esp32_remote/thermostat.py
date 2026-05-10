@@ -101,16 +101,9 @@ class ThermostatController:
         self.heater = heater_ctrl
 
     def update_readings(self, temp_f, humidity, pressure):
-        """Update BME280 sensor readings. Falls back to remote (kitchen) temp if local sensor is unavailable."""
-        if temp_f is not None:
-            self.current_temp = temp_f
-        elif self.remote_temp is not None:
-            # Local sensor dead — use kitchen temp as fallback so control loop keeps working
-            self.current_temp = self.remote_temp
-            print(f"Sensor fallback: using kitchen temp {self.remote_temp:.1f}F")
-        else:
-            self.current_temp = None
-        self.current_humidity = humidity  # humidity stays None if sensor dead
+        """Update BME280 sensor readings."""
+        self.current_temp = temp_f
+        self.current_humidity = humidity
         self.current_pressure = pressure
 
     def update_evap_temp(self, temp_f):
@@ -281,14 +274,24 @@ class ThermostatController:
         """Check if enough time has passed since last Whynter change"""
         return (time.time() - self.last_whynter_change) >= config.MIN_CYCLE_TIME
 
+    def _local_or_remote_temp(self):
+        """Return local temp if available, else fall back to kitchen (remote) temp."""
+        if self.current_temp is not None:
+            return self.current_temp
+        remote = self._remote_temp_if_fresh()
+        if remote is not None:
+            return remote
+        return None
+
     def _apparent_temp(self):
         """Humidity-adjusted apparent temperature for cooling decisions.
         At 50% RH: apparent = actual. Higher humidity feels warmer, lower feels cooler."""
-        if self.current_temp is None:
+        temp = self._local_or_remote_temp()
+        if temp is None:
             return None
         if self.current_humidity is None:
-            return self.current_temp
-        return self.current_temp + (self.current_humidity - 50) * config.HUMIDITY_COMFORT_FACTOR
+            return temp
+        return temp + (self.current_humidity - 50) * config.HUMIDITY_COMFORT_FACTOR
 
     def _effective_humidity(self):
         """Average humidity across available sensors for more stable readings."""
@@ -330,7 +333,7 @@ class ThermostatController:
 
     def _effective_heat_temp(self):
         """Worst-case (coldest) temperature across zones for heating decisions"""
-        local = self.current_temp
+        local = self._local_or_remote_temp()
         remote = self._remote_temp_if_fresh()
         if local is None and remote is None:
             return None
