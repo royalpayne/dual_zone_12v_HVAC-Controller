@@ -429,7 +429,7 @@ class RemoteAPI:
         Used by deploy_ota.py instead of the fragile WebREPL restart."""
         import _thread, time as _t
         def _do_reset():
-            _t.sleep_ms(200)  # give HTTP response time to flush
+            _t.sleep_ms(800)  # give HTTP response time to flush before reset
             import machine
             machine.reset()
         _thread.start_new_thread(_do_reset, ())
