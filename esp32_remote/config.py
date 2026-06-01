@@ -34,7 +34,7 @@ BL_HUMIDITY_OFFSET = 3.3  # percent (split-the-difference vs BME280)
 HYSTERESIS = 1.5
 
 # Boost mode - portable unit kicks in when temp exceeds setpoint by this amount
-BOOST_THRESHOLD = 3  # degrees F
+BOOST_THRESHOLD = 4  # degrees F — raised from 3° (comfort avg was +0.1°, room to spare)
 BOOST_STALL_TIME = 600  # seconds (10 min) - boost if rooftop AC runs this long with no temp drop
 
 # Dehumidification (via Whynter cool mode - evaporates condensate out exhaust)
@@ -63,7 +63,7 @@ VENT_FAN_MAX_OUTDOOR_TEMP = 78  # °F — don't run vent fan if outdoor temp exc
 VENT_FAN_MIN_CYCLE = 180        # seconds — minimum run/off time (3 min)
 
 # Short-cycle protection (minimum seconds between state changes)
-MIN_CYCLE_TIME = 30  # 30 seconds
+MIN_CYCLE_TIME = 240  # 4 minutes — reduces short cycling, protects compressor
 
 # Sensor Settings
 SENSOR_READ_INTERVAL = 5  # seconds between readings
