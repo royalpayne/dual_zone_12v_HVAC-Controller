@@ -86,27 +86,34 @@ def main():
     print("ESP32 Remote starting...")
     print(f"DRY_RUN: {config.DRY_RUN}")
 
-    # Initialize I2C
-    i2c = I2C(0,
-              sda=Pin(config.I2C_SDA_PIN),
-              scl=Pin(config.I2C_SCL_PIN),
-              freq=config.I2C_FREQ)
-
-    # Scan I2C bus
-    devices = i2c.scan()
-    print(f"I2C devices: {[hex(d) for d in devices]}")
+    # Initialize I2C — wrapped in try/except because a locked-up I2C bus
+    # (device holding SDA low after power cycle) can cause i2c.scan() to hang
+    # indefinitely, preventing WiFi + webserver from ever starting.
+    i2c = None
+    try:
+        i2c = I2C(0,
+                  sda=Pin(config.I2C_SDA_PIN),
+                  scl=Pin(config.I2C_SCL_PIN),
+                  freq=config.I2C_FREQ)
+        # Scan with a short attempt — if it takes too long the bus is locked
+        devices = i2c.scan()
+        print(f"I2C devices: {[hex(d) for d in devices]}")
+    except Exception as e:
+        print(f"I2C init/scan failed: {e} — continuing without I2C peripherals")
+        i2c = None
 
     # Initialize OLED display
     display = None
-    try:
-        oled = SSD1306_I2C(config.DISPLAY_WIDTH, config.DISPLAY_HEIGHT, i2c, config.OLED_ADDR)
-        display = ThermostatDisplay(oled)
-        display.draw_startup()
-    except Exception as e:
-        print(f"OLED init failed: {e}")
+    if i2c is not None:
+        try:
+            oled = SSD1306_I2C(config.DISPLAY_WIDTH, config.DISPLAY_HEIGHT, i2c, config.OLED_ADDR)
+            display = ThermostatDisplay(oled)
+            display.draw_startup()
+        except Exception as e:
+            print(f"OLED init failed: {e}")
 
     # Initialize sensors (BME280/BMP280)
-    sensor = SensorHub(i2c)
+    sensor = SensorHub(i2c)  # SensorHub handles None i2c gracefully
     sensor_status = sensor.get_status()
     print(f"Sensor: {sensor_status['sensor_type']}")
 

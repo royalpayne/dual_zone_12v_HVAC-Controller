@@ -27,16 +27,31 @@ class SensorHub:
     # This prevents blocking the web server on every API call
     CACHE_INTERVAL_MS = 1000
 
-    def __init__(self, i2c=None):
+    _I2C_SENTINEL = object()  # distinguishes "not provided" from None
+
+    def __init__(self, i2c=_I2C_SENTINEL):
         self.sensor = None
         self.sensor_type = None
 
-        # Initialize I2C if not provided
+        # Create I2C only when no argument was passed at all.
+        # If caller explicitly passes None (locked bus), skip sensor init.
+        if i2c is SensorHub._I2C_SENTINEL:
+            try:
+                i2c = I2C(0,
+                          sda=Pin(config.I2C_SDA_PIN),
+                          scl=Pin(config.I2C_SCL_PIN),
+                          freq=config.I2C_FREQ)
+            except Exception as e:
+                print(f"SensorHub I2C init failed: {e}")
+                i2c = None
+
         if i2c is None:
-            i2c = I2C(0,
-                      sda=Pin(config.I2C_SDA_PIN),
-                      scl=Pin(config.I2C_SCL_PIN),
-                      freq=config.I2C_FREQ)
+            print("SensorHub: no I2C bus — running without sensors")
+            self._last_temp_f = None
+            self._last_humidity = None
+            self._last_pressure = None
+            self._last_sensor_read = 0
+            return
 
         # Try BME280 first (has humidity built-in)
         if HAS_BME280:
