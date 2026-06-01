@@ -177,28 +177,42 @@ def _put_file(ws, local_path, remote_name):
         raise OSError(f"PUT failed: code {code}")
 
 
-def _warm_restart(ip):
-    """Interrupt main.py via WebREPL, purge module cache, re-execute main.py.
+def _http_reset(ip):
+    """Trigger a clean hardware reset via the /api/reset HTTP endpoint.
+    More reliable than WebREPL restart because it doesn't fight with the
+    running main() event loop. Returns True if the reset command was accepted."""
+    import urllib.request
+    try:
+        req = urllib.request.Request(
+            f"http://{ip}/api/reset",
+            data=b"{}",
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as r:
+            return r.status == 200
+    except Exception:
+        return False
 
-    Uses _restart.py helper script on the device (uploaded with deploy).
-    This avoids a full hardware reset — WiFi and WebREPL stay up the entire
-    time.  Updated modules are loaded fresh from flash.
-    """
+
+def _warm_restart(ip):
+    """Restart the device. Tries HTTP reset first (reliable), falls back
+    to WebREPL interrupt + module purge if the HTTP endpoint isn't available
+    (e.g. first deploy before /api/reset existed)."""
     print(f"  Restarting ({ip})...")
+
+    # --- Strategy 1: HTTP reset (clean machine.reset()) ---
+    if _http_reset(ip):
+        return True
+
+    # --- Strategy 2: WebREPL interrupt + _restart.py (legacy fallback) ---
     s = None
     try:
         s, ws = _connect(ip)
-
-        # Ctrl-C twice — interrupts running main() loop (caught by
-        # KeyboardInterrupt handler which breaks out of while True).
         ws.write(b"\r\x03\x03", frame=FRAME_TXT)
-        time.sleep(3)  # Give main loop time to fully exit
-
-        # Execute _restart.py helper which purges module cache and
-        # re-runs main.py.  Single REPL line avoids paste mode issues.
+        time.sleep(3)
         ws.write(b"exec(open('_restart.py').read())\r\n", frame=FRAME_TXT)
-        time.sleep(2)  # Give _restart.py time to start executing
-
+        time.sleep(2)
         s.close()
         s = None
         return True

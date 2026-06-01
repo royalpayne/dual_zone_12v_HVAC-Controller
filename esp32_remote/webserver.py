@@ -87,6 +87,8 @@ class RemoteAPI:
             return self._api_onewire_scan(request)
         elif 'GET /api/gpio_test' in request:
             return self._api_gpio_test()
+        elif 'POST /api/reset' in request or 'GET /api/reset' in request:
+            return self._api_reset()
         else:
             return "HTTP/1.1 404 Not Found\r\n\r\n"
 
@@ -419,3 +421,16 @@ class RemoteAPI:
             'failed_count': len(failed),
             'reserved_count': len(RESERVED),
         })
+
+    def _api_reset(self):
+        """Trigger a clean hardware reset via machine.reset().
+        Sends the HTTP response first, then resets after a short delay
+        so the response reaches the caller before the connection drops.
+        Used by deploy_ota.py instead of the fragile WebREPL restart."""
+        import _thread, time as _t
+        def _do_reset():
+            _t.sleep_ms(200)  # give HTTP response time to flush
+            import machine
+            machine.reset()
+        _thread.start_new_thread(_do_reset, ())
+        return self._json_response({'ok': True, 'action': 'reset'})
