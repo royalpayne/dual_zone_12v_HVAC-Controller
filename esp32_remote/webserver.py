@@ -430,6 +430,20 @@ class RemoteAPI:
         import _thread, time as _t
         def _do_reset():
             _t.sleep_ms(800)  # give HTTP response time to flush before reset
+            # Send 9 SCL pulses to release any I2C slave stuck holding SDA low.
+            # ESP32-S3 soft reset doesn't reset I2C peripheral state; if a reset
+            # fires mid-transaction the OLED/BME280 can lock the bus on next boot.
+            try:
+                from machine import Pin
+                scl = Pin(config.I2C_SCL_PIN, Pin.OUT)
+                for _ in range(9):
+                    scl.value(1)
+                    _t.sleep_us(5)
+                    scl.value(0)
+                    _t.sleep_us(5)
+                scl.value(1)  # leave SCL high (idle)
+            except Exception:
+                pass
             import machine
             machine.reset()
         _thread.start_new_thread(_do_reset, ())
